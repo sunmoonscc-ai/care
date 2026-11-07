@@ -1,0 +1,9 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 요양보호사 프로그램 개발 및 시범 운영용 규칙
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}
