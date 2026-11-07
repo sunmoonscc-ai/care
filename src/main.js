@@ -1,52 +1,88 @@
 import { getLocalRosterData, syncRosterFromFirestore, saveRosterData } from './services/rosterService';
 import { validateRoster } from './services/ruleEngine';
 import { subscribeAuth, logoutUser } from './services/authService';
+import { getUserProfile, registerNewUserRequest, listAllUsers } from './services/userService';
 import { subscribeRosterChanges } from './services/realtimeSync';
+import { setupUserManagementModal } from './services/userManagementModal';
+
 import { renderDashboardView } from './views/dashboardView';
 import { renderRosterEditorView } from './views/rosterEditorView';
 import { renderAutoGenerateView } from './views/autoGenerateView';
 import { renderShiftExchangeView } from './views/shiftExchangeView';
 import { renderCaregiverMobileView } from './views/caregiverMobileView';
 import { renderLoginView } from './views/loginView';
+import { renderPendingUserView } from './views/pendingUserView';
 
 class CareShiftApp {
   constructor() {
-    this.currentView = 'loading'; // 초기 인증 확인 전 임시 상태
-    this.rosterData = getLocalRosterData(); // ⚡ 지연 0ms: 인메모리/로컬 캐시 즉각 로드
+    this.currentView = 'loading';
+    this.rosterData = getLocalRosterData();
     this.violations = [];
-    this.authState = { isLoggedIn: false, user: null, isAdmin: false };
+    this.authState = { isLoggedIn: false, user: null, isAdmin: false, userProfile: null };
     this.container = document.getElementById('view-content');
+    this.openUserMgmtModal = null;
   }
 
   init() {
-    // 1. 규칙 검증 및 네비게이션 리스너 등록
     this.recalculateViolations();
     this.setupNavigation();
+    this.openUserMgmtModal = setupUserManagementModal(this.rosterData.staffList, () => {
+      this.checkAdminNotifications();
+    });
 
-    // 2. 인증 상태 리스너 (Firebase Auth)
-    subscribeAuth((authInfo) => {
-      const prevLoggedIn = this.authState.isLoggedIn;
-      this.authState = authInfo;
-      this.updateHeaderUser();
+    // 1. Firebase Auth 리스너
+    subscribeAuth(async (authInfo) => {
+      this.authState.isLoggedIn = authInfo.isLoggedIn;
+      this.authState.user = authInfo.user;
+      this.authState.isAdmin = authInfo.isAdmin;
 
       if (!this.authState.isLoggedIn) {
-        // 비로그인 상태 (처음 온 사용자이거나 로그아웃 상태) ➔ 로그인 화면을 첫 화면으로 노출
+        // 비로그인 상태 -> 로그인 화면 표시
+        this.authState.userProfile = null;
+        this.updateHeaderUser();
         this.currentView = 'login';
         this.render();
       } else {
-        // 기존 로그인 사용자거나 방금 로그인 성공 ➔ 관리자는 editor, 요양보호사는 mobile
-        if (!prevLoggedIn || this.currentView === 'login' || this.currentView === 'loading') {
-          this.currentView = this.authState.isAdmin ? 'editor' : 'mobile';
+        // 2. 로그인된 사용자의 DB 프로필 조회
+        let profile = await getUserProfile(authInfo.user.email);
+
+        // 만일 DB에 등록되지 않은 신규 가입자라면 가입 신청 등록
+        if (!profile && !authInfo.isAdmin) {
+          profile = await registerNewUserRequest(authInfo.user);
         }
+
+        this.authState.userProfile = profile;
+        this.updateHeaderUser();
+
+        // 관리자인 경우 신규 가입 대기자 알림 배너 갱신
+        if (this.authState.isAdmin) {
+          this.checkAdminNotifications();
+        }
+
+        // 3. 권한별 화면 분기
+        if (this.authState.isAdmin) {
+          // 관리자: 월간 근무표 편집기
+          if (this.currentView === 'login' || this.currentView === 'loading' || this.currentView === 'pending') {
+            this.currentView = 'editor';
+          }
+        } else if (profile?.status === 'PENDING' || profile?.status === 'REJECTED') {
+          // 가입 대기중 또는 거절된 사용자: 접속 대기 화면
+          this.currentView = 'pending';
+        } else {
+          // 정회원, 준회원, 임시회원: 본인 전용 모바일 근무 화면
+          if (this.currentView === 'login' || this.currentView === 'loading' || this.currentView === 'pending') {
+            this.currentView = 'mobile';
+          }
+        }
+
         this.render();
 
-        // 3. ⚡ 사용자 로그인 완료 후 백그라운드에서 조용히 Firestore 최신 데이터 동기화
+        // 4. 백그라운드 Firestore 최신 근무표 동기화
         syncRosterFromFirestore().then((remoteData) => {
           if (remoteData) {
             this.rosterData = remoteData;
             this.recalculateViolations();
-            // 현재 보고 있는 화면을 부드럽게 최신 데이터로 리프레시
-            if (this.currentView !== 'login') {
+            if (this.currentView !== 'login' && this.currentView !== 'pending') {
               this.render();
             }
           }
@@ -54,14 +90,46 @@ class CareShiftApp {
       }
     });
 
-    // 4. Firestore 원격 변경사항 실시간 반영 리스너 (구글 시트나 다른 관리자가 수정 시)
+    // 5. Firestore 원격 실시간 변경 구독
     subscribeRosterChanges((remoteData) => {
       this.rosterData = remoteData;
       this.recalculateViolations();
-      if (this.currentView !== 'login') {
+      if (this.currentView !== 'login' && this.currentView !== 'pending') {
         this.render();
       }
     });
+  }
+
+  // 관리자 신규 가입 신청 알림 배너 표시
+  async checkAdminNotifications() {
+    if (!this.authState.isAdmin) return;
+    const users = await listAllUsers();
+    const pendingUsers = users.filter(u => u.status === 'PENDING');
+
+    const badge = document.getElementById('admin-new-user-badge');
+    if (badge) {
+      if (pendingUsers.length > 0) {
+        badge.innerHTML = `
+          <button id="btn-open-user-mgmt-header" class="flex items-center gap-1.5 px-2.5 py-1 bg-rose-50 text-rose-700 hover:bg-rose-100 rounded-lg text-xs font-bold border border-rose-200 transition animate-pulse">
+            <span class="material-symbols-outlined text-[16px] text-rose-600">person_add</span>
+            신규 가입 승인 대기 <span class="bg-rose-600 text-white rounded-full px-1.5 py-0.2 text-[10px]">${pendingUsers.length}</span>
+          </button>
+        `;
+        badge.querySelector('#btn-open-user-mgmt-header')?.addEventListener('click', () => {
+          if (this.openUserMgmtModal) this.openUserMgmtModal();
+        });
+      } else {
+        badge.innerHTML = `
+          <button id="btn-open-user-mgmt-header" class="flex items-center gap-1 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition">
+            <span class="material-symbols-outlined text-[16px]">group</span>
+            회원 관리
+          </button>
+        `;
+        badge.querySelector('#btn-open-user-mgmt-header')?.addEventListener('click', () => {
+          if (this.openUserMgmtModal) this.openUserMgmtModal();
+        });
+      }
+    }
   }
 
   updateHeaderUser() {
@@ -70,9 +138,18 @@ class CareShiftApp {
 
     if (this.authState.isLoggedIn && this.authState.user) {
       const u = this.authState.user;
-      const roleBadge = this.authState.isAdmin 
-        ? `<span class="px-1.5 py-0.2 rounded bg-rose-100 text-rose-800 text-[10px] font-bold">관리자</span>`
-        : `<span class="px-1.5 py-0.2 rounded bg-slate-200 text-slate-700 text-[10px] font-bold">요양보호사</span>`;
+      const profile = this.authState.userProfile;
+      
+      let roleBadge = `<span class="px-1.5 py-0.2 rounded bg-slate-200 text-slate-700 text-[10px] font-bold">대기중</span>`;
+      if (this.authState.isAdmin) {
+        roleBadge = `<span class="px-1.5 py-0.2 rounded bg-rose-100 text-rose-800 text-[10px] font-bold">관리자</span>`;
+      } else if (profile?.role === 'REGULAR') {
+        roleBadge = `<span class="px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold">정회원</span>`;
+      } else if (profile?.role === 'ASSOCIATE') {
+        roleBadge = `<span class="px-1.5 py-0.2 rounded bg-blue-100 text-blue-800 text-[10px] font-bold">준회원</span>`;
+      } else if (profile?.role === 'GUEST') {
+        roleBadge = `<span class="px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 text-[10px] font-bold">임시회원</span>`;
+      }
 
       userContainer.innerHTML = `
         <div class="flex items-center gap-1.5 sm:gap-2">
@@ -132,7 +209,6 @@ class CareShiftApp {
   }
 
   setupNavigation() {
-    // PC 네비게이션
     document.querySelectorAll('nav a[data-path]').forEach(link => {
       link.addEventListener('click', (e) => {
         e.preventDefault();
@@ -141,7 +217,6 @@ class CareShiftApp {
       });
     });
 
-    // 모바일 하단 탭바
     document.querySelectorAll('.mobile-nav-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
@@ -152,9 +227,13 @@ class CareShiftApp {
   }
 
   navigate(viewName) {
+    // 가입 승인 대기중인 회원이 다른 화면 접근 시도 시 차단
+    if (this.authState.isLoggedIn && !this.authState.isAdmin && (this.authState.userProfile?.status === 'PENDING' || this.authState.userProfile?.status === 'REJECTED')) {
+      viewName = 'pending';
+    }
+
     this.currentView = viewName;
     
-    // PC 헤더 탭 스타일
     document.querySelectorAll('nav a[data-path]').forEach(link => {
       const path = link.getAttribute('data-path');
       if (path === viewName) {
@@ -164,7 +243,6 @@ class CareShiftApp {
       }
     });
 
-    // 모바일 하단 탭 스타일
     document.querySelectorAll('.mobile-nav-btn').forEach(btn => {
       const target = btn.dataset.target;
       if (target === viewName) {
@@ -186,12 +264,17 @@ class CareShiftApp {
   render() {
     this.container.innerHTML = '';
 
-    // 1. 비로그인 상태일 때 로그인 화면 표시
+    // 1. 비로그인 화면
     if (!this.authState.isLoggedIn && this.currentView === 'login') {
       renderLoginView(this.container, () => {
-        this.currentView = this.authState.isAdmin ? 'editor' : 'mobile';
-        this.render();
+        // 로그인 완료 콜백
       });
+      return;
+    }
+
+    // 2. 가입 대기 / 거절 화면
+    if (this.currentView === 'pending') {
+      renderPendingUserView(this.container, { userProfile: this.authState.userProfile });
       return;
     }
 
@@ -202,7 +285,7 @@ class CareShiftApp {
       navigate: (v) => this.navigate(v),
       onUpdateRoster: (newData) => {
         if (!this.authState.isAdmin) {
-          alert('⚠️ 근무표 수정 및 배포 권한은 관리자에게만 부여되어 있습니다.');
+          alert('⚠️ 근무표 수정 권한은 관리자에게만 부여되어 있습니다.');
           return;
         }
         this.rosterData = newData;
@@ -249,6 +332,5 @@ class CareShiftApp {
   }
 }
 
-// 앱 실행
 const app = new CareShiftApp();
 app.init();
