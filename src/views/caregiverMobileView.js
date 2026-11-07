@@ -1,7 +1,8 @@
 // 요양보호사용 전용 모바일 뷰 (기획안 2장, 6장: 큰 글씨, 버튼 3개 이내, 직관적 내 근무 조회)
 import { realShiftTypes } from '../services/realRosterData';
+import { saveRequest } from '../services/requestService';
 
-export function renderCaregiverMobileView(container, { rosterData, currentStaffId = 'st_1', navigate }) {
+export function renderCaregiverMobileView(container, { rosterData, authState, currentStaffId = 'st_1', navigate }) {
   const staff = rosterData.staffList.find(s => s.id === currentStaffId) || rosterData.staffList[0];
   const assignments = rosterData.assignments[staff.id] || [];
 
@@ -33,7 +34,7 @@ export function renderCaregiverMobileView(container, { rosterData, currentStaffI
             <p class="text-[11px] text-teal-100">늘푸른요양병원 2층 병동</p>
           </div>
         </div>
-        <!-- 직원 전환 셀렉터 (시연 편의용) -->
+        <!-- 직원 전환 셀렉터 -->
         <select id="select-mobile-staff" class="bg-teal-900 text-white text-xs px-2 py-1 rounded border border-teal-700 focus:outline-none">
           ${rosterData.staffList.map(s => `
             <option value="${s.id}" ${s.id === staff.id ? 'selected' : ''}>${s.name}</option>
@@ -104,7 +105,6 @@ export function renderCaregiverMobileView(container, { rosterData, currentStaffI
             <span class="text-slate-500 py-1">금</span>
             <span class="text-blue-500 font-bold py-1">토</span>
 
-            <!-- 9월 1일 화요일 시작 (일, 월 공백 2칸) -->
             <div></div><div></div>
 
             ${assignments.map(a => {
@@ -127,20 +127,35 @@ export function renderCaregiverMobileView(container, { rosterData, currentStaffI
 
   // 직원 전환 이벤트
   container.querySelector('#select-mobile-staff')?.addEventListener('change', (e) => {
-    renderCaregiverMobileView(container, { rosterData, currentStaffId: e.target.value, navigate });
+    renderCaregiverMobileView(container, { rosterData, authState, currentStaffId: e.target.value, navigate });
   });
 
-  // 버튼 클릭 알림
-  container.querySelector('#btn-mobile-request-off')?.addEventListener('click', () => {
+  // 희망 휴무 신청
+  container.querySelector('#btn-mobile-request-off')?.addEventListener('click', async () => {
     const day = prompt('희망 휴무를 신청할 날짜(일자)를 입력하세요 (예: 18):', '18');
-    if (day) {
-      alert(`✅ [9월 ${day}일] 희망 휴무 신청이 수간호사님께 전달되었습니다. 승인 시 근무표에 빨간색으로 자동 반영됩니다.`);
-    }
+    if (!day) return;
+    const reason = prompt('신청 사유를 입력하세요 (예: 병원 정기검진):', '병원 정기검진') || '개인 사정';
+
+    await saveRequest({
+      type: 'OFF',
+      typeName: '희망 휴무(OFF)',
+      requesterId: staff.id,
+      requesterName: staff.name,
+      targetId: '',
+      targetName: '-',
+      date: `2026-09-${day.padStart(2, '0')}`,
+      fromShift: 'B',
+      toShift: 'X',
+      reason: reason,
+      status: 'PENDING_ADMIN',
+      statusText: '관리자 승인 대기중'
+    });
+
+    alert(`✅ [9월 ${day}일] 희망 휴무 신청이 관리자(수간호사님)께 접수되었습니다!\n관리자 승인 즉시 근무표에 빨간색으로 자동 반영됩니다.`);
   });
 
+  // 근무 맞교환 신청
   container.querySelector('#btn-mobile-request-swap')?.addEventListener('click', () => {
-    alert('동료와의 1:1 맞교환 신청 화면으로 연결됩니다. 교환할 날짜와 동료를 선택하세요.');
     navigate('requests');
   });
 }
-
