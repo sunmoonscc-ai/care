@@ -1,4 +1,4 @@
-// 사용자 회원 관리 및 권한 승인 서비스 (Firestore 연동)
+// 사용자 회원 관리 및 권한 승인 서비스 (Firestore users 컬렉션 연동)
 import { db, isOfflineFallback } from './firebase';
 import { 
   collection, 
@@ -7,8 +7,7 @@ import {
   setDoc, 
   updateDoc, 
   getDocs, 
-  query, 
-  where 
+  onSnapshot 
 } from 'firebase/firestore';
 
 const STORAGE_KEY_USERS = 'careshift_users_directory';
@@ -18,16 +17,6 @@ export const ADMIN_EMAILS = [
   'hdcc6th@gmail.com',
   'sunmoon.scc@gmail.com'
 ];
-
-/**
- * 회원 등급 정의:
- * - 'ADMIN': 시스템 관리자 (모든 권한)
- * - 'REGULAR': 정회원 (본인 근무 조회, 휴무/교환 신청 및 자동 승인 연동)
- * - 'ASSOCIATE': 준회원 (정회원에 준하나 관리자가 언제든 가입취소 가능)
- * - 'GUEST': 임시회원 (둘러보기만 가능, 신청 불가)
- * - 'PENDING': 가입 승인 대기중 (접속 대기 화면)
- * - 'REJECTED': 가입 거절됨 (접속 불가 화면)
- */
 
 export async function getUserProfile(email) {
   if (!email) return null;
@@ -45,21 +34,26 @@ export async function getUserProfile(email) {
     };
   }
 
-  // 1. Firestore에서 사용자 조회
+  // 1. Firestore에서 조회
   if (!isOfflineFallback && db) {
     try {
       const userDoc = await getDoc(doc(db, 'users', cleanEmail));
       if (userDoc.exists()) {
-        return userDoc.data();
+        const data = userDoc.data();
+        // 로컬 캐시 갱신
+        const localDir = getLocalUsers();
+        localDir[cleanEmail] = data;
+        saveLocalUsers(localDir);
+        return data;
       }
     } catch (e) {
-      console.warn("Firestore user profile fetch warning:", e);
+      console.warn("Firestore getUserProfile error:", e);
     }
   }
 
   // 2. 로컬 스토리지 확인
-  const localDirectory = getLocalUsers();
-  return localDirectory[cleanEmail] || null;
+  const localDir = getLocalUsers();
+  return localDir[cleanEmail] || null;
 }
 
 export async function registerNewUserRequest(user) {
@@ -74,15 +68,18 @@ export async function registerNewUserRequest(user) {
     appliedAt: new Date().toLocaleString('ko-KR')
   };
 
+  // 로컬 저장
   const localDir = getLocalUsers();
   localDir[cleanEmail] = profile;
   saveLocalUsers(localDir);
 
+  // Firestore 영구 저장
   if (!isOfflineFallback && db) {
     try {
       await setDoc(doc(db, 'users', cleanEmail), profile);
+      console.log("🔥 [Firestore] 신규 가입 신청 등록 완료:", cleanEmail);
     } catch (e) {
-      console.warn("Firestore register user warning:", e);
+      console.error("Firestore register user error:", e);
     }
   }
 
@@ -108,7 +105,7 @@ export async function approveUser({ email, role, staffId }) {
     try {
       await updateDoc(doc(db, 'users', cleanEmail), updates);
     } catch (e) {
-      console.warn("Firestore user approve error:", e);
+      console.error("Firestore user approve error:", e);
     }
   }
 }
@@ -132,25 +129,50 @@ export async function rejectOrRevokeUser(email, reason = '가입 거절 또는 �
     try {
       await updateDoc(doc(db, 'users', cleanEmail), updates);
     } catch (e) {
-      console.warn("Firestore user revoke error:", e);
+      console.error("Firestore user revoke error:", e);
     }
   }
 }
 
 export async function listAllUsers() {
+  const localDir = getLocalUsers();
+  let usersMap = { ...localDir };
+
   if (!isOfflineFallback && db) {
     try {
       const snap = await getDocs(collection(db, 'users'));
       if (!snap.empty) {
-        return snap.docs.map(d => d.data());
+        snap.docs.forEach(d => {
+          const u = d.data();
+          usersMap[u.email] = u;
+        });
+        saveLocalUsers(usersMap);
       }
     } catch (e) {
-      console.warn("Firestore list all users error:", e);
+      console.warn("Firestore listAllUsers error:", e);
     }
   }
 
-  const localDir = getLocalUsers();
-  return Object.values(localDir);
+  return Object.values(usersMap);
+}
+
+// 실시간 사용자 변경 감시 리스너 (관리자 화면에서 가입 신청 즉시 감지)
+export function subscribeUsersList(callback) {
+  if (isOfflineFallback || !db) return () => {};
+
+  try {
+    return onSnapshot(collection(db, 'users'), (snap) => {
+      const users = snap.docs.map(d => d.data());
+      const localDir = getLocalUsers();
+      users.forEach(u => { localDir[u.email] = u; });
+      saveLocalUsers(localDir);
+      callback(users);
+    }, (err) => {
+      console.warn("Users subscription warning:", err);
+    });
+  } catch (e) {
+    return () => {};
+  }
 }
 
 function getLocalUsers() {
