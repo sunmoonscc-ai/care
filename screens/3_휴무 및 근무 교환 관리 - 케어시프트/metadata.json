@@ -1,0 +1,17 @@
+{
+  "deviceType": "DESKTOP",
+  "height": "2344",
+  "htmlCode": {
+    "downloadUrl": "https://stitch.googleapis.com/v1/projects/6964175987263913822/files/52839bde2aa04d96a9dd578a5ab66043:download",
+    "mimeType": "text/html",
+    "name": "projects/6964175987263913822/screens/52839bde2aa04d96a9dd578a5ab66043/fileEntries/html"
+  },
+  "name": "projects/6964175987263913822/screens/52839bde2aa04d96a9dd578a5ab66043",
+  "screenshot": {
+    "downloadUrl": "https://stitch.googleapis.com/v1/projects/6964175987263913822/files/screenshot_00065fa882dab7c3033859e77b1b7401:download",
+    "mimeType": "image/png",
+    "name": "projects/6964175987263913822/screens/52839bde2aa04d96a9dd578a5ab66043/fileEntries/screenshot"
+  },
+  "title": "휴무 및 근무 교환 관리 - 케어시프트",
+  "width": "2560"
+}

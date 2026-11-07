@@ -1,0 +1,17 @@
+{
+  "deviceType": "DESKTOP",
+  "height": "3196",
+  "htmlCode": {
+    "downloadUrl": "https://stitch.googleapis.com/v1/projects/6964175987263913822/files/275f3d3b7486468b8d508017e876da96:download",
+    "mimeType": "text/html",
+    "name": "projects/6964175987263913822/screens/275f3d3b7486468b8d508017e876da96/fileEntries/html"
+  },
+  "name": "projects/6964175987263913822/screens/275f3d3b7486468b8d508017e876da96",
+  "screenshot": {
+    "downloadUrl": "https://stitch.googleapis.com/v1/projects/6964175987263913822/files/screenshot_00065fa88378ea5701a63eb559353482:download",
+    "mimeType": "image/png",
+    "name": "projects/6964175987263913822/screens/275f3d3b7486468b8d508017e876da96/fileEntries/screenshot"
+  },
+  "title": "운영 대시보드 - 케어시프트",
+  "width": "2560"
+}

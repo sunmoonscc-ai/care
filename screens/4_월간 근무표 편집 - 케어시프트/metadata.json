@@ -1,0 +1,17 @@
+{
+  "deviceType": "DESKTOP",
+  "height": "2188",
+  "htmlCode": {
+    "downloadUrl": "https://stitch.googleapis.com/v1/projects/6964175987263913822/files/824237f87e29403695efd0250d521484:download",
+    "mimeType": "text/html",
+    "name": "projects/6964175987263913822/screens/824237f87e29403695efd0250d521484/fileEntries/html"
+  },
+  "name": "projects/6964175987263913822/screens/824237f87e29403695efd0250d521484",
+  "screenshot": {
+    "downloadUrl": "https://stitch.googleapis.com/v1/projects/6964175987263913822/files/screenshot_00065fa88c48c69e0207abb0610a9c97:download",
+    "mimeType": "image/png",
+    "name": "projects/6964175987263913822/screens/824237f87e29403695efd0250d521484/fileEntries/screenshot"
+  },
+  "title": "월간 근무표 편집 - 케어시프트",
+  "width": "2560"
+}

@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+
+<html lang="ko"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Manrope:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "violation-error-text": "#991B1B", "primary-fixed-dim": "#8fd1d9", "surface-container-highest": "#d5e3fc", "tertiary-fixed": "#8cf5e4", "surface-container-lowest": "#ffffff", "shift-day-bg": "#FEF3C7", "grid-border-heavy": "#CBD5E1", "violation-error-bg": "#FEF2F2", "error": "#ba1a1a", "violation-warn-bg": "#FFFBEB", "inverse-primary": "#8fd1d9", "on-secondary-fixed-variant": "#004786", "primary-fixed": "#abeef6", "error-container": "#ffdad6", "on-primary-container": "#90d2da", "on-tertiary-container": "#70d9c9", "on-tertiary": "#ffffff", "on-background": "#0d1c2e", "on-primary": "#ffffff", "inverse-surface": "#233144", "shift-day-border": "#FCD34D", "primary": "#004349", "inverse-on-surface": "#eaf1ff", "grid-surface": "#FFFFFF", "grid-canvas": "#F8FAFC", "shift-off-text": "#475569", "shift-annual-bg": "#ECFDF5", "on-primary-fixed-variant": "#004f55", "on-surface": "#0d1c2e", "on-secondary-container": "#003567", "on-surface-variant": "#3f484a", "on-secondary": "#ffffff", "surface-container": "#e6eeff", "tertiary-fixed-dim": "#6fd8c8", "surface-variant": "#d5e3fc", "shift-night-text": "#312E81", "secondary-fixed": "#d4e3ff", "on-error": "#ffffff", "outline-variant": "#bfc8c9", "surface-container-low": "#eff4ff", "secondary-fixed-dim": "#a5c8ff", "on-tertiary-fixed": "#00201c", "shift-off-bg": "#F1F5F9", "secondary": "#005faf", "shift-off-border": "#CBD5E1", "surface": "#f8f9ff", "shift-night-bg": "#EEF2FF", "on-primary-fixed": "#002023", "weekend-column-bg": "#F8FAFC", "on-tertiary-fixed-variant": "#005048", "surface-container-high": "#dce9ff", "shift-evening-bg": "#FFEDD5", "on-secondary-fixed": "#001c3a", "surface-tint": "#20686f", "violation-warn-text": "#854D0E", "shift-night-border": "#C7D2FE", "surface-dim": "#ccdbf3", "primary-container": "#0d5c63", "surface-bright": "#f8f9ff", "tertiary": "#00443d", "tertiary-container": "#005e54", "violation-error-border": "#EF4444", "secondary-container": "#54a0fe", "shift-evening-text": "#9A3412", "shift-annual-border": "#A7F3D0", "background": "#f8f9ff", "shift-evening-border": "#FDBA74", "grid-border": "#E2E8F0", "violation-warn-border": "#F59E0B", "shift-annual-text": "#065F46", "on-error-container": "#93000a", "shift-day-text": "#92400E", "outline": "#6f797a" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "space-xl": "1.5rem", "space-sm": "0.5rem", "space-2xl": "2rem", "margin-mobile": "1rem", "margin": "1.5rem", "space-2xs": "0.125rem", "gutter-dense": "0.5rem", "space-xs": "0.25rem", "gutter": "1rem", "space-md": "0.75rem", "space-lg": "1rem" }, "fontFamily": { "label-xs": ["Inter"], "body-lg": ["Inter"], "cell-shift-code": ["Inter"], "headline-sm": ["Manrope"], "display-lg": ["Manrope"], "title-lg": ["Manrope"], "body-md": ["Inter"], "mobile-hero-shift": ["Manrope"], "title-md": ["Inter"], "label-md": ["Inter"], "cell-time-meta": ["Inter"], "body-sm": ["Inter"], "headline-md": ["Manrope"] }, "fontSize": { "label-xs": ["11px", { "lineHeight": "14px", "fontWeight": "500" }], "body-lg": ["15px", { "lineHeight": "22px", "fontWeight": "400" }], "cell-shift-code": ["13px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "700" }], "headline-sm": ["18px", { "lineHeight": "26px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "display-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "title-lg": ["16px", { "lineHeight": "24px", "fontWeight": "600" }], "body-md": ["13px", { "lineHeight": "18px", "fontWeight": "400" }], "mobile-hero-shift": ["28px", { "lineHeight": "34px", "fontWeight": "800" }], "title-md": ["14px", { "lineHeight": "20px", "fontWeight": "600" }], "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "600" }], "cell-time-meta": ["10px", { "lineHeight": "12px", "fontWeight": "500" }], "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }], "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }] } } } };</script></head><body class="bg-background font-body-md text-on-surface antialiased"><header class="fixed top-0 left-0 right-0 z-50 bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-20 w-full px-margin flex flex-col justify-between pt-space-xs"><div class="flex items-center justify-between w-full h-11"><div class="flex items-center gap-space-lg"><div class="flex items-center gap-space-sm"><img alt="CareShift Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1XOnCz4jkUhzQ7vfsyTaHyENyssitgnKOBL4iwvnWoElUZ9DmuKPK_mMlTwEQebtas39IKwMvL6agygivuyLOnT9fm2UWLkYFycEKiYWTSUQb67bwMyE_r5b7s7lO5tB8s3Y65ahzx6cAO7J7rSzbLBP3kvLYknJqTkwOVgR-fioIpoyw1IN8WNP_YPiHYKmluYQyKrRKqTZvtg-dBbaCpPlfyJewGbDXo0zXWp8A"/><div class="flex flex-col"><span class="font-headline-sm text-headline-sm text-primary tracking-tight leading-none">케어시프트</span><span class="font-label-xs text-label-xs text-on-surface-variant font-medium">CareShift Roster</span></div></div><div class="h-5 w-[1px] bg-grid-border"></div><div class="flex items-center gap-space-sm"><div class="flex items-center gap-space-xs px-space-sm py-1 bg-surface-container-low rounded-lg text-on-surface"><span class="font-label-xs text-label-xs text-on-surface-variant font-medium">의료기관</span><span class="font-title-md text-title-md text-on-surface">늘푸른요양병원 본원</span><span class="material-symbols-outlined text-[16px] text-on-surface-variant">expand_more</span></div><div class="flex items-center gap-space-xs px-space-sm py-1 bg-surface-container-low rounded-lg text-on-surface"><span class="font-label-xs text-label-xs text-on-surface-variant font-medium">담당병동</span><span class="font-title-md text-title-md text-on-surface">제2재활병동 (54병상)</span><span class="material-symbols-outlined text-[16px] text-on-surface-variant">unfold_more</span></div></div></div><div class="flex items-center gap-space-md"><div class="flex items-center gap-space-xs px-space-sm py-1 bg-surface-container-low rounded-lg"><span class="font-label-xs text-label-xs text-on-surface-variant">실시간 검증</span><span class="inline-flex items-center px-1.5 py-0.5 rounded bg-violation-error-bg text-violation-error-text font-label-xs text-label-xs font-bold">위반 1</span><span class="inline-flex items-center px-1.5 py-0.5 rounded bg-violation-warn-bg text-violation-warn-text font-label-xs text-label-xs font-bold">주의 2</span></div><div class="flex items-center gap-space-xs px-space-sm py-1 bg-primary-fixed/20 text-on-primary-fixed-variant rounded-lg"><span class="material-symbols-outlined text-[15px]">event_upcoming</span><span class="font-label-xs text-label-xs font-semibold">11월 근무표 확정 D-3</span></div><button class="p-1.5 text-on-surface-variant hover:text-on-surface rounded-lg relative" type="button"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-error"></span></button><div class="h-5 w-[1px] bg-grid-border"></div><div class="flex items-center gap-space-sm"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div><div class="flex flex-col text-left"><span class="font-title-md text-title-md text-on-surface leading-tight">이영숙 수간호사</span><span class="font-label-xs text-label-xs text-on-surface-variant">요양보호 2팀장</span></div><button class="p-1 text-on-surface-variant hover:text-on-surface rounded" type="button"><span class="material-symbols-outlined text-[18px]">settings</span></button></div></div></div><div class="flex items-end justify-between w-full"><nav class="flex items-center gap-space-xs" data-active-classes="text-primary font-title-md border-b-2 border-primary bg-surface-container-low/60 rounded-t-lg"><a class="px-space-md py-2 font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors flex items-center gap-1.5" data-path="roster-editor" href="#">월간 근무표 편집</a><a aria-current="page" class="px-space-md py-2 transition-colors flex items-center gap-1.5 text-primary font-title-md border-b-2 border-primary bg-surface-container-low/60 rounded-t-lg" data-path="operations-dashboard" href="#">운영 대시보드</a><a class="px-space-md py-2 font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors flex items-center gap-1.5" data-path="rule-simulation" href="#">자동 생성 &amp; 규칙 시뮬레이션</a><a class="px-space-md py-2 font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors flex items-center gap-1.5" data-path="requests-management" href="#">휴무·교환 신청 관리<span class="ml-1 px-1.5 py-0.2 rounded-full bg-secondary-container text-on-secondary-container font-label-xs text-label-xs">3건</span></a><a class="px-space-md py-2 font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors flex items-center gap-1.5" data-path="staff-governance" href="#">직원 관리 &amp; 인력 기준</a><a class="px-space-md py-2 font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors flex items-center gap-1.5" data-path="statistics-export" href="#">근로 통계 &amp; 엑셀 내보내기</a></nav><div class="flex items-center gap-space-xs pb-1.5"><span class="font-label-xs text-label-xs text-on-surface-variant">최종 자동저장 1분 전</span><span class="inline-block w-2 h-2 rounded-full bg-tertiary-container"></span></div></div></div></header><main class="w-full pt-20 bg-background min-h-screen"><div class="flex flex-col w-full">
+<div class="w-full px-margin py-space-xl flex flex-col gap-space-2xl">
+<!-- SECTION 1: Master Briefing Hub -->
+<section class="relative overflow-hidden rounded-xl bg-surface-container-low shadow-sm p-space-xl">
+<div class="absolute -right-16 -top-16 w-80 h-80 rounded-full bg-primary/5 pointer-events-none blur-2xl"></div>
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-lg relative z-10">
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center gap-space-sm flex-wrap">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-primary text-on-primary font-label-md text-label-md">
+<span class="w-2 h-2 rounded-full bg-tertiary-fixed animate-pulse"></span>
+              DAY (데이) 실시간 운영 중
+            </span>
+<span class="font-label-md text-label-md text-on-surface-variant font-medium">
+              2026년 11월 4일 (수요일) 10:42 기준
+            </span>
+<span class="px-2 py-0.5 rounded bg-surface-container text-on-surface-variant font-label-xs text-label-xs">
+              제2재활병동 (54병상)
+            </span>
+</div>
+<div class="flex items-baseline gap-space-md flex-wrap pt-1">
+<h1 class="font-headline-md text-headline-md text-on-surface font-bold tracking-tight">
+              실시간 병상 가동률 <span class="text-primary font-display-lg text-display-lg ml-1 font-extrabold">92%</span>
+</h1>
+<span class="font-body-md text-body-md text-on-surface-variant">
+              (재원환자 <strong class="text-on-surface font-semibold">50명</strong> / 총 54병상 · 중증 와상환자 22명)
+            </span>
+<div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violation-error-bg text-violation-error-text font-title-md text-title-md font-bold">
+<span class="material-symbols-outlined text-[18px]">warning</span>
+              당일 결근 1건 발생 (긴급 조치 요망)
+            </div>
+</div>
+</div>
+<!-- Quick Operational Actions -->
+<div class="flex items-center gap-space-sm flex-wrap self-start lg:self-center">
+<button class="flex items-center gap-2 px-space-md py-2.5 rounded-lg bg-violation-error-text text-on-primary shadow-sm hover:opacity-95 active:scale-95 transition-all" id="btn-call-substitute">
+<span class="material-symbols-outlined text-[18px]">emergency_share</span>
+<span class="font-title-md text-title-md font-bold">긴급 대체 인력 호출</span>
+</button>
+<button class="flex items-center gap-1.5 px-space-md py-2.5 rounded-lg bg-surface-container-lowest text-on-surface shadow-sm hover:bg-surface-container-high transition-all" id="btn-open-memo">
+<span class="material-symbols-outlined text-[18px] text-primary">edit_note</span>
+<span class="font-title-md text-title-md">인수인계 메모</span>
+</button>
+<a class="flex items-center gap-1.5 px-space-md py-2.5 rounded-lg bg-surface-container-lowest text-on-surface shadow-sm hover:bg-surface-container-high transition-all" data-path="roster-editor" href="#">
+<span class="material-symbols-outlined text-[18px] text-secondary">calendar_month</span>
+<span class="font-title-md text-title-md">근무표 확정 현황</span>
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">arrow_forward</span>
+</a>
+</div>
+</div>
+</section>
+<!-- SECTION 2: Key Operational Metrics 4-Pack -->
+<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-md">
+<!-- KPI 1: Today Headcount -->
+<div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-title-md text-title-md text-on-surface-variant">오늘 근무 총원</span>
+<div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]">groups</span>
+</div>
+</div>
+<div class="pt-space-md pb-space-xs flex items-baseline justify-between">
+<div class="flex items-baseline gap-1">
+<span class="font-display-lg text-display-lg font-bold text-on-surface">14</span>
+<span class="font-body-md text-body-md text-on-surface-variant">명 인가</span>
+</div>
+<span class="font-label-xs text-label-xs px-2 py-0.5 rounded bg-tertiary-fixed/30 text-tertiary font-bold">13명 출근</span>
+</div>
+<div class="flex items-center justify-between pt-space-xs text-on-surface-variant font-label-xs text-label-xs">
+<span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold">D 6명</span>
+<span class="px-1.5 py-0.5 rounded bg-shift-evening-bg text-shift-evening-text font-bold">E 5명 (-1)</span>
+<span class="px-1.5 py-0.5 rounded bg-shift-night-bg text-shift-night-text font-bold">N 3명</span>
+</div>
+</div>
+<!-- KPI 2: Absent & Substitute In Progress -->
+<div class="p-space-lg rounded-xl bg-violation-error-bg shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-title-md text-title-md text-violation-error-text font-bold">당일 결근 · 대체 대응</span>
+<span class="w-2.5 h-2.5 rounded-full bg-violation-error-border animate-ping"></span>
+</div>
+<div class="pt-space-md pb-space-xs">
+<div class="flex items-baseline gap-2">
+<span class="font-display-lg text-display-lg font-extrabold text-violation-error-text">1</span>
+<span class="font-title-md text-title-md font-semibold text-violation-error-text">건 발생</span>
+</div>
+<p class="font-body-sm text-body-sm text-violation-error-text pt-1 truncate">
+            이옥자 (이브닝 15:00) 급환 발생
+          </p>
+</div>
+<div class="flex items-center justify-between pt-space-xs">
+<span class="font-label-xs text-label-xs text-violation-error-text">대체 후보 3명 산출됨</span>
+<button class="px-2 py-1 rounded bg-surface-container-lowest text-violation-error-text font-label-xs text-label-xs font-bold hover:shadow-sm" onclick="document.getElementById('substitute-widget').scrollIntoView({behavior:'smooth'})">
+            바로 매칭
+          </button>
+</div>
+</div>
+<!-- KPI 3: Pending Shift Requests -->
+<div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-title-md text-title-md text-on-surface-variant">미처리 신청 내역</span>
+<div class="w-8 h-8 rounded-lg bg-secondary-fixed/50 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[20px]">swap_horiz</span>
+</div>
+</div>
+<div class="pt-space-md pb-space-xs flex items-baseline justify-between">
+<div class="flex items-baseline gap-1">
+<span class="font-display-lg text-display-lg font-bold text-on-surface">5</span>
+<span class="font-body-md text-body-md text-on-surface-variant">건 심사 대기</span>
+</div>
+<span class="font-label-xs text-label-xs px-2 py-0.5 rounded bg-violation-warn-bg text-violation-warn-text font-bold">승인 시급</span>
+</div>
+<div class="flex items-center justify-between pt-space-xs text-on-surface-variant font-label-xs text-label-xs">
+<span>희망 휴무 3건</span>
+<span>맞교환 신청 2건</span>
+</div>
+</div>
+<!-- KPI 4: Monthly Roster Progress -->
+<div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-title-md text-title-md text-on-surface-variant">11월 근무표 확정</span>
+<span class="font-label-xs text-label-xs px-2 py-0.5 rounded bg-primary-fixed/30 text-on-primary-fixed font-bold">D-3</span>
+</div>
+<div class="pt-space-md pb-space-xs">
+<div class="flex items-center justify-between mb-1.5">
+<span class="font-title-md text-title-md font-bold text-on-surface">85% 완성</span>
+<span class="font-label-xs text-label-xs text-violation-error-text font-bold">위반 1건 잔여</span>
+</div>
+<div class="w-full h-2 rounded-full bg-surface-container-high overflow-hidden">
+<div class="h-full bg-primary rounded-full" style="width: 85%"></div>
+</div>
+</div>
+<div class="flex items-center justify-between pt-space-xs font-label-xs text-label-xs text-on-surface-variant">
+<span>초안 시뮬레이션 완료</span>
+<span class="text-primary font-semibold">11/7 마감</span>
+</div>
+</div>
+</section>
+<!-- SECTION 3: Main Grid (2 Columns: Timeline Deck & Substitute Matrix) -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-space-lg items-start">
+<!-- LEFT COLUMN: Realtime Shift Timeline (7 Cols) -->
+<div class="xl:col-span-7 flex flex-col gap-space-md">
+<div class="flex items-center justify-between px-space-xs">
+<div class="flex items-center gap-space-sm">
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">오늘 시간대별 타임라인 및 병동 배치</h2>
+<span class="font-label-xs text-label-xs px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant">실시간 동기화</span>
+</div>
+<div class="flex items-center gap-1 text-on-surface-variant font-label-xs text-label-xs">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+<span>법정 인력 기준 충족 상태</span>
+</div>
+</div>
+<!-- Shift Block 1: DAY (Active) -->
+<div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="px-2.5 py-1 rounded bg-shift-day-bg text-shift-day-text font-cell-shift-code text-cell-shift-code font-bold">
+                DAY · 주간조
+              </span>
+<span class="font-title-md text-title-md font-bold text-on-surface">07:00 ~ 15:00</span>
+<span class="font-label-xs text-label-xs px-2 py-0.5 rounded bg-tertiary-fixed/30 text-tertiary font-semibold">근무 진행 중 (4.5h 경과)</span>
+</div>
+<span class="font-label-md text-label-md font-bold text-on-surface">배정 6명 / 정원 6명</span>
+</div>
+<!-- Hospital Room Section Summary -->
+<div class="p-space-sm rounded-lg bg-surface-container-low flex items-center justify-between text-on-surface font-body-sm text-body-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-primary">local_hospital</span>
+<span><strong>집중 케어 구역 (201호 ~ 208호):</strong> 중증 와상 14명 담당 <strong>3명 전담 배치</strong></span>
+</div>
+<span class="text-on-surface-variant font-label-xs text-label-xs">오전 투약 및 기저귀 교환 완료</span>
+</div>
+<!-- Staff Chips -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-space-xs">
+<div class="flex items-center justify-between p-2 rounded bg-surface-container-low">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-full bg-primary text-on-primary flex items-center justify-center font-label-xs text-label-xs font-bold">박</div>
+<div class="flex flex-col">
+<span class="font-title-md text-title-md leading-none text-on-surface">박정희 <span class="font-label-xs text-label-xs text-primary font-bold">팀장</span></span>
+<span class="font-cell-time-meta text-cell-time-meta text-on-surface-variant">201-203호 총괄</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-[16px] text-tertiary">check_circle</span>
+</div>
+<div class="flex items-center justify-between p-2 rounded bg-surface-container-low">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-full bg-surface-container text-on-surface flex items-center justify-center font-label-xs text-label-xs font-bold">김</div>
+<div class="flex flex-col">
+<span class="font-title-md text-title-md leading-none text-on-surface">김명자</span>
+<span class="font-cell-time-meta text-cell-time-meta text-on-surface-variant">204-205호 집중</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-[16px] text-tertiary">check_circle</span>
+</div>
+<div class="flex items-center justify-between p-2 rounded bg-surface-container-low">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-full bg-surface-container text-on-surface flex items-center justify-center font-label-xs text-label-xs font-bold">정</div>
+<div class="flex flex-col">
+<span class="font-title-md text-title-md leading-none text-on-surface">정숙희</span>
+<span class="font-cell-time-meta text-cell-time-meta text-on-surface-variant">206-208호</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-[16px] text-tertiary">check_circle</span>
+</div>
+<div class="flex items-center justify-between p-2 rounded bg-surface-container-low">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-full bg-surface-container text-on-surface flex items-center justify-center font-label-xs text-label-xs font-bold">강</div>
+<div class="flex flex-col">
+<span class="font-title-md text-title-md leading-none text-on-surface">강미란</span>
+<span class="font-cell-time-meta text-cell-time-meta text-on-surface-variant">209-211호</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-[16px] text-tertiary">check_circle</span>
+</div>
+<div class="flex items-center justify-between p-2 rounded bg-surface-container-low">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-full bg-surface-container text-on-surface flex items-center justify-center font-label-xs text-label-xs font-bold">윤</div>
+<div class="flex flex-col">
+<span class="font-title-md text-title-md leading-none text-on-surface">윤선애</span>
+<span class="font-cell-time-meta text-cell-time-meta text-on-surface-variant">212-214호</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-[16px] text-tertiary">check_circle</span>
+</div>
+<div class="flex items-center justify-between p-2 rounded bg-surface-container-low">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-full bg-surface-container text-on-surface flex items-center justify-center font-label-xs text-label-xs font-bold">조</div>
+<div class="flex flex-col">
+<span class="font-title-md text-title-md leading-none text-on-surface">조현정</span>
+<span class="font-cell-time-meta text-cell-time-meta text-on-surface-variant">재활 이동 보조</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-[16px] text-tertiary">check_circle</span>
+</div>
+</div>
+</div>
+<!-- Shift Block 2: EVENING (Warning & Shortfall) -->
+<div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between flex-wrap gap-2">
+<div class="flex items-center gap-space-sm">
+<span class="px-2.5 py-1 rounded bg-shift-evening-bg text-shift-evening-text font-cell-shift-code text-cell-shift-code font-bold">
+                EVENING · 이브닝조
+              </span>
+<span class="font-title-md text-title-md font-bold text-on-surface">15:00 ~ 23:00</span>
+<span class="font-label-xs text-label-xs px-2 py-0.5 rounded bg-violation-error-bg text-violation-error-text font-bold">인력 부족 위험</span>
+</div>
+<span class="font-label-md text-label-md font-bold text-violation-error-text">배정 4명 / 필요 5명 (-1명)</span>
+</div>
+<!-- Alert Callout inside Evening -->
+<div class="p-space-md rounded-lg bg-violation-error-bg flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm">
+<div class="flex items-start gap-2">
+<span class="material-symbols-outlined text-violation-error-text text-[20px] mt-0.5">error</span>
+<div>
+<p class="font-title-md text-title-md text-violation-error-text font-bold leading-tight">
+                  이옥자 요양보호사 결근 신고 (급성 위염 진단서 제출)
+                </p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                  석식 식사 보조 및 취침 전 위생케어 구역(206~208호) 공백 발생 예정
+                </p>
+</div>
+</div>
+<button class="px-3 py-1.5 rounded-lg bg-violation-error-text text-on-primary font-title-md text-title-md font-bold shrink-0 self-start sm:self-center" onclick="document.getElementById('substitute-widget').scrollIntoView({behavior:'smooth'})">
+              대체 즉시 확정
+            </button>
+</div>
+<!-- Evening Active Staff Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-xs">
+<div class="p-2 rounded bg-surface-container-low flex flex-col justify-between h-14">
+<span class="font-title-md text-title-md text-on-surface font-semibold">최순덕</span>
+<span class="font-cell-time-meta text-cell-time-meta text-on-surface-variant">201~203호 (출근예정)</span>
+</div>
+<div class="p-2 rounded bg-surface-container-low flex flex-col justify-between h-14">
+<span class="font-title-md text-title-md text-on-surface font-semibold">배선화</span>
+<span class="font-cell-time-meta text-cell-time-meta text-on-surface-variant">204~205호 (출근예정)</span>
+</div>
+<div class="p-2 rounded bg-surface-container-low flex flex-col justify-between h-14">
+<span class="font-title-md text-title-md text-on-surface font-semibold">황은자</span>
+<span class="font-cell-time-meta text-cell-time-meta text-on-surface-variant">209~211호 (출근예정)</span>
+</div>
+<div class="p-2 rounded bg-surface-container-low flex flex-col justify-between h-14">
+<span class="font-title-md text-title-md text-on-surface font-semibold">문혜숙</span>
+<span class="font-cell-time-meta text-cell-time-meta text-on-surface-variant">212~214호 (출근예정)</span>
+</div>
+</div>
+</div>
+<!-- Shift Block 3: NIGHT (Preparation) -->
+<div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="px-2.5 py-1 rounded bg-shift-night-bg text-shift-night-text font-cell-shift-code text-cell-shift-code font-bold">
+                NIGHT · 나이트조
+              </span>
+<span class="font-title-md text-title-md font-bold text-on-surface">23:00 ~ 07:00 (+1일)</span>
+<span class="font-label-xs text-label-xs px-2 py-0.5 rounded bg-surface-container text-on-surface-variant font-medium">대기 상태</span>
+</div>
+<span class="font-label-md text-label-md font-bold text-on-surface">배정 3명 / 최소요건 충족</span>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-space-sm">
+<div class="p-space-sm rounded-lg bg-surface-container-low flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<span class="font-title-md text-title-md font-bold text-on-surface">임영애</span>
+<span class="font-label-xs text-label-xs px-1.5 py-0.2 rounded bg-surface-container-highest text-primary font-bold">10년 숙련</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">야간 순회 A파트 &amp; 응급 라포</span>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-low flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<span class="font-title-md text-title-md font-bold text-on-surface">송미경</span>
+<span class="font-label-xs text-label-xs px-1.5 py-0.2 rounded bg-surface-container-highest text-primary font-bold">7년 숙련</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">야간 순회 B파트 &amp; 2시간 체위변경</span>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-low flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<span class="font-title-md text-title-md font-bold text-on-surface">권순자</span>
+<span class="font-label-xs text-label-xs px-1.5 py-0.2 rounded bg-surface-container text-on-surface-variant">일반</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">낙상 고위험군 관찰 및 기저귀 라운딩</span>
+</div>
+</div>
+</div>
+</div>
+<!-- RIGHT COLUMN: Emergency Absent Solver & Quick Dispatch (5 Cols) -->
+<div class="xl:col-span-5 flex flex-col gap-space-md" id="substitute-widget">
+<div class="flex items-center justify-between px-space-xs">
+<div class="flex items-center gap-space-sm">
+<h2 class="font-headline-sm text-headline-sm text-violation-error-text font-bold">긴급 결근 대응 스마트 매칭</h2>
+<span class="material-symbols-outlined text-violation-error-text text-[20px]">smart_toy</span>
+</div>
+<span class="font-label-xs text-label-xs text-on-surface-variant">법정 휴식시간 실시간 연동</span>
+</div>
+<!-- Incident Inspector Card -->
+<div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-10 h-10 rounded-full bg-violation-error-bg text-violation-error-text flex items-center justify-center font-headline-sm text-headline-sm font-bold">
+                이
+              </div>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface">이옥자 요양보호사</span>
+<span class="font-label-xs text-label-xs px-1.5 py-0.5 rounded bg-violation-error-bg text-violation-error-text font-bold">결근</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">이브닝 (15:00~23:00) · 제2재활병동</span>
+</div>
+</div>
+<span class="font-label-xs text-label-xs text-on-surface-variant">09:40 접수</span>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-low text-on-surface font-body-sm text-body-sm">
+<strong>사유:</strong> 급성 복통 및 위염 진료 (늘푸른내과 통원 진단서 카톡 제출 완료)
+          </div>
+<div class="flex flex-col gap-space-xs pt-1">
+<div class="flex items-center justify-between">
+<span class="font-title-md text-title-md font-bold text-on-surface">규칙 엔진 대체 후보자 랭킹</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant">연속근무 위반 0건 필터</span>
+</div>
+<!-- Candidate 1 (Top Pick) -->
+<div class="p-space-md rounded-lg bg-tertiary-fixed/10 flex flex-col gap-space-xs transition-all hover:bg-tertiary-fixed/20">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-5 h-5 rounded-full bg-primary text-on-primary flex items-center justify-center font-label-xs text-label-xs font-bold">1</span>
+<span class="font-title-md text-title-md font-bold text-on-surface">오선화 요양보호사</span>
+<span class="font-label-xs text-label-xs px-1.5 py-0.2 rounded bg-tertiary-fixed text-on-tertiary-fixed font-bold">적합도 98%</span>
+</div>
+<span class="font-label-xs text-label-xs text-primary font-bold">오늘 비번(OFF)</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant pl-7">
+                직전 나이트 후 48시간 휴식 완료 · 근로기준법 59조(11시간 연속휴식) 안전 충족 · 당월 초과근로 잔여 12시간
+              </p>
+<div class="flex items-center justify-between pl-7 pt-1">
+<span class="font-label-xs text-label-xs text-on-surface font-medium">연락처: 010-8921-****</span>
+<button class="px-3 py-1 rounded bg-primary text-on-primary font-title-md text-title-md font-bold hover:bg-primary-container transition-all" onclick="alert('오선화 님에게 이브닝 긴급 대체근무 알림톡 및 전화 요청을 발송했습니다.')">
+                  호출 발송
+                </button>
+</div>
+</div>
+<!-- Candidate 2 -->
+<div class="p-space-md rounded-lg bg-surface-container-low flex flex-col gap-space-xs transition-all hover:bg-surface-container">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-5 h-5 rounded-full bg-surface-container text-on-surface flex items-center justify-center font-label-xs text-label-xs font-bold">2</span>
+<span class="font-title-md text-title-md font-bold text-on-surface">한정림 요양보호사</span>
+<span class="font-label-xs text-label-xs px-1.5 py-0.2 rounded bg-surface-container text-on-surface-variant font-bold">적합도 86%</span>
+</div>
+<span class="font-label-xs text-label-xs text-on-surface-variant">오늘 연차(AL)</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant pl-7">
+                이브닝 가능 의사 표명자 · 대체수당 1.5배 가산 대상 · 연속근무 3일차로 규정 범위 내
+              </p>
+<div class="flex items-center justify-between pl-7 pt-1">
+<span class="font-label-xs text-label-xs text-on-surface font-medium">연락처: 010-3412-****</span>
+<button class="px-3 py-1 rounded bg-surface-container-highest text-on-surface font-title-md text-title-md font-medium hover:bg-surface-container-high transition-all" onclick="alert('한정림 님에게 대체근무 승낙 알림톡을 발송했습니다.')">
+                  호출 발송
+                </button>
+</div>
+</div>
+<!-- Candidate 3 -->
+<div class="p-space-md rounded-lg bg-surface-container-low flex flex-col gap-space-xs transition-all hover:bg-surface-container">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-5 h-5 rounded-full bg-surface-container text-on-surface flex items-center justify-center font-label-xs text-label-xs font-bold">3</span>
+<span class="font-title-md text-title-md font-bold text-on-surface">최영순 요양보호사</span>
+<span class="font-label-xs text-label-xs px-1.5 py-0.2 rounded bg-surface-container text-on-surface-variant font-bold">적합도 79%</span>
+</div>
+<span class="font-label-xs text-label-xs text-on-surface-variant">오늘 비번(OFF)</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant pl-7">
+                최근 2주간 주말 및 야간 근무 빈도 낮아 형평성 지표 우수 (단, 내일 데이 근무로 연속휴식 8시간 주의 필요)
+              </p>
+<div class="flex items-center justify-between pl-7 pt-1">
+<span class="font-label-xs text-label-xs text-on-surface font-medium">연락처: 010-5231-****</span>
+<button class="px-3 py-1 rounded bg-surface-container-highest text-on-surface font-title-md text-title-md font-medium hover:bg-surface-container-high transition-all" onclick="alert('최영순 님에게 대체근무 요청을 발송했습니다. (내일 근무조 변경 검토 요망)')">
+                  호출 발송
+                </button>
+</div>
+</div>
+</div>
+<!-- Multi-Dispatch & Broadcast -->
+<div class="pt-space-xs flex items-center gap-space-sm">
+<button class="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-secondary text-on-secondary font-title-md text-title-md font-bold hover:bg-on-secondary-fixed-variant transition-all" onclick="alert('선택된 3명의 후보자에게 카카오 알림톡 긴급 대체요청이 동시 발송되었습니다. 선착순 수락 시 자동 배치됩니다.')">
+<span class="material-symbols-outlined text-[18px]">send_to_mobile</span>
+              카카오 알림톡/SMS 동시 긴급 호출 (3명)
+            </button>
+</div>
+</div>
+<!-- Shift Gap Warning Visualizer -->
+<div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-sm">
+<span class="font-title-md text-title-md font-bold text-on-surface">병동별 케어 공백 리스크 지수</span>
+<div class="flex flex-col gap-2 pt-1">
+<div class="flex flex-col gap-1">
+<div class="flex items-center justify-between font-label-xs text-label-xs">
+<span>제2재활병동 (이브닝)</span>
+<span class="text-violation-error-text font-bold">경고 78% (대체 미정 시)</span>
+</div>
+<div class="w-full h-2 rounded-full bg-surface-container-high overflow-hidden">
+<div class="h-full bg-violation-error-border rounded-full" style="width: 78%"></div>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex items-center justify-between font-label-xs text-label-xs">
+<span>제1일반병동 (이브닝)</span>
+<span class="text-tertiary font-bold">안전 12%</span>
+</div>
+<div class="w-full h-2 rounded-full bg-surface-container-high overflow-hidden">
+<div class="h-full bg-tertiary rounded-full" style="width: 12%"></div>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex items-center justify-between font-label-xs text-label-xs">
+<span>치매안심병동 (나이트)</span>
+<span class="text-tertiary font-bold">안전 8%</span>
+</div>
+<div class="w-full h-2 rounded-full bg-surface-container-high overflow-hidden">
+<div class="h-full bg-tertiary rounded-full" style="width: 8%"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- SECTION 4: Realtime System Audit Log & Swap Tracker (Compliance Record) -->
+<section class="flex flex-col gap-space-md">
+<div class="flex items-center justify-between px-space-xs">
+<div class="flex items-center gap-space-sm">
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">실시간 근무 변경 감사 로그 &amp; 승인 타임라인</h2>
+<span class="font-label-xs text-label-xs px-2.5 py-0.5 rounded-full bg-surface-container text-on-surface-variant">의료법 및 감사 추적용 100% 보존</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="px-2.5 py-1 rounded bg-surface-container-low text-on-surface-variant font-label-xs text-label-xs hover:text-on-surface">
+            필터: 결근/대체만 보기
+          </button>
+<button class="px-2.5 py-1 rounded bg-surface-container-low text-on-surface-variant font-label-xs text-label-xs hover:text-on-surface">
+            엑셀 다운로드
+          </button>
+</div>
+</div>
+<div class="rounded-xl bg-surface-container-lowest shadow-sm overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-left font-body-md text-body-md border-collapse">
+<thead>
+<tr class="bg-surface-container-low font-label-xs text-label-xs text-on-surface-variant">
+<th class="py-space-md px-space-lg">일시</th>
+<th class="py-space-md px-space-md">구분</th>
+<th class="py-space-md px-space-md">대상자</th>
+<th class="py-space-md px-space-md">변경 상세 (기존 → 변경)</th>
+<th class="py-space-md px-space-md">신청/발생 사유</th>
+<th class="py-space-md px-space-md">법정 규칙 검증</th>
+<th class="py-space-md px-space-md">처리 상태</th>
+<th class="py-space-md px-space-lg text-right">관리 작업</th>
+</tr>
+</thead>
+<tbody class="text-on-surface divide-y-0">
+<!-- Row 1: Urgent Absent -->
+<tr class="bg-violation-error-bg/30 hover:bg-violation-error-bg/50 transition-colors">
+<td class="py-space-md px-space-lg font-cell-time-meta text-cell-time-meta text-on-surface-variant whitespace-nowrap">
+                  11-04 09:40:12
+                </td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<span class="inline-flex items-center px-2 py-0.5 rounded bg-violation-error-bg text-violation-error-text font-label-xs text-label-xs font-bold">
+                    긴급 결근
+                  </span>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<div class="flex items-center gap-1.5 font-title-md text-title-md font-bold">
+<span>이옥자</span>
+<span class="text-on-surface-variant font-body-sm text-body-sm">(2재활)</span>
+</div>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<span class="px-2 py-0.5 rounded bg-shift-evening-bg text-shift-evening-text font-bold">E 이브닝</span>
+<span class="mx-1 text-on-surface-variant">→</span>
+<span class="px-2 py-0.5 rounded bg-violation-error-bg text-violation-error-text font-bold">결근 (대체모색)</span>
+</td>
+<td class="py-space-md px-space-md text-on-surface-variant truncate max-w-xs">
+                  급성 위염 진단서 첨부 (구두 통화 기록 녹취 보관)
+                </td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<span class="inline-flex items-center gap-1 text-violation-error-text font-label-xs text-label-xs font-bold">
+<span class="material-symbols-outlined text-[14px]">cancel</span> 병동 최소인원 결손
+                  </span>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<span class="inline-flex items-center px-2 py-0.5 rounded bg-violation-warn-bg text-violation-warn-text font-label-xs text-label-xs font-bold">
+                    대체 매칭 중
+                  </span>
+</td>
+<td class="py-space-md px-space-lg text-right whitespace-nowrap">
+<button class="px-2 py-1 rounded bg-surface-container text-on-surface font-label-xs text-label-xs hover:bg-surface-container-high" onclick="alert('사유서 및 진단서 뷰어를 호출합니다.')">
+                    증빙 확인
+                  </button>
+</td>
+</tr>
+<!-- Row 2: Shift Swap Request Pending -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-md px-space-lg font-cell-time-meta text-cell-time-meta text-on-surface-variant whitespace-nowrap">
+                  11-04 08:15:30
+                </td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<span class="inline-flex items-center px-2 py-0.5 rounded bg-secondary-fixed/50 text-secondary font-label-xs text-label-xs font-bold">
+                    근무 맞교환
+                  </span>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<div class="flex items-center gap-1.5 font-title-md text-title-md">
+<span>정순남 ⇄ 김영애</span>
+</div>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<span class="font-body-sm text-body-sm">11/06(금) D ⇄ N 맞교환</span>
+</td>
+<td class="py-space-md px-space-md text-on-surface-variant truncate max-w-xs">
+                  가족 경조사(자녀 결혼)로 인한 상호 동의 교환 신청
+                </td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<span class="inline-flex items-center gap-1 text-tertiary font-label-xs text-label-xs font-bold">
+<span class="material-symbols-outlined text-[14px]">check_circle</span> 11시간 휴식 만족
+                  </span>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<span class="inline-flex items-center px-2 py-0.5 rounded bg-surface-container text-on-surface font-label-xs text-label-xs font-bold">
+                    수간호사 승인대기
+                  </span>
+</td>
+<td class="py-space-md px-space-lg text-right whitespace-nowrap">
+<div class="inline-flex items-center gap-1">
+<button class="px-2 py-1 rounded bg-primary text-on-primary font-label-xs text-label-xs font-bold" onclick="alert('맞교환이 승인되어 11월 근무표에 반영되었습니다.')">
+                      승인
+                    </button>
+<button class="px-2 py-1 rounded bg-surface-container text-on-surface font-label-xs text-label-xs" onclick="alert('맞교환 신청이 반려되었습니다.')">
+                      반려
+                    </button>
+</div>
+</td>
+</tr>
+<!-- Row 3: Leave Request Approved -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-space-md px-space-lg font-cell-time-meta text-cell-time-meta text-on-surface-variant whitespace-nowrap">
+                  11-03 16:50:22
+                </td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<span class="inline-flex items-center px-2 py-0.5 rounded bg-shift-annual-bg text-shift-annual-text font-label-xs text-label-xs font-bold">
+                    희망 휴무
+                  </span>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<div class="flex items-center gap-1.5 font-title-md text-title-md">
+<span>최영순</span>
+<span class="text-on-surface-variant font-body-sm text-body-sm">(2재활)</span>
+</div>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<span class="font-body-sm text-body-sm">11/12(목) 연차휴가 (AL)</span>
+</td>
+<td class="py-space-md px-space-md text-on-surface-variant truncate max-w-xs">
+                  정기 건강검진 일정 배정
+                </td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<span class="inline-flex items-center gap-1 text-tertiary font-label-xs text-label-xs font-bold">
+<span class="material-symbols-outlined text-[14px]">check_circle</span> 당일 최소인원 유지
+                  </span>
+</td>
+<td class="py-space-md px-space-md whitespace-nowrap">
+<span class="inline-flex items-center px-2 py-0.5 rounded bg-tertiary-fixed/30 text-tertiary font-label-xs text-label-xs font-bold">
+                    승인 완료
+                  </span>
+</td>
+<td class="py-space-md px-space-lg text-right whitespace-nowrap">
+<span class="font-label-xs text-label-xs text-on-surface-variant">이영숙 팀장 결재</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<!-- SECTION 5: Handover Memo Drawer / Quick Modal Panel (Toggled via JS) -->
+<div class="hidden p-space-xl rounded-xl bg-surface-container-lowest shadow-xl flex flex-col gap-space-md border border-grid-border" id="memo-panel">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[24px]">assignment</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">오늘 데이 → 이브닝 인수인계 특이사항</h3>
+</div>
+<button class="p-1 rounded text-on-surface-variant hover:text-on-surface" id="btn-close-memo">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+<div class="flex flex-col gap-space-xs">
+<label class="font-title-md text-title-md font-bold text-on-surface">중증환자 및 낙상주의 집중 관찰 인계</label>
+<textarea class="w-full p-2.5 rounded-lg bg-surface-container-low text-on-surface font-body-sm text-body-sm focus:outline-none focus:ring-1 focus:ring-primary" placeholder="203호 김어르신 혈압 변동 주의, 207호 야간 섬망 증세 관찰 요망..." rows="3"></textarea>
+</div>
+<div class="flex flex-col gap-space-xs">
+<label class="font-title-md text-title-md font-bold text-on-surface">식사/위생 및 대체인력 전달사항</label>
+<textarea class="w-full p-2.5 rounded-lg bg-surface-container-low text-on-surface font-body-sm text-body-sm focus:outline-none focus:ring-1 focus:ring-primary" placeholder="이옥자 요양사 결근으로 인한 206~208호 석식 케어 대체 투입자(오선화 확정 시) 사전 가이드 완료 필요..." rows="3"></textarea>
+</div>
+</div>
+<div class="flex justify-end gap-space-sm pt-2">
+<button class="px-4 py-2 rounded-lg bg-primary text-on-primary font-title-md text-title-md font-bold hover:bg-primary-container" id="btn-save-memo">
+          인수인계 저장 및 병동 공지
+        </button>
+</div>
+</div>
+</div>
+</div>
+<script>
+  // Handover memo toggle
+  const btnOpenMemo = document.getElementById('btn-open-memo');
+  const btnCloseMemo = document.getElementById('btn-close-memo');
+  const btnSaveMemo = document.getElementById('btn-save-memo');
+  const memoPanel = document.getElementById('memo-panel');
+
+  if (btnOpenMemo && memoPanel) {
+    btnOpenMemo.addEventListener('click', () => {
+      memoPanel.classList.toggle('hidden');
+      if (!memoPanel.classList.contains('hidden')) {
+        memoPanel.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+  }
+
+  if (btnCloseMemo && memoPanel) {
+    btnCloseMemo.addEventListener('click', () => {
+      memoPanel.classList.add('hidden');
+    });
+  }
+
+  if (btnSaveMemo && memoPanel) {
+    btnSaveMemo.addEventListener('click', () => {
+      alert('오늘의 인수인계 사항이 안전하게 저장되고, 이브닝조 요양보호사 모바일 앱으로 동기화되었습니다.');
+      memoPanel.classList.add('hidden');
+    });
+  }
+
+  // Quick emergency dispatch button jump
+  const btnCallSub = document.getElementById('btn-call-substitute');
+  if (btnCallSub) {
+    btnCallSub.addEventListener('click', () => {
+      const target = document.getElementById('substitute-widget');
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+  }
+</script></main><footer class="w-full bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.04)] py-space-md mt-space-2xl"><div class="w-full px-margin flex items-center justify-between font-label-xs text-label-xs text-on-surface-variant"><div><span>CareShift v2.4 (의료법 및 근로기준법 제59조 준수 엔진 적용)</span><span class="mx-2">·</span><span>늘푸른요양병원 본원 운영 관리센터</span></div><div class="flex items-center gap-space-lg"><a class="hover:text-on-surface" href="#">법정 간호인력 가이드</a><a class="hover:text-on-surface" href="#">긴급 지원 헬프데스크 (02-555-0199)</a><a class="hover:text-on-surface" href="#">개인정보처리방침</a></div></div></footer></body></html>

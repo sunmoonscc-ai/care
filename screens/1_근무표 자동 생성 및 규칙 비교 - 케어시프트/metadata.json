@@ -1,0 +1,17 @@
+{
+  "deviceType": "DESKTOP",
+  "height": "4526",
+  "htmlCode": {
+    "downloadUrl": "https://stitch.googleapis.com/v1/projects/6964175987263913822/files/ba540d54a6c44797906789fac388b035:download",
+    "mimeType": "text/html",
+    "name": "projects/6964175987263913822/screens/ba540d54a6c44797906789fac388b035/fileEntries/html"
+  },
+  "name": "projects/6964175987263913822/screens/ba540d54a6c44797906789fac388b035",
+  "screenshot": {
+    "downloadUrl": "https://stitch.googleapis.com/v1/projects/6964175987263913822/files/screenshot_00065fa88484aae705c2ff0957200799:download",
+    "mimeType": "image/png",
+    "name": "projects/6964175987263913822/screens/ba540d54a6c44797906789fac388b035/fileEntries/screenshot"
+  },
+  "title": "근무표 자동 생성 및 규칙 비교 - 케어시프트",
+  "width": "2560"
+}

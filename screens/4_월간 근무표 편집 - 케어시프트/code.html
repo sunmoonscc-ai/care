@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+
+<html lang="ko"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Manrope:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "violation-error-text": "#991B1B", "primary-fixed-dim": "#8fd1d9", "surface-container-highest": "#d5e3fc", "tertiary-fixed": "#8cf5e4", "surface-container-lowest": "#ffffff", "shift-day-bg": "#FEF3C7", "grid-border-heavy": "#CBD5E1", "violation-error-bg": "#FEF2F2", "error": "#ba1a1a", "violation-warn-bg": "#FFFBEB", "inverse-primary": "#8fd1d9", "on-secondary-fixed-variant": "#004786", "primary-fixed": "#abeef6", "error-container": "#ffdad6", "on-primary-container": "#90d2da", "on-tertiary-container": "#70d9c9", "on-tertiary": "#ffffff", "on-background": "#0d1c2e", "on-primary": "#ffffff", "inverse-surface": "#233144", "shift-day-border": "#FCD34D", "primary": "#004349", "inverse-on-surface": "#eaf1ff", "grid-surface": "#FFFFFF", "grid-canvas": "#F8FAFC", "shift-off-text": "#475569", "shift-annual-bg": "#ECFDF5", "on-primary-fixed-variant": "#004f55", "on-surface": "#0d1c2e", "on-secondary-container": "#003567", "on-surface-variant": "#3f484a", "on-secondary": "#ffffff", "surface-container": "#e6eeff", "tertiary-fixed-dim": "#6fd8c8", "surface-variant": "#d5e3fc", "shift-night-text": "#312E81", "secondary-fixed": "#d4e3ff", "on-error": "#ffffff", "outline-variant": "#bfc8c9", "surface-container-low": "#eff4ff", "secondary-fixed-dim": "#a5c8ff", "on-tertiary-fixed": "#00201c", "shift-off-bg": "#F1F5F9", "secondary": "#005faf", "shift-off-border": "#CBD5E1", "surface": "#f8f9ff", "shift-night-bg": "#EEF2FF", "on-primary-fixed": "#002023", "weekend-column-bg": "#F8FAFC", "on-tertiary-fixed-variant": "#005048", "surface-container-high": "#dce9ff", "shift-evening-bg": "#FFEDD5", "on-secondary-fixed": "#001c3a", "surface-tint": "#20686f", "violation-warn-text": "#854D0E", "shift-night-border": "#C7D2FE", "surface-dim": "#ccdbf3", "primary-container": "#0d5c63", "surface-bright": "#f8f9ff", "tertiary": "#00443d", "tertiary-container": "#005e54", "violation-error-border": "#EF4444", "secondary-container": "#54a0fe", "shift-evening-text": "#9A3412", "shift-annual-border": "#A7F3D0", "background": "#f8f9ff", "shift-evening-border": "#FDBA74", "grid-border": "#E2E8F0", "violation-warn-border": "#F59E0B", "shift-annual-text": "#065F46", "on-error-container": "#93000a", "shift-day-text": "#92400E", "outline": "#6f797a" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "space-xl": "1.5rem", "space-sm": "0.5rem", "space-2xl": "2rem", "margin-mobile": "1rem", "margin": "1.5rem", "space-2xs": "0.125rem", "gutter-dense": "0.5rem", "space-xs": "0.25rem", "gutter": "1rem", "space-md": "0.75rem", "space-lg": "1rem" }, "fontFamily": { "label-xs": ["Inter"], "body-lg": ["Inter"], "cell-shift-code": ["Inter"], "headline-sm": ["Manrope"], "display-lg": ["Manrope"], "title-lg": ["Manrope"], "body-md": ["Inter"], "mobile-hero-shift": ["Manrope"], "title-md": ["Inter"], "label-md": ["Inter"], "cell-time-meta": ["Inter"], "body-sm": ["Inter"], "headline-md": ["Manrope"] }, "fontSize": { "label-xs": ["11px", { "lineHeight": "14px", "fontWeight": "500" }], "body-lg": ["15px", { "lineHeight": "22px", "fontWeight": "400" }], "cell-shift-code": ["13px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "700" }], "headline-sm": ["18px", { "lineHeight": "26px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "display-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "title-lg": ["16px", { "lineHeight": "24px", "fontWeight": "600" }], "body-md": ["13px", { "lineHeight": "18px", "fontWeight": "400" }], "mobile-hero-shift": ["28px", { "lineHeight": "34px", "fontWeight": "800" }], "title-md": ["14px", { "lineHeight": "20px", "fontWeight": "600" }], "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "600" }], "cell-time-meta": ["10px", { "lineHeight": "12px", "fontWeight": "500" }], "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }], "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }] } } } };</script></head><body class="bg-background font-body-md text-on-surface antialiased"><header class="fixed top-0 left-0 right-0 z-50 bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-20 w-full px-margin flex flex-col justify-between pt-space-xs"><div class="flex items-center justify-between w-full h-11"><div class="flex items-center gap-space-lg"><div class="flex items-center gap-space-sm"><img alt="CareShift Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1XOnCz4jkUhzQ7vfsyTaHyENyssitgnKOBL4iwvnWoElUZ9DmuKPK_mMlTwEQebtas39IKwMvL6agygivuyLOnT9fm2UWLkYFycEKiYWTSUQb67bwMyE_r5b7s7lO5tB8s3Y65ahzx6cAO7J7rSzbLBP3kvLYknJqTkwOVgR-fioIpoyw1IN8WNP_YPiHYKmluYQyKrRKqTZvtg-dBbaCpPlfyJewGbDXo0zXWp8A"/><div class="flex flex-col"><span class="font-headline-sm text-headline-sm text-primary tracking-tight leading-none">케어시프트</span><span class="font-label-xs text-label-xs text-on-surface-variant font-medium">CareShift Roster</span></div></div><div class="h-5 w-[1px] bg-grid-border"></div><div class="flex items-center gap-space-sm"><div class="flex items-center gap-space-xs px-space-sm py-1 bg-surface-container-low rounded-lg text-on-surface"><span class="font-label-xs text-label-xs text-on-surface-variant font-medium">의료기관</span><span class="font-title-md text-title-md text-on-surface">늘푸른요양병원 본원</span><span class="material-symbols-outlined text-[16px] text-on-surface-variant">expand_more</span></div><div class="flex items-center gap-space-xs px-space-sm py-1 bg-surface-container-low rounded-lg text-on-surface"><span class="font-label-xs text-label-xs text-on-surface-variant font-medium">담당병동</span><span class="font-title-md text-title-md text-on-surface">제2재활병동 (54병상)</span><span class="material-symbols-outlined text-[16px] text-on-surface-variant">unfold_more</span></div></div></div><div class="flex items-center gap-space-md"><div class="flex items-center gap-space-xs px-space-sm py-1 bg-surface-container-low rounded-lg"><span class="font-label-xs text-label-xs text-on-surface-variant">실시간 검증</span><span class="inline-flex items-center px-1.5 py-0.5 rounded bg-violation-error-bg text-violation-error-text font-label-xs text-label-xs font-bold">위반 1</span><span class="inline-flex items-center px-1.5 py-0.5 rounded bg-violation-warn-bg text-violation-warn-text font-label-xs text-label-xs font-bold">주의 2</span></div><div class="flex items-center gap-space-xs px-space-sm py-1 bg-primary-fixed/20 text-on-primary-fixed-variant rounded-lg"><span class="material-symbols-outlined text-[15px]">event_upcoming</span><span class="font-label-xs text-label-xs font-semibold">11월 근무표 확정 D-3</span></div><button class="p-1.5 text-on-surface-variant hover:text-on-surface rounded-lg relative" type="button"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-error"></span></button><div class="h-5 w-[1px] bg-grid-border"></div><div class="flex items-center gap-space-sm"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div><div class="flex flex-col text-left"><span class="font-title-md text-title-md text-on-surface leading-tight">이영숙 수간호사</span><span class="font-label-xs text-label-xs text-on-surface-variant">요양보호 2팀장</span></div><button class="p-1 text-on-surface-variant hover:text-on-surface rounded" type="button"><span class="material-symbols-outlined text-[18px]">settings</span></button></div></div></div><div class="flex items-end justify-between w-full"><nav class="flex items-center gap-space-xs" data-active-classes="text-primary font-title-md border-b-2 border-primary bg-surface-container-low/60 rounded-t-lg"><a aria-current="page" class="px-space-md py-2 transition-colors flex items-center gap-1.5 text-primary font-title-md border-b-2 border-primary bg-surface-container-low/60 rounded-t-lg" data-path="roster-editor" href="#">월간 근무표 편집</a><a class="px-space-md py-2 font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors flex items-center gap-1.5" data-path="operations-dashboard" href="#">운영 대시보드</a><a class="px-space-md py-2 font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors flex items-center gap-1.5" data-path="rule-simulation" href="#">자동 생성 &amp; 규칙 시뮬레이션</a><a class="px-space-md py-2 font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors flex items-center gap-1.5" data-path="requests-management" href="#">휴무·교환 신청 관리<span class="ml-1 px-1.5 py-0.2 rounded-full bg-secondary-container text-on-secondary-container font-label-xs text-label-xs">3건</span></a><a class="px-space-md py-2 font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors flex items-center gap-1.5" data-path="staff-governance" href="#">직원 관리 &amp; 인력 기준</a><a class="px-space-md py-2 font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors flex items-center gap-1.5" data-path="statistics-export" href="#">근로 통계 &amp; 엑셀 내보내기</a></nav><div class="flex items-center gap-space-xs pb-1.5"><span class="font-label-xs text-label-xs text-on-surface-variant">최종 자동저장 1분 전</span><span class="inline-block w-2 h-2 rounded-full bg-tertiary-container"></span></div></div></div></header><main class="w-full pt-20 bg-background min-h-screen"><div class="flex flex-col w-full">
+<!-- Sub-bar & Context Summary Bar -->
+<section class="w-full px-margin py-space-sm bg-surface-container-low flex flex-col lg:flex-row items-start lg:items-center justify-between gap-space-sm">
+<div class="flex flex-wrap items-center gap-space-sm">
+<div class="flex items-center gap-space-xs bg-surface-container-lowest px-space-sm py-1.5 rounded shadow-sm">
+<button class="text-on-surface-variant hover:text-on-surface flex items-center justify-center p-0.5" type="button">
+<span class="material-symbols-outlined text-[18px]">chevron_left</span>
+</button>
+<span class="font-headline-sm text-headline-sm text-on-surface px-1 tracking-tight">2026년 11월</span>
+<button class="text-on-surface-variant hover:text-on-surface flex items-center justify-center p-0.5" type="button">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+<span class="font-label-xs text-label-xs text-on-surface-variant bg-surface-container px-1.5 py-0.5 rounded">10/29~10/31 3일간 이월표시 활성</span>
+</div>
+<div class="flex items-center gap-space-xs bg-surface-container-lowest px-space-sm py-1.5 rounded shadow-sm">
+<span class="font-title-md text-title-md text-primary">제2재활병동 (일반/중증 54병상)</span>
+<span class="text-on-surface-variant font-label-xs text-label-xs">| 총 18명 (직고용 14 · 파견 4)</span>
+</div>
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-surface-container-highest text-on-secondary-container rounded font-label-md text-label-md">
+<span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+        작성 중 · v2.4 초안 (자동검증 엔진 가동)
+      </div>
+</div>
+<!-- Right Operations Actions -->
+<div class="flex flex-wrap items-center gap-space-xs">
+<button class="inline-flex items-center gap-1 px-space-sm py-1.5 bg-surface-container-lowest hover:bg-surface-container text-on-surface font-title-md text-title-md rounded shadow-sm transition-colors" onclick="triggerValidationCheck()" type="button">
+<span class="material-symbols-outlined text-[18px] text-tertiary">fact_check</span>
+<span>규칙 즉시 검증</span>
+</button>
+<button class="inline-flex items-center gap-1 px-space-sm py-1.5 bg-surface-container-lowest hover:bg-surface-container text-on-surface font-title-md text-title-md rounded shadow-sm transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px] text-secondary">history</span>
+<span>지난달 불러오기</span>
+</button>
+<button class="inline-flex items-center gap-1 px-space-sm py-1.5 bg-secondary-container hover:bg-secondary text-on-secondary-container hover:text-on-secondary font-title-md text-title-md rounded shadow-sm transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">smart_toy</span>
+<span>AI 자동 생성 실행</span>
+</button>
+<div class="flex items-center bg-surface-container-lowest rounded shadow-sm p-0.5">
+<button class="p-1.5 text-on-surface-variant hover:text-on-surface rounded" title="A4 가로 인쇄 미리보기" type="button">
+<span class="material-symbols-outlined text-[18px]">print</span>
+</button>
+<button class="p-1.5 text-on-surface-variant hover:text-on-surface rounded" title="엑셀 내보내기 (.xlsx)" type="button">
+<span class="material-symbols-outlined text-[18px]">download</span>
+</button>
+</div>
+<button class="inline-flex items-center gap-1.5 px-space-md py-1.5 bg-primary hover:bg-primary-container text-on-primary font-title-md text-title-md rounded shadow transition-all" type="button">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+<span>최종 근무표 확정 공지</span>
+</button>
+</div>
+</section>
+<!-- Quick Keyboard Tokens Guide Strip -->
+<section class="w-full px-margin py-1.5 bg-surface-container border-none flex flex-wrap items-center justify-between text-on-surface-variant">
+<div class="flex items-center gap-space-sm overflow-x-auto py-0.5">
+<span class="font-label-xs text-label-xs font-semibold text-on-surface shrink-0 flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px] text-primary">keyboard</span>
+        입력 단축키 칩:
+      </span>
+<div class="flex items-center gap-1.5 text-label-xs font-label-xs">
+<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold">D: 데이 (07-15)</span>
+<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-shift-evening-bg text-shift-evening-text font-bold">E: 이브닝 (15-23)</span>
+<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-shift-night-bg text-shift-night-text font-bold">N: 나이트 (23-07)</span>
+<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold">O: 비번/휴무</span>
+<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-shift-annual-bg text-shift-annual-text font-bold">Y: 연차유급</span>
+<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-surface-container-lowest text-secondary font-bold">R: 희망휴무</span>
+<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-surface-container-highest text-on-secondary-container font-bold">24: 24h 격일</span>
+</div>
+</div>
+<div class="hidden xl:flex items-center gap-space-md text-label-xs font-label-xs">
+<span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-violation-error-border"></span> 법정·운영위반 (클릭시 정정)</span>
+<span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-violation-warn-border"></span> 권장주의</span>
+<span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-surface-container-highest"></span> 토요일</span>
+<span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-error-container"></span> 일·공휴일</span>
+</div>
+</section>
+<!-- Interactive Spreadsheet Workspace Split Screen -->
+<div class="w-full px-margin py-space-sm flex flex-col xl:flex-row gap-space-sm items-start">
+<!-- Left Main Roster Matrix Spreadsheet Canvas -->
+<div class="flex-1 w-full min-w-0 bg-surface-container-lowest rounded shadow-sm flex flex-col overflow-hidden">
+<!-- Top Scroll Notification / Quick Search in Grid -->
+<div class="px-space-md py-2 bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-space-md">
+<div class="flex items-center gap-1.5">
+<span class="font-title-md text-title-md text-on-surface">간호·간병 근무 배치표</span>
+<span class="font-label-xs text-label-xs px-2 py-0.5 bg-surface-container rounded text-on-surface-variant">11월 총 30일 (근로기준법 59조 대응)</span>
+</div>
+<div class="hidden sm:flex items-center gap-1 text-label-xs font-label-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-[14px]">mouse</span>
+<span>좌우 스크롤 및 셀 직접 클릭 시 즉시 변경 모달</span>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<div class="relative">
+<input class="h-7 w-36 sm:w-48 pl-7 pr-2 font-label-xs text-label-xs bg-surface-container-lowest text-on-surface rounded shadow-sm focus:outline-none" placeholder="직원 검색 (이름/직책)..." type="text"/>
+<span class="material-symbols-outlined absolute left-1.5 top-1.5 text-[15px] text-on-surface-variant">search</span>
+</div>
+<button class="h-7 px-2 bg-surface-container hover:bg-surface-container-high rounded text-on-surface font-label-xs text-label-xs flex items-center gap-1" type="button">
+<span class="material-symbols-outlined text-[15px]">filter_list</span> 필터
+          </button>
+</div>
+</div>
+<!-- Scrollable Data Grid Wrapper -->
+<div class="w-full overflow-x-auto overflow-y-auto max-h-[640px] relative select-none">
+<table class="w-full border-collapse text-left text-on-surface min-w-[1380px]">
+<!-- Table Sticky Header -->
+<thead class="sticky top-0 z-30 bg-surface-container-high shadow-[0_2px_4px_rgba(15,23,42,0.04)]">
+<tr class="h-10 text-on-surface">
+<!-- Sticky Left Column 1: Staff Profiles -->
+<th class="sticky left-0 z-40 bg-surface-container-high px-space-sm w-[210px] min-w-[210px] font-title-md text-title-md shadow-[2px_0_4px_rgba(0,0,0,0.04)]">
+                직원 정보 (18명)
+              </th>
+<!-- Previous Month Carry-over Days (Oct 29-31) -->
+<th class="w-9 min-w-[36px] text-center font-label-xs text-label-xs text-on-surface-variant opacity-60 bg-surface-container">29<br/><span class="text-[9px]">목</span></th>
+<th class="w-9 min-w-[36px] text-center font-label-xs text-label-xs text-on-surface-variant opacity-60 bg-surface-container">30<br/><span class="text-[9px]">금</span></th>
+<th class="w-9 min-w-[36px] text-center font-label-xs text-label-xs text-on-surface-variant opacity-60 bg-surface-container-highest">31<br/><span class="text-[9px]">토</span></th>
+<!-- November Days 1 through 30 -->
+<!-- Day 1 (Sun) -->
+<th class="w-10 min-w-[40px] text-center font-label-xs text-label-xs bg-error-container text-violation-error-text font-bold">1<br/><span class="text-[9px]">일</span></th>
+<th class="w-10 min-w-[40px] text-center font-label-xs text-label-xs">2<br/><span class="text-[9px]">월</span></th>
+<th class="w-10 min-w-[40px] text-center font-label-xs text-label-xs">3<br/><span class="text-[9px]">화</span></th>
+<th class="w-10 min-w-[40px] text-center font-label-xs text-label-xs">4<br/><span class="text-[9px]">수</span></th>
+<th class="w-10 min-w-[40px] text-center font-label-xs text-label-xs">5<br/><span class="text-[9px]">목</span></th>
+<th class="w-10 min-w-[40px] text-center font-label-xs text-label-xs">6<br/><span class="text-[9px]">금</span></th>
+<!-- Day 7 (Sat) -->
+<th class="w-10 min-w-[40px] text-center font-label-xs text-label-xs bg-surface-container-highest text-secondary font-bold">7<br/><span class="text-[9px]">토</span></th>
+<!-- Day 8 (Sun) -->
+<th class="w-10 min-w-[40px] text-center font-label-xs text-label-xs bg-error-container text-violation-error-text font-bold">8<br/><span class="text-[9px]">일</span></th>
+<th class="w-10 min-w-[40px] text-center font-label-xs text-label-xs">9<br/><span class="text-[9px]">월</span></th>
+<th class="w-10 min-w-[40px] text-center font-label-xs text-label-xs">10<br/><span class="text-[9px]">화</span></th>
+<th class="w-10 min-w-[40px] text-center font-label-xs text-label-xs">11<br/><span class="text-[9px]">수</span></th>
+<th class="w-10 min-w-[40px] text-center font-label-xs text-label-xs">12<br/><span class="text-[9px]">목</span></th>
+<th class="w-10 min-w-[40px] text-center font-label-xs text-label-xs">13<br/><span class="text-[9px]">금</span></th>
+<!-- Day 14 (Sat - Alert hotspot) -->
+<th class="w-10 min-w-[40px] text-center font-label-xs text-label-xs bg-surface-container-highest text-secondary font-bold">
+                14<br/><span class="text-[9px]">토</span>
+</th>
+<!-- Day 15 (Sun) -->
+<th class="w-10 min-w-[40px] text-center font-label-xs text-label-xs bg-error-container text-violation-error-text font-bold">15<br/><span class="text-[9px]">일</span></th>
+<th class="w-10 min-w-[40px] text-center font-label-xs text-label-xs">16<br/><span class="text-[9px]">월</span></th>
+<th class="w-10 min-w-[40px] text-center font-label-xs text-label-xs">17<br/><span class="text-[9px]">화</span></th>
+<th class="w-10 min-w-[40px] text-center font-label-xs text-label-xs">18<br/><span class="text-[9px]">수</span></th>
+<th class="w-10 min-w-[40px] text-center font-label-xs text-label-xs">19<br/><span class="text-[9px]">목</span></th>
+<th class="w-10 min-w-[40px] text-center font-label-xs text-label-xs">20<br/><span class="text-[9px]">금</span></th>
+<!-- Day 21 (Sat) -->
+<th class="w-10 min-w-[40px] text-center font-label-xs text-label-xs bg-surface-container-highest text-secondary font-bold">21<br/><span class="text-[9px]">토</span></th>
+<!-- Day 22 (Sun) -->
+<th class="w-10 min-w-[40px] text-center font-label-xs text-label-xs bg-error-container text-violation-error-text font-bold">22<br/><span class="text-[9px]">일</span></th>
+<th class="w-10 min-w-[40px] text-center font-label-xs text-label-xs">23<br/><span class="text-[9px]">월</span></th>
+<th class="w-10 min-w-[40px] text-center font-label-xs text-label-xs">24<br/><span class="text-[9px]">화</span></th>
+<th class="w-10 min-w-[40px] text-center font-label-xs text-label-xs">25<br/><span class="text-[9px]">수</span></th>
+<th class="w-10 min-w-[40px] text-center font-label-xs text-label-xs">26<br/><span class="text-[9px]">목</span></th>
+<th class="w-10 min-w-[40px] text-center font-label-xs text-label-xs">27<br/><span class="text-[9px]">금</span></th>
+<!-- Day 28 (Sat) -->
+<th class="w-10 min-w-[40px] text-center font-label-xs text-label-xs bg-surface-container-highest text-secondary font-bold">28<br/><span class="text-[9px]">토</span></th>
+<!-- Day 29 (Sun) -->
+<th class="w-10 min-w-[40px] text-center font-label-xs text-label-xs bg-error-container text-violation-error-text font-bold">29<br/><span class="text-[9px]">일</span></th>
+<th class="w-10 min-w-[40px] text-center font-label-xs text-label-xs">30<br/><span class="text-[9px]">월</span></th>
+<!-- Sticky Right Summary Columns Header -->
+<th class="sticky right-0 z-40 bg-surface-container-high px-space-sm w-[210px] min-w-[210px] font-title-md text-title-md text-center shadow-[-2px_0_4px_rgba(0,0,0,0.04)]">
+                월간 통계 &amp; 근로시간
+              </th>
+</tr>
+</thead>
+<tbody class="divide-y-0 text-on-surface bg-surface-container-lowest">
+<!-- Row 1: 박정희 팀장 -->
+<tr class="hover:bg-surface-container-low transition-colors h-10">
+<td class="sticky left-0 z-20 bg-surface-container-lowest hover:bg-surface-container-low px-space-sm shadow-[2px_0_4px_rgba(0,0,0,0.04)]">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span class="font-title-md text-title-md font-bold">박정희</span>
+<span class="px-1 py-0.2 rounded bg-primary-fixed text-on-primary-fixed font-label-xs text-label-xs">팀장</span>
+</div>
+<span class="font-label-xs text-label-xs text-on-surface-variant">경력7년·직고용</span>
+</div>
+</td>
+<!-- Spillover -->
+<td class="text-center opacity-40 bg-surface-container"><span class="font-label-xs text-label-xs">D</span></td>
+<td class="text-center opacity-40 bg-surface-container"><span class="font-label-xs text-label-xs">D</span></td>
+<td class="text-center opacity-40 bg-surface-container-highest"><span class="font-label-xs text-label-xs">O</span></td>
+<!-- 1~30 -->
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center bg-surface-container-highest/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-evening-bg text-shift-evening-text font-bold text-label-xs">E</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-evening-bg text-shift-evening-text font-bold text-label-xs">E</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center bg-surface-container-highest/40"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-annual-bg text-shift-annual-text font-bold text-label-xs">Y</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-annual-bg text-shift-annual-text font-bold text-label-xs">Y</span></td>
+<td class="text-center bg-surface-container-highest/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center bg-surface-container-highest/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<!-- Summary Right -->
+<td class="sticky right-0 z-20 bg-surface-container-lowest hover:bg-surface-container-low px-space-sm shadow-[-2px_0_4px_rgba(0,0,0,0.04)]">
+<div class="flex items-center justify-between text-label-xs font-label-xs">
+<span class="font-mono text-on-surface">D17 E2 N0 O9 Y2</span>
+<div class="flex items-center gap-1">
+<span class="font-semibold text-primary">160h</span>
+<span class="material-symbols-outlined text-tertiary text-[15px]">check_circle</span>
+</div>
+</div>
+</td>
+</tr>
+<!-- Row 2: 김미숙 (CRITICAL VIOLATION: 4 consecutive nights on 11/14) -->
+<tr class="hover:bg-surface-container-low transition-colors h-10 bg-violation-error-bg/30">
+<td class="sticky left-0 z-20 bg-surface-container-lowest hover:bg-surface-container-low px-space-sm shadow-[2px_0_4px_rgba(0,0,0,0.04)]">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-violation-error-text"></span>
+<span class="font-title-md text-title-md font-bold text-violation-error-text">김미숙</span>
+<span class="px-1 py-0.2 rounded bg-surface-container-high text-on-surface font-label-xs text-label-xs">숙련</span>
+</div>
+<span class="font-label-xs text-label-xs text-violation-error-text font-medium">5년·야간전담</span>
+</div>
+</td>
+<!-- Spillover -->
+<td class="text-center opacity-40 bg-surface-container"><span class="font-label-xs text-label-xs">O</span></td>
+<td class="text-center opacity-40 bg-surface-container"><span class="font-label-xs text-label-xs">O</span></td>
+<td class="text-center opacity-40 bg-surface-container-highest"><span class="font-label-xs text-label-xs">N</span></td>
+<!-- 1~10 -->
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-night-bg text-shift-night-text font-bold text-label-xs">N</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-night-bg text-shift-night-text font-bold text-label-xs">N</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-night-bg text-shift-night-text font-bold text-label-xs">N</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center bg-surface-container-highest/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-night-bg text-shift-night-text font-bold text-label-xs">N</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-night-bg text-shift-night-text font-bold text-label-xs">N</span></td>
+<!-- 11~14 N sequence ending in violation on 14th -->
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-night-bg text-shift-night-text font-bold text-label-xs">N</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-night-bg text-shift-night-text font-bold text-label-xs">N</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-night-bg text-shift-night-text font-bold text-label-xs">N</span></td>
+<!-- Cell 14 (Nov 14 Sat) Violating Cell -->
+<td class="text-center bg-violation-error-bg relative cursor-pointer" id="cell-violation-kim" onclick="inspectViolation('kim-consecutive')">
+<span class="px-1.5 py-0.5 rounded bg-violation-error-text text-on-primary font-bold text-label-xs inline-flex items-center gap-0.5">
+                  N
+                  <span class="material-symbols-outlined text-[10px]">warning</span>
+</span>
+<span class="absolute bottom-0 right-0 w-2 h-2 bg-violation-error-border rounded-tl"></span>
+</td>
+<!-- 15~30 -->
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-night-bg text-shift-night-text font-bold text-label-xs">N</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-night-bg text-shift-night-text font-bold text-label-xs">N</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center bg-surface-container-highest/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-night-bg text-shift-night-text font-bold text-label-xs">N</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-night-bg text-shift-night-text font-bold text-label-xs">N</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-night-bg text-shift-night-text font-bold text-label-xs">N</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-night-bg text-shift-night-text font-bold text-label-xs">N</span></td>
+<td class="text-center bg-surface-container-highest/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-night-bg text-shift-night-text font-bold text-label-xs">N</span></td>
+<!-- Summary Right -->
+<td class="sticky right-0 z-20 bg-surface-container-lowest hover:bg-surface-container-low px-space-sm shadow-[-2px_0_4px_rgba(0,0,0,0.04)]">
+<div class="flex items-center justify-between text-label-xs font-label-xs">
+<span class="font-mono text-on-surface">D0 E0 N15 O15 Y0</span>
+<div class="flex items-center gap-1">
+<span class="font-bold text-violation-error-text">168h</span>
+<span class="material-symbols-outlined text-violation-error-text text-[15px]">error</span>
+</div>
+</div>
+</td>
+</tr>
+<!-- Row 3: 최영순 (숙련 / 3년 / 11/14 O 휴무자 - 대체 후보) -->
+<tr class="hover:bg-surface-container-low transition-colors h-10">
+<td class="sticky left-0 z-20 bg-surface-container-lowest hover:bg-surface-container-low px-space-sm shadow-[2px_0_4px_rgba(0,0,0,0.04)]">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="font-title-md text-title-md font-bold">최영순</span>
+<span class="px-1 py-0.2 rounded bg-surface-container-high text-on-surface font-label-xs text-label-xs">숙련</span>
+</div>
+<span class="font-label-xs text-label-xs text-on-surface-variant">3년·야간가능</span>
+</div>
+</td>
+<!-- Spillover -->
+<td class="text-center opacity-40 bg-surface-container"><span class="font-label-xs text-label-xs">E</span></td>
+<td class="text-center opacity-40 bg-surface-container"><span class="font-label-xs text-label-xs">E</span></td>
+<td class="text-center opacity-40 bg-surface-container-highest"><span class="font-label-xs text-label-xs">O</span></td>
+<!-- 1~30 -->
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-evening-bg text-shift-evening-text font-bold text-label-xs">E</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-evening-bg text-shift-evening-text font-bold text-label-xs">E</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-evening-bg text-shift-evening-text font-bold text-label-xs">E</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-evening-bg text-shift-evening-text font-bold text-label-xs">E</span></td>
+<td class="text-center bg-surface-container-highest/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-evening-bg text-shift-evening-text font-bold text-label-xs">E</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-evening-bg text-shift-evening-text font-bold text-label-xs">E</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<!-- 14th: Currently O, Target swap candidate -->
+<td class="text-center bg-surface-container-highest/40 cursor-pointer" id="cell-choi-14">
+<span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span>
+</td>
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-evening-bg text-shift-evening-text font-bold text-label-xs">E</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-evening-bg text-shift-evening-text font-bold text-label-xs">E</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center bg-surface-container-highest/40"><span class="px-1.5 py-0.5 rounded bg-shift-evening-bg text-shift-evening-text font-bold text-label-xs">E</span></td>
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-evening-bg text-shift-evening-text font-bold text-label-xs">E</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-evening-bg text-shift-evening-text font-bold text-label-xs">E</span></td>
+<td class="text-center bg-surface-container-highest/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<!-- Summary Right -->
+<td class="sticky right-0 z-20 bg-surface-container-lowest hover:bg-surface-container-low px-space-sm shadow-[-2px_0_4px_rgba(0,0,0,0.04)]">
+<div class="flex items-center justify-between text-label-xs font-label-xs">
+<span class="font-mono text-on-surface">D7 E11 N0 O12 Y0</span>
+<div class="flex items-center gap-1">
+<span class="font-semibold text-primary">152h</span>
+<span class="material-symbols-outlined text-tertiary text-[15px]">check_circle</span>
+</div>
+</div>
+</td>
+</tr>
+<!-- Row 4: 이옥자 (일반 / 직고용) -->
+<tr class="hover:bg-surface-container-low transition-colors h-10">
+<td class="sticky left-0 z-20 bg-surface-container-lowest hover:bg-surface-container-low px-space-sm shadow-[2px_0_4px_rgba(0,0,0,0.04)]">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-outline"></span>
+<span class="font-title-md text-title-md font-bold">이옥자</span>
+<span class="px-1 py-0.2 rounded bg-surface-container text-on-surface-variant font-label-xs text-label-xs">일반</span>
+</div>
+<span class="font-label-xs text-label-xs text-on-surface-variant">2년·직고용</span>
+</div>
+</td>
+<td class="text-center opacity-40 bg-surface-container"><span class="font-label-xs text-label-xs">D</span></td>
+<td class="text-center opacity-40 bg-surface-container"><span class="font-label-xs text-label-xs">D</span></td>
+<td class="text-center opacity-40 bg-surface-container-highest"><span class="font-label-xs text-label-xs">O</span></td>
+<!-- 1~30 -->
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-evening-bg text-shift-evening-text font-bold text-label-xs">E</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-evening-bg text-shift-evening-text font-bold text-label-xs">E</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center bg-surface-container-highest/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-evening-bg text-shift-evening-text font-bold text-label-xs">E</span></td>
+<td class="text-center bg-surface-container-highest/40"><span class="px-1.5 py-0.5 rounded bg-shift-evening-bg text-shift-evening-text font-bold text-label-xs">E</span></td>
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center bg-surface-container-highest/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-evening-bg text-shift-evening-text font-bold text-label-xs">E</span></td>
+<td class="text-center bg-surface-container-highest/40"><span class="px-1.5 py-0.5 rounded bg-shift-evening-bg text-shift-evening-text font-bold text-label-xs">E</span></td>
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<!-- Summary Right -->
+<td class="sticky right-0 z-20 bg-surface-container-lowest hover:bg-surface-container-low px-space-sm shadow-[-2px_0_4px_rgba(0,0,0,0.04)]">
+<div class="flex items-center justify-between text-label-xs font-label-xs">
+<span class="font-mono text-on-surface">D13 E6 N0 O11 Y0</span>
+<div class="flex items-center gap-1">
+<span class="font-semibold text-primary">156h</span>
+<span class="material-symbols-outlined text-tertiary text-[15px]">check_circle</span>
+</div>
+</div>
+</td>
+</tr>
+<!-- Row 5: 장메이 (위탁 / 일반 / 중국어 가능) -->
+<tr class="hover:bg-surface-container-low transition-colors h-10">
+<td class="sticky left-0 z-20 bg-surface-container-lowest hover:bg-surface-container-low px-space-sm shadow-[2px_0_4px_rgba(0,0,0,0.04)]">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-secondary-container"></span>
+<span class="font-title-md text-title-md font-bold">장메이</span>
+<span class="px-1 py-0.2 rounded bg-surface-container-high text-on-secondary-container font-label-xs text-label-xs">위탁</span>
+</div>
+<span class="font-label-xs text-label-xs text-on-surface-variant">일반·다문화지원</span>
+</div>
+</td>
+<td class="text-center opacity-40 bg-surface-container"><span class="font-label-xs text-label-xs">E</span></td>
+<td class="text-center opacity-40 bg-surface-container"><span class="font-label-xs text-label-xs">O</span></td>
+<td class="text-center opacity-40 bg-surface-container-highest"><span class="font-label-xs text-label-xs">D</span></td>
+<!-- 1~30 -->
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-evening-bg text-shift-evening-text font-bold text-label-xs">E</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-evening-bg text-shift-evening-text font-bold text-label-xs">E</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center bg-surface-container-highest/40"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-evening-bg text-shift-evening-text font-bold text-label-xs">E</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-evening-bg text-shift-evening-text font-bold text-label-xs">E</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center bg-surface-container-highest/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-evening-bg text-shift-evening-text font-bold text-label-xs">E</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-evening-bg text-shift-evening-text font-bold text-label-xs">E</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center bg-surface-container-highest/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-evening-bg text-shift-evening-text font-bold text-label-xs">E</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-evening-bg text-shift-evening-text font-bold text-label-xs">E</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center bg-surface-container-highest/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-evening-bg text-shift-evening-text font-bold text-label-xs">E</span></td>
+<!-- Summary Right -->
+<td class="sticky right-0 z-20 bg-surface-container-lowest hover:bg-surface-container-low px-space-sm shadow-[-2px_0_4px_rgba(0,0,0,0.04)]">
+<div class="flex items-center justify-between text-label-xs font-label-xs">
+<span class="font-mono text-on-surface">D10 E9 N0 O11 Y0</span>
+<div class="flex items-center gap-1">
+<span class="font-semibold text-primary">152h</span>
+<span class="material-symbols-outlined text-tertiary text-[15px]">check_circle</span>
+</div>
+</div>
+</td>
+</tr>
+<!-- Row 6: 정다은 (WARNING: 수습 / 단독 나이트 배치 경고) -->
+<tr class="hover:bg-surface-container-low transition-colors h-10 bg-violation-warn-bg/40">
+<td class="sticky left-0 z-20 bg-surface-container-lowest hover:bg-surface-container-low px-space-sm shadow-[2px_0_4px_rgba(0,0,0,0.04)]">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-violation-warn-border"></span>
+<span class="font-title-md text-title-md font-bold text-violation-warn-text">정다은</span>
+<span class="px-1 py-0.2 rounded bg-violation-warn-bg text-violation-warn-text font-label-xs text-label-xs">수습</span>
+</div>
+<span class="font-label-xs text-label-xs text-violation-warn-text font-medium">신규3주차·단독불가</span>
+</div>
+</td>
+<td class="text-center opacity-40 bg-surface-container"><span class="font-label-xs text-label-xs">D</span></td>
+<td class="text-center opacity-40 bg-surface-container"><span class="font-label-xs text-label-xs">D</span></td>
+<td class="text-center opacity-40 bg-surface-container-highest"><span class="font-label-xs text-label-xs">O</span></td>
+<!-- 1~30 -->
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center bg-surface-container-highest/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<!-- 14th: Handled as probation warning on duty -->
+<td class="text-center bg-violation-warn-bg relative cursor-pointer" id="cell-warn-jung" onclick="inspectViolation('jung-probation')">
+<span class="px-1.5 py-0.5 rounded bg-violation-warn-text text-on-primary font-bold text-label-xs inline-flex items-center gap-0.5">
+                  D
+                  <span class="material-symbols-outlined text-[10px]">info</span>
+</span>
+</td>
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center bg-surface-container-highest/40"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center bg-surface-container-highest/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<!-- Summary Right -->
+<td class="sticky right-0 z-20 bg-surface-container-lowest hover:bg-surface-container-low px-space-sm shadow-[-2px_0_4px_rgba(0,0,0,0.04)]">
+<div class="flex items-center justify-between text-label-xs font-label-xs">
+<span class="font-mono text-on-surface">D16 E0 N0 O14 Y0</span>
+<div class="flex items-center gap-1">
+<span class="font-semibold text-violation-warn-text">128h</span>
+<span class="material-symbols-outlined text-violation-warn-border text-[15px]">priority_high</span>
+</div>
+</div>
+</td>
+</tr>
+<!-- Row 7: 한순자 (숙련 / 4년) -->
+<tr class="hover:bg-surface-container-low transition-colors h-10">
+<td class="sticky left-0 z-20 bg-surface-container-lowest hover:bg-surface-container-low px-space-sm shadow-[2px_0_4px_rgba(0,0,0,0.04)]">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="font-title-md text-title-md font-bold">한순자</span>
+<span class="px-1 py-0.2 rounded bg-surface-container-high text-on-surface font-label-xs text-label-xs">숙련</span>
+</div>
+<span class="font-label-xs text-label-xs text-on-surface-variant">4년·직고용</span>
+</div>
+</td>
+<td class="text-center opacity-40 bg-surface-container"><span class="font-label-xs text-label-xs">D</span></td>
+<td class="text-center opacity-40 bg-surface-container"><span class="font-label-xs text-label-xs">D</span></td>
+<td class="text-center opacity-40 bg-surface-container-highest"><span class="font-label-xs text-label-xs">O</span></td>
+<!-- 1~30 -->
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-evening-bg text-shift-evening-text font-bold text-label-xs">E</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-evening-bg text-shift-evening-text font-bold text-label-xs">E</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center bg-surface-container-highest/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-evening-bg text-shift-evening-text font-bold text-label-xs">E</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-evening-bg text-shift-evening-text font-bold text-label-xs">E</span></td>
+<td class="text-center bg-surface-container-highest/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-evening-bg text-shift-evening-text font-bold text-label-xs">E</span></td>
+<td class="text-center bg-surface-container-highest/40"><span class="px-1.5 py-0.5 rounded bg-shift-evening-bg text-shift-evening-text font-bold text-label-xs">E</span></td>
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center bg-surface-container-highest/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<!-- Summary Right -->
+<td class="sticky right-0 z-20 bg-surface-container-lowest hover:bg-surface-container-low px-space-sm shadow-[-2px_0_4px_rgba(0,0,0,0.04)]">
+<div class="flex items-center justify-between text-label-xs font-label-xs">
+<span class="font-mono text-on-surface">D13 E6 N0 O11 Y0</span>
+<div class="flex items-center gap-1">
+<span class="font-semibold text-primary">152h</span>
+<span class="material-symbols-outlined text-tertiary text-[15px]">check_circle</span>
+</div>
+</div>
+</td>
+</tr>
+<!-- Row 8: 박춘자 (일반 / 직고용) -->
+<tr class="hover:bg-surface-container-low transition-colors h-10">
+<td class="sticky left-0 z-20 bg-surface-container-lowest hover:bg-surface-container-low px-space-sm shadow-[2px_0_4px_rgba(0,0,0,0.04)]">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-outline"></span>
+<span class="font-title-md text-title-md font-bold">박춘자</span>
+<span class="px-1 py-0.2 rounded bg-surface-container text-on-surface font-label-xs text-label-xs">일반</span>
+</div>
+<span class="font-label-xs text-label-xs text-on-surface-variant">2년·직고용</span>
+</div>
+</td>
+<td class="text-center opacity-40 bg-surface-container"><span class="font-label-xs text-label-xs">O</span></td>
+<td class="text-center opacity-40 bg-surface-container"><span class="font-label-xs text-label-xs">O</span></td>
+<td class="text-center opacity-40 bg-surface-container-highest"><span class="font-label-xs text-label-xs">N</span></td>
+<!-- 1~30 -->
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-night-bg text-shift-night-text font-bold text-label-xs">N</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-night-bg text-shift-night-text font-bold text-label-xs">N</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-night-bg text-shift-night-text font-bold text-label-xs">N</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center bg-surface-container-highest/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-night-bg text-shift-night-text font-bold text-label-xs">N</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-night-bg text-shift-night-text font-bold text-label-xs">N</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-night-bg text-shift-night-text font-bold text-label-xs">N</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-night-bg text-shift-night-text font-bold text-label-xs">N</span></td>
+<!-- 14th: Off shift, creating 1-person night shortage -->
+<td class="text-center bg-surface-container-highest/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-night-bg text-shift-night-text font-bold text-label-xs">N</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-night-bg text-shift-night-text font-bold text-label-xs">N</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-night-bg text-shift-night-text font-bold text-label-xs">N</span></td>
+<td class="text-center bg-surface-container-highest/40"><span class="px-1.5 py-0.5 rounded bg-shift-night-bg text-shift-night-text font-bold text-label-xs">N</span></td>
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-night-bg text-shift-night-text font-bold text-label-xs">N</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-night-bg text-shift-night-text font-bold text-label-xs">N</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center bg-surface-container-highest/40"><span class="px-1.5 py-0.5 rounded bg-shift-night-bg text-shift-night-text font-bold text-label-xs">N</span></td>
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-night-bg text-shift-night-text font-bold text-label-xs">N</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<!-- Summary Right -->
+<td class="sticky right-0 z-20 bg-surface-container-lowest hover:bg-surface-container-low px-space-sm shadow-[-2px_0_4px_rgba(0,0,0,0.04)]">
+<div class="flex items-center justify-between text-label-xs font-label-xs">
+<span class="font-mono text-on-surface">D0 E0 N13 O17 Y0</span>
+<div class="flex items-center gap-1">
+<span class="font-semibold text-primary">156h</span>
+<span class="material-symbols-outlined text-tertiary text-[15px]">check_circle</span>
+</div>
+</div>
+</td>
+</tr>
+<!-- Row 9: 윤선화 (희망휴무 R 지정 예시) -->
+<tr class="hover:bg-surface-container-low transition-colors h-10">
+<td class="sticky left-0 z-20 bg-surface-container-lowest hover:bg-surface-container-low px-space-sm shadow-[2px_0_4px_rgba(0,0,0,0.04)]">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="font-title-md text-title-md font-bold">윤선화</span>
+<span class="px-1 py-0.2 rounded bg-surface-container-high text-on-surface font-label-xs text-label-xs">숙련</span>
+</div>
+<span class="font-label-xs text-label-xs text-on-surface-variant">3년·직고용</span>
+</div>
+</td>
+<td class="text-center opacity-40 bg-surface-container"><span class="font-label-xs text-label-xs">D</span></td>
+<td class="text-center opacity-40 bg-surface-container"><span class="font-label-xs text-label-xs">D</span></td>
+<td class="text-center opacity-40 bg-surface-container-highest"><span class="font-label-xs text-label-xs">O</span></td>
+<!-- 1~30 with R request granted -->
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center bg-surface-container-highest/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-evening-bg text-shift-evening-text font-bold text-label-xs">E</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-evening-bg text-shift-evening-text font-bold text-label-xs">E</span></td>
+<!-- Nov 11 R Request Chip -->
+<td class="text-center bg-surface-container-low">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-lowest text-secondary font-bold text-label-xs shadow-sm" title="희망휴무 신청 승인">R</span>
+</td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center bg-surface-container-highest/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-evening-bg text-shift-evening-text font-bold text-label-xs">E</span></td>
+<td class="text-center bg-surface-container-highest/40"><span class="px-1.5 py-0.5 rounded bg-shift-evening-bg text-shift-evening-text font-bold text-label-xs">E</span></td>
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center bg-surface-container-highest/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-day-bg text-shift-day-text font-bold text-label-xs">D</span></td>
+<!-- Summary Right -->
+<td class="sticky right-0 z-20 bg-surface-container-lowest hover:bg-surface-container-low px-space-sm shadow-[-2px_0_4px_rgba(0,0,0,0.04)]">
+<div class="flex items-center justify-between text-label-xs font-label-xs">
+<span class="font-mono text-on-surface">D14 E4 N0 O11 R1</span>
+<div class="flex items-center gap-1">
+<span class="font-semibold text-primary">144h</span>
+<span class="material-symbols-outlined text-tertiary text-[15px]">check_circle</span>
+</div>
+</div>
+</td>
+</tr>
+<!-- Row 10: 강성민 (위탁 / 24h 격일제 대응 요원) -->
+<tr class="hover:bg-surface-container-low transition-colors h-10">
+<td class="sticky left-0 z-20 bg-surface-container-lowest hover:bg-surface-container-low px-space-sm shadow-[2px_0_4px_rgba(0,0,0,0.04)]">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-secondary-container"></span>
+<span class="font-title-md text-title-md font-bold">강성민</span>
+<span class="px-1 py-0.2 rounded bg-surface-container-high text-on-secondary-container font-label-xs text-label-xs">위탁</span>
+</div>
+<span class="font-label-xs text-label-xs text-on-surface-variant">일반·격일가능</span>
+</div>
+</td>
+<td class="text-center opacity-40 bg-surface-container"><span class="font-label-xs text-label-xs">24</span></td>
+<td class="text-center opacity-40 bg-surface-container"><span class="font-label-xs text-label-xs">O</span></td>
+<td class="text-center opacity-40 bg-surface-container-highest"><span class="font-label-xs text-label-xs">24</span></td>
+<!-- 1~30 Alternating 24h / Off pattern -->
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1 py-0.5 rounded bg-surface-container-highest text-on-secondary-container font-bold text-[11px]">24</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1 py-0.5 rounded bg-surface-container-highest text-on-secondary-container font-bold text-[11px]">24</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1 py-0.5 rounded bg-surface-container-highest text-on-secondary-container font-bold text-[11px]">24</span></td>
+<td class="text-center bg-surface-container-highest/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center bg-error-container/40"><span class="px-1 py-0.5 rounded bg-surface-container-highest text-on-secondary-container font-bold text-[11px]">24</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1 py-0.5 rounded bg-surface-container-highest text-on-secondary-container font-bold text-[11px]">24</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1 py-0.5 rounded bg-surface-container-highest text-on-secondary-container font-bold text-[11px]">24</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center bg-surface-container-highest/40"><span class="px-1 py-0.5 rounded bg-surface-container-highest text-on-secondary-container font-bold text-[11px]">24</span></td>
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1 py-0.5 rounded bg-surface-container-highest text-on-secondary-container font-bold text-[11px]">24</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1 py-0.5 rounded bg-surface-container-highest text-on-secondary-container font-bold text-[11px]">24</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1 py-0.5 rounded bg-surface-container-highest text-on-secondary-container font-bold text-[11px]">24</span></td>
+<td class="text-center bg-surface-container-highest/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center bg-error-container/40"><span class="px-1 py-0.5 rounded bg-surface-container-highest text-on-secondary-container font-bold text-[11px]">24</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1 py-0.5 rounded bg-surface-container-highest text-on-secondary-container font-bold text-[11px]">24</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1 py-0.5 rounded bg-surface-container-highest text-on-secondary-container font-bold text-[11px]">24</span></td>
+<td class="text-center"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center bg-surface-container-highest/40"><span class="px-1 py-0.5 rounded bg-surface-container-highest text-on-secondary-container font-bold text-[11px]">24</span></td>
+<td class="text-center bg-error-container/40"><span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span></td>
+<td class="text-center"><span class="px-1 py-0.5 rounded bg-surface-container-highest text-on-secondary-container font-bold text-[11px]">24</span></td>
+<!-- Summary Right -->
+<td class="sticky right-0 z-20 bg-surface-container-lowest hover:bg-surface-container-low px-space-sm shadow-[-2px_0_4px_rgba(0,0,0,0.04)]">
+<div class="flex items-center justify-between text-label-xs font-label-xs">
+<span class="font-mono text-on-surface">24h 15회 / O15</span>
+<div class="flex items-center gap-1">
+<span class="font-semibold text-primary">240h</span>
+<span class="material-symbols-outlined text-tertiary text-[15px]">check_circle</span>
+</div>
+</div>
+</td>
+</tr>
+</tbody>
+<!-- Table Sticky Bottom Summary: Shift Totals & Ward Thresholds -->
+<tfoot class="sticky bottom-0 z-30 bg-surface-container-low shadow-[0_-2px_4px_rgba(15,23,42,0.04)]">
+<!-- Day Shift (D) Total Row -->
+<tr class="h-8 font-label-xs text-label-xs text-on-surface">
+<td class="sticky left-0 z-40 bg-surface-container-low px-space-sm font-semibold flex items-center justify-between shadow-[2px_0_4px_rgba(0,0,0,0.04)]">
+<span class="text-shift-day-text font-bold">주간 배정 (필요 4명)</span>
+<span class="font-mono text-on-surface-variant">D</span>
+</td>
+<td class="text-center opacity-40 bg-surface-container font-mono">4</td>
+<td class="text-center opacity-40 bg-surface-container font-mono">4</td>
+<td class="text-center opacity-40 bg-surface-container-highest font-mono">4</td>
+<!-- 1~30 -->
+<td class="text-center bg-error-container/60 font-mono font-bold text-shift-day-text">4/4</td>
+<td class="text-center font-mono">4/4</td>
+<td class="text-center font-mono">4/4</td>
+<td class="text-center font-mono">4/4</td>
+<td class="text-center font-mono">4/4</td>
+<td class="text-center font-mono">4/4</td>
+<td class="text-center bg-surface-container-highest/60 font-mono">4/4</td>
+<td class="text-center bg-error-container/60 font-mono">4/4</td>
+<td class="text-center font-mono">4/4</td>
+<td class="text-center font-mono">4/4</td>
+<td class="text-center font-mono">4/4</td>
+<td class="text-center font-mono">4/4</td>
+<td class="text-center font-mono">4/4</td>
+<td class="text-center bg-surface-container-highest/60 font-mono">4/4</td>
+<td class="text-center bg-error-container/60 font-mono">4/4</td>
+<td class="text-center font-mono">4/4</td>
+<td class="text-center font-mono">4/4</td>
+<td class="text-center font-mono">4/4</td>
+<td class="text-center font-mono">4/4</td>
+<td class="text-center font-mono">4/4</td>
+<td class="text-center bg-surface-container-highest/60 font-mono">4/4</td>
+<td class="text-center bg-error-container/60 font-mono">4/4</td>
+<td class="text-center font-mono">4/4</td>
+<td class="text-center font-mono">4/4</td>
+<td class="text-center font-mono">4/4</td>
+<td class="text-center font-mono">4/4</td>
+<td class="text-center font-mono">4/4</td>
+<td class="text-center bg-surface-container-highest/60 font-mono">4/4</td>
+<td class="text-center bg-error-container/60 font-mono">4/4</td>
+<td class="text-center font-mono">4/4</td>
+<td class="sticky right-0 z-40 bg-surface-container-low px-space-sm text-center font-semibold text-tertiary shadow-[-2px_0_4px_rgba(0,0,0,0.04)]">
+                주간 충족 100%
+              </td>
+</tr>
+<!-- Evening Shift (E) Total Row -->
+<tr class="h-8 font-label-xs text-label-xs text-on-surface bg-surface-container/60">
+<td class="sticky left-0 z-40 bg-surface-container px-space-sm font-semibold flex items-center justify-between shadow-[2px_0_4px_rgba(0,0,0,0.04)]">
+<span class="text-shift-evening-text font-bold">저녁 배정 (필요 3명)</span>
+<span class="font-mono text-on-surface-variant">E</span>
+</td>
+<td class="text-center opacity-40 font-mono">3</td>
+<td class="text-center opacity-40 font-mono">3</td>
+<td class="text-center opacity-40 font-mono">3</td>
+<!-- 1~30 -->
+<td class="text-center bg-error-container/60 font-mono font-bold text-shift-evening-text">3/3</td>
+<td class="text-center font-mono">3/3</td>
+<td class="text-center font-mono">3/3</td>
+<td class="text-center font-mono">3/3</td>
+<td class="text-center font-mono">3/3</td>
+<td class="text-center font-mono">3/3</td>
+<td class="text-center bg-surface-container-highest/60 font-mono">3/3</td>
+<td class="text-center bg-error-container/60 font-mono">3/3</td>
+<td class="text-center font-mono">3/3</td>
+<td class="text-center font-mono">3/3</td>
+<td class="text-center font-mono">3/3</td>
+<td class="text-center font-mono">3/3</td>
+<td class="text-center font-mono">3/3</td>
+<td class="text-center bg-surface-container-highest/60 font-mono">3/3</td>
+<td class="text-center bg-error-container/60 font-mono">3/3</td>
+<td class="text-center font-mono">3/3</td>
+<td class="text-center font-mono">3/3</td>
+<td class="text-center font-mono">3/3</td>
+<td class="text-center font-mono">3/3</td>
+<td class="text-center font-mono">3/3</td>
+<td class="text-center bg-surface-container-highest/60 font-mono">3/3</td>
+<td class="text-center bg-error-container/60 font-mono">3/3</td>
+<td class="text-center font-mono">3/3</td>
+<td class="text-center font-mono">3/3</td>
+<td class="text-center font-mono">3/3</td>
+<td class="text-center font-mono">3/3</td>
+<td class="text-center font-mono">3/3</td>
+<td class="text-center bg-surface-container-highest/60 font-mono">3/3</td>
+<td class="text-center bg-error-container/60 font-mono">3/3</td>
+<td class="text-center font-mono">3/3</td>
+<td class="sticky right-0 z-40 bg-surface-container px-space-sm text-center font-semibold text-tertiary shadow-[-2px_0_4px_rgba(0,0,0,0.04)]">
+                저녁 충족 100%
+              </td>
+</tr>
+<!-- Night Shift (N) Total Row (ALERT ON 11/14: 1/2 shortage) -->
+<tr class="h-8 font-label-xs text-label-xs text-on-surface bg-surface-container-high/60">
+<td class="sticky left-0 z-40 bg-surface-container-high px-space-sm font-semibold flex items-center justify-between shadow-[2px_0_4px_rgba(0,0,0,0.04)]">
+<span class="text-shift-night-text font-bold">야간 배정 (필요 2명)</span>
+<span class="font-mono text-on-surface-variant">N</span>
+</td>
+<td class="text-center opacity-40 font-mono">2</td>
+<td class="text-center opacity-40 font-mono">2</td>
+<td class="text-center opacity-40 font-mono">2</td>
+<!-- 1~30 with Day 14 red breach -->
+<td class="text-center bg-error-container/60 font-mono">2/2</td>
+<td class="text-center font-mono">2/2</td>
+<td class="text-center font-mono">2/2</td>
+<td class="text-center font-mono">2/2</td>
+<td class="text-center font-mono">2/2</td>
+<td class="text-center font-mono">2/2</td>
+<td class="text-center bg-surface-container-highest/60 font-mono">2/2</td>
+<td class="text-center bg-error-container/60 font-mono">2/2</td>
+<td class="text-center font-mono">2/2</td>
+<td class="text-center font-mono">2/2</td>
+<td class="text-center font-mono">2/2</td>
+<td class="text-center font-mono">2/2</td>
+<td class="text-center font-mono">2/2</td>
+<!-- Day 14: Shortage 1/2! -->
+<td class="text-center bg-violation-error-bg font-mono font-bold text-violation-error-text animate-pulse" id="aggregate-14-night">
+                1/2⚠
+              </td>
+<td class="text-center bg-error-container/60 font-mono">2/2</td>
+<td class="text-center font-mono">2/2</td>
+<td class="text-center font-mono">2/2</td>
+<td class="text-center font-mono">2/2</td>
+<td class="text-center font-mono">2/2</td>
+<td class="text-center font-mono">2/2</td>
+<td class="text-center bg-surface-container-highest/60 font-mono">2/2</td>
+<td class="text-center bg-error-container/60 font-mono">2/2</td>
+<td class="text-center font-mono">2/2</td>
+<td class="text-center font-mono">2/2</td>
+<td class="text-center font-mono">2/2</td>
+<td class="text-center font-mono">2/2</td>
+<td class="text-center font-mono">2/2</td>
+<td class="text-center bg-surface-container-highest/60 font-mono">2/2</td>
+<td class="text-center bg-error-container/60 font-mono">2/2</td>
+<td class="text-center font-mono">2/2</td>
+<td class="sticky right-0 z-40 bg-surface-container-high px-space-sm text-center font-bold text-violation-error-text shadow-[-2px_0_4px_rgba(0,0,0,0.04)]">
+                1일 야간부족 (14일)
+              </td>
+</tr>
+<!-- Senior Staff Presence (숙련자 포함 여부) Row -->
+<tr class="h-7 font-label-xs text-label-xs text-on-surface-variant bg-surface-container-lowest">
+<td class="sticky left-0 z-40 bg-surface-container-lowest px-space-sm font-medium flex items-center justify-between shadow-[2px_0_4px_rgba(0,0,0,0.04)]">
+<span>숙련자(1년 이상) 매근무 포함</span>
+<span class="material-symbols-outlined text-[14px] text-tertiary">check</span>
+</td>
+<td class="text-center opacity-40 font-mono">✓</td>
+<td class="text-center opacity-40 font-mono">✓</td>
+<td class="text-center opacity-40 font-mono">✓</td>
+<!-- 1~30 check marks -->
+<td class="text-center font-mono text-tertiary">✓</td>
+<td class="text-center font-mono text-tertiary">✓</td>
+<td class="text-center font-mono text-tertiary">✓</td>
+<td class="text-center font-mono text-tertiary">✓</td>
+<td class="text-center font-mono text-tertiary">✓</td>
+<td class="text-center font-mono text-tertiary">✓</td>
+<td class="text-center font-mono text-tertiary">✓</td>
+<td class="text-center font-mono text-tertiary">✓</td>
+<td class="text-center font-mono text-tertiary">✓</td>
+<td class="text-center font-mono text-tertiary">✓</td>
+<td class="text-center font-mono text-tertiary">✓</td>
+<td class="text-center font-mono text-tertiary">✓</td>
+<td class="text-center font-mono text-tertiary">✓</td>
+<!-- 14th Sat -->
+<td class="text-center font-mono text-violation-warn-text">✓(미달)</td>
+<td class="text-center font-mono text-tertiary">✓</td>
+<td class="text-center font-mono text-tertiary">✓</td>
+<td class="text-center font-mono text-tertiary">✓</td>
+<td class="text-center font-mono text-tertiary">✓</td>
+<td class="text-center font-mono text-tertiary">✓</td>
+<td class="text-center font-mono text-tertiary">✓</td>
+<td class="text-center font-mono text-tertiary">✓</td>
+<td class="text-center font-mono text-tertiary">✓</td>
+<td class="text-center font-mono text-tertiary">✓</td>
+<td class="text-center font-mono text-tertiary">✓</td>
+<td class="text-center font-mono text-tertiary">✓</td>
+<td class="text-center font-mono text-tertiary">✓</td>
+<td class="text-center font-mono text-tertiary">✓</td>
+<td class="text-center font-mono text-tertiary">✓</td>
+<td class="text-center font-mono text-tertiary">✓</td>
+<td class="text-center font-mono text-tertiary">✓</td>
+<td class="sticky right-0 z-40 bg-surface-container-lowest px-space-sm text-center text-label-xs font-semibold text-tertiary shadow-[-2px_0_4px_rgba(0,0,0,0.04)]">
+                충족 29/30일
+              </td>
+</tr>
+</tfoot>
+</table>
+</div>
+<!-- Quick Edit Floating Action Popover Placeholder (for active cell direct clicks) -->
+<div class="hidden absolute z-50 bg-surface-container-lowest p-space-sm rounded shadow-xl flex flex-col gap-1.5 w-60" id="quick-cell-editor">
+<div class="flex items-center justify-between">
+<span class="font-title-md text-title-md text-on-surface" id="editor-cell-title">11월 14일 근무 변경</span>
+<button class="text-on-surface-variant hover:text-on-surface" onclick="closeCellEditor()" type="button"><span class="material-symbols-outlined text-[16px]">close</span></button>
+</div>
+<div class="grid grid-cols-3 gap-1 pt-1">
+<button class="p-1 rounded bg-shift-day-bg text-shift-day-text font-bold text-center text-label-xs" onclick="applyShiftCode('D')" type="button">D (데이)</button>
+<button class="p-1 rounded bg-shift-evening-bg text-shift-evening-text font-bold text-center text-label-xs" onclick="applyShiftCode('E')" type="button">E (이브닝)</button>
+<button class="p-1 rounded bg-shift-night-bg text-shift-night-text font-bold text-center text-label-xs" onclick="applyShiftCode('N')" type="button">N (나이트)</button>
+<button class="p-1 rounded bg-shift-off-bg text-shift-off-text font-bold text-center text-label-xs" onclick="applyShiftCode('O')" type="button">O (휴무)</button>
+<button class="p-1 rounded bg-shift-annual-bg text-shift-annual-text font-bold text-center text-label-xs" onclick="applyShiftCode('Y')" type="button">Y (연차)</button>
+<button class="p-1 rounded bg-surface-container text-secondary font-bold text-center text-label-xs" onclick="applyShiftCode('R')" type="button">R (희망)</button>
+</div>
+</div>
+</div>
+<!-- Right Side Inspection Drawer: Live Rule Validation Panel (제6장 핵심 검증 엔진) -->
+<aside class="w-full xl:w-[340px] xl:shrink-0 bg-surface-container-lowest rounded shadow-sm flex flex-col p-space-md gap-space-sm">
+<!-- Panel Header & Summary Badges -->
+<div class="flex items-center justify-between pb-space-xs">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-[20px]">rule_folder</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">실시간 규칙 검증</h2>
+</div>
+<span class="font-label-xs text-label-xs px-2 py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed font-semibold">엔진 활성</span>
+</div>
+<!-- Compliance Metrics Card (Bento Style) -->
+<div class="p-space-sm bg-surface-container-low rounded flex flex-col gap-space-xs">
+<div class="flex items-center justify-between text-label-xs font-label-xs">
+<span class="text-on-surface-variant">규칙 충족 및 선호도 평가</span>
+<span class="font-bold text-primary">94.2%</span>
+</div>
+<!-- Visual Progress Ring / Spark Bar -->
+<div class="w-full bg-surface-container rounded-full h-2 flex overflow-hidden">
+<div class="bg-tertiary h-full" style="width: 82%;"></div>
+<div class="bg-violation-warn-border h-full" style="width: 12%;"></div>
+<div class="bg-violation-error-border h-full" style="width: 6%;"></div>
+</div>
+<div class="flex items-center justify-between pt-1 font-label-xs text-label-xs">
+<div class="flex items-center gap-1 text-violation-error-text font-bold">
+<span class="w-2 h-2 rounded-full bg-violation-error-border"></span>
+<span>법정 금지 1건</span>
+</div>
+<div class="flex items-center gap-1 text-violation-warn-text font-bold">
+<span class="w-2 h-2 rounded-full bg-violation-warn-border"></span>
+<span>운영 주의 2건</span>
+</div>
+<div class="flex items-center gap-1 text-secondary font-medium">
+<span class="material-symbols-outlined text-[14px]">favorite</span>
+<span>선호 반영 94%</span>
+</div>
+</div>
+</div>
+<!-- Violation Detail Cards List -->
+<div class="flex flex-col gap-space-sm pt-1 overflow-y-auto max-h-[500px]">
+<!-- CARD 1: 법정/운영 치명적 위반 (11/14 야간 부족) -->
+<div class="p-space-sm bg-violation-error-bg rounded flex flex-col gap-1.5 transition-all hover:shadow-md cursor-pointer" onclick="jumpToCell('aggregate-14-night')">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-1">
+<span class="px-1.5 py-0.2 rounded bg-violation-error-text text-on-primary font-label-xs text-label-xs font-bold">금지</span>
+<span class="font-title-md text-title-md text-violation-error-text">11/14(토) 야간 인원 1명 부족</span>
+</div>
+<button class="text-violation-error-text p-0.5" title="셀 위치로 포커스" type="button">
+<span class="material-symbols-outlined text-[16px]">pin_drop</span>
+</button>
+</div>
+<p class="font-body-sm text-body-sm text-violation-error-text">
+            의료법 간호간병 기준: 제2병동 야간조 최소 2명 필요하나 현재 1명만 배정됨.
+          </p>
+<div class="mt-1 pt-1.5 bg-surface-container-lowest/80 p-2 rounded flex flex-col gap-1.5">
+<span class="font-label-xs text-label-xs font-semibold text-primary flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-tertiary">auto_fix_high</span>
+              AI 대체 가능자 추천:
+            </span>
+<div class="flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-title-md text-title-md text-on-surface">최영순 요양보호사</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant">11/14(토) 비번(O) · 숙련 3년</span>
+</div>
+<button class="px-2 py-1 bg-primary text-on-primary hover:bg-primary-container rounded font-label-xs text-label-xs font-semibold shadow-sm transition-colors" onclick="event.stopPropagation(); resolveNightShortage()" type="button">
+                최영순 N 투입
+              </button>
+</div>
+</div>
+</div>
+<!-- CARD 2: 연속 나이트 초과 금지 위반 (김미숙 4연속) -->
+<div class="p-space-sm bg-violation-error-bg rounded flex flex-col gap-1.5 transition-all hover:shadow-md cursor-pointer" onclick="jumpToCell('cell-violation-kim')">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-1">
+<span class="px-1.5 py-0.2 rounded bg-violation-error-text text-on-primary font-label-xs text-label-xs font-bold">금지</span>
+<span class="font-title-md text-title-md text-violation-error-text">김미숙 4일 연속 나이트 배정</span>
+</div>
+<button class="text-violation-error-text p-0.5" title="셀 위치로 포커스" type="button">
+<span class="material-symbols-outlined text-[16px]">pin_drop</span>
+</button>
+</div>
+<p class="font-body-sm text-body-sm text-violation-error-text">
+            내부 취업규칙 &amp; 보건복지부 권고요건: 나이트 연속 3일 제한 초과. (11/11 ~ 11/14 4연속 배정)
+          </p>
+<div class="flex items-center justify-between pt-1">
+<span class="font-label-xs text-label-xs text-on-surface-variant">해결책: 11/14(토)를 비번(O)으로 전환</span>
+<button class="px-2 py-1 bg-surface-container-lowest hover:bg-surface-container text-violation-error-text rounded font-label-xs text-label-xs font-semibold shadow-sm" onclick="event.stopPropagation(); resolveKimConsecutive()" type="button">
+              비번(O) 전환
+            </button>
+</div>
+</div>
+<!-- CARD 3: 수습인력 단독/미숙련 주의 (정다은) -->
+<div class="p-space-sm bg-violation-warn-bg rounded flex flex-col gap-1.5 transition-all hover:shadow-md cursor-pointer" onclick="jumpToCell('cell-warn-jung')">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-1">
+<span class="px-1.5 py-0.2 rounded bg-violation-warn-border text-on-primary font-label-xs text-label-xs font-bold">주의</span>
+<span class="font-title-md text-title-md text-violation-warn-text">정다은(수습) 주말 조 배치</span>
+</div>
+<button class="text-violation-warn-text p-0.5" title="셀 위치로 포커스" type="button">
+<span class="material-symbols-outlined text-[16px]">pin_drop</span>
+</button>
+</div>
+<p class="font-body-sm text-body-sm text-violation-warn-text">
+            신규 수습 기간(3개월 미만) 주말 단독 조 투입 지양 요망. 동일 조 숙련자 매칭 상태 확인 필요.
+          </p>
+<div class="flex items-center justify-between pt-0.5">
+<span class="font-label-xs text-label-xs text-on-surface-variant">동일 조: 박정희(팀장) 동행 확인됨</span>
+<span class="font-label-xs text-label-xs text-tertiary font-bold flex items-center">
+<span class="material-symbols-outlined text-[14px]">check</span> 승인 가능
+            </span>
+</div>
+</div>
+<!-- Preference Satisfaction Card -->
+<div class="p-space-sm bg-surface-container-low rounded flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<span class="font-title-md text-title-md text-on-surface flex items-center gap-1">
+<span class="material-symbols-outlined text-secondary text-[16px]">thumb_up</span>
+              희망 휴무 반영 현황
+            </span>
+<span class="font-label-xs text-label-xs font-bold text-secondary">31건 중 29건 충족</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+            윤선화(11/11), 박정희(11/20) 포함 총 94% 선호 휴무 자동 반영 완료.
+          </p>
+</div>
+</div>
+<!-- Side Panel Sticky Quick Batch Solver Action -->
+<div class="mt-auto pt-space-xs bg-surface-container-lowest">
+<button class="w-full py-2 px-space-sm bg-primary hover:bg-primary-container text-on-primary rounded font-title-md text-title-md flex items-center justify-center gap-1.5 shadow transition-colors" onclick="autoSolveAll()" type="button">
+<span class="material-symbols-outlined text-[18px]">auto_mode</span>
+<span>원클릭 AI 결함 자동 조정</span>
+</button>
+</div>
+</aside>
+</div>
+<!-- A4 Print Layout Watermark Notification / Export Drawer Toast (Hidden by default, triggered on script) -->
+<div class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-space-lg py-space-sm bg-inverse-surface text-inverse-on-surface rounded shadow-xl flex items-center gap-space-sm transition-all duration-300" id="toast-message">
+<span class="material-symbols-outlined text-[20px] text-primary-fixed">info</span>
+<span class="font-title-md text-title-md" id="toast-text">근무표 규칙 검증이 실행되었습니다.</span>
+</div>
+</div>
+<script>
+  // Spreadsheet micro-interactions and quick solvers
+  function showToast(message) {
+    const toast = document.getElementById('toast-message');
+    const toastText = document.getElementById('toast-text');
+    if (!toast || !toastText) return;
+    toastText.textContent = message;
+    toast.classList.remove('hidden');
+    toast.style.opacity = '1';
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      setTimeout(() => toast.classList.add('hidden'), 300);
+    }, 2800);
+  }
+
+  function triggerValidationCheck() {
+    showToast('전체 18명 대상 의료법 및 59조 특례조항 실시간 검증 완료 (위반 1건, 주의 2건)');
+  }
+
+  function jumpToCell(elementId) {
+    const el = document.getElementById(elementId);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+      // Temporary highlight pulse
+      el.classList.add('ring-4', 'ring-primary', 'transition-all');
+      setTimeout(() => {
+        el.classList.remove('ring-4', 'ring-primary');
+      }, 1500);
+    }
+  }
+
+  function resolveNightShortage() {
+    // Dynamically solve 11/14 Choi Young Soon switch to N
+    const choiCell = document.getElementById('cell-choi-14');
+    const aggCell = document.getElementById('aggregate-14-night');
+    if (choiCell) {
+      choiCell.innerHTML = '<span class="px-1.5 py-0.5 rounded bg-shift-night-bg text-shift-night-text font-bold text-label-xs">N</span>';
+    }
+    if (aggCell) {
+      aggCell.className = 'text-center font-mono font-bold text-tertiary';
+      aggCell.textContent = '2/2✓';
+    }
+    showToast('11/14(토) 최영순 요양보호사가 야간(N)으로 배정되어 야간 인원 2명이 충족되었습니다.');
+  }
+
+  function resolveKimConsecutive() {
+    // Resolve Kim Mi Sook 4th consecutive night
+    const kimCell = document.getElementById('cell-violation-kim');
+    if (kimCell) {
+      kimCell.innerHTML = '<span class="px-1.5 py-0.5 rounded bg-shift-off-bg text-shift-off-text font-bold text-label-xs">O</span>';
+      kimCell.classList.remove('bg-violation-error-bg');
+    }
+    showToast('김미숙 11/14 근무가 비번(O)으로 조정되어 4일 연속 나이트 위반이 해소되었습니다.');
+  }
+
+  function autoSolveAll() {
+    resolveNightShortage();
+    resolveKimConsecutive();
+    showToast('AI 최적화 엔진이 모든 법정 위반 2건을 안전하게 자동 치환했습니다.');
+  }
+
+  function inspectViolation(type) {
+    if (type === 'kim-consecutive') {
+      showToast('김미숙: 4연속 야간 근무 위반 안내 패널을 확인하세요.');
+    } else if (type === 'jung-probation') {
+      showToast('정다은: 신규 수습 배치 가이드라인 점검 완료.');
+    }
+  }
+
+  function closeCellEditor() {
+    const editor = document.getElementById('quick-cell-editor');
+    if (editor) editor.classList.add('hidden');
+  }
+
+  function applyShiftCode(code) {
+    showToast(`선택 셀에 근무 코드 [${code}]이(가) 적용되었습니다.`);
+    closeCellEditor();
+  }
+</script></main><footer class="w-full bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.04)] py-space-md mt-space-2xl"><div class="w-full px-margin flex items-center justify-between font-label-xs text-label-xs text-on-surface-variant"><div><span>CareShift v2.4 (의료법 및 근로기준법 제59조 준수 엔진 적용)</span><span class="mx-2">·</span><span>늘푸른요양병원 본원 운영 관리센터</span></div><div class="flex items-center gap-space-lg"><a class="hover:text-on-surface" href="#">법정 간호인력 가이드</a><a class="hover:text-on-surface" href="#">긴급 지원 헬프데스크 (02-555-0199)</a><a class="hover:text-on-surface" href="#">개인정보처리방침</a></div></div></footer></body></html>
