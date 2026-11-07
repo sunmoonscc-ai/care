@@ -15,69 +15,57 @@ export function renderRosterEditorView(container, { rosterData, violations, onUp
   const dayNames = ['화', '수', '목', '금', '토', '일', '월', '화', '수', '목', '금', '토', '일', '월', '화', '수', '목', '금', '토', '일', '월', '화', '수', '목', '금', '토', '일', '월', '화', '수'];
 
   container.innerHTML = `
-    <div class="flex flex-col w-full h-[calc(100vh-5rem)] overflow-hidden bg-slate-100">
+    <div class="flex flex-col w-full h-[calc(100vh-8.5rem)] md:h-[calc(100vh-5rem)] overflow-hidden bg-slate-100">
       <!-- 엑셀 스타일 조작 툴바 -->
-      <section class="w-full px-6 py-2 bg-white flex flex-wrap items-center justify-between border-b border-slate-300 shrink-0 gap-2 shadow-sm">
-        <div class="flex items-center gap-3">
-          <div class="flex items-center gap-2">
-            <span class="text-xs font-bold px-2 py-0.5 rounded bg-teal-100 text-teal-800">
-              ${rosterData.status === 'published' ? '공식 배포본' : '작성중 초안'}
-            </span>
-            <h1 class="text-base font-extrabold text-slate-900 tracking-tight">
-              ${rosterData.title}
-            </h1>
-          </div>
-          <span class="text-xs text-slate-400">출력일시: ${rosterData.printedAt || '2026-08-24 11:47'}</span>
+      <section class="w-full px-3 sm:px-6 py-2 bg-white flex flex-wrap items-center justify-between border-b border-slate-300 shrink-0 gap-2 shadow-sm">
+        <div class="flex items-center gap-2 sm:gap-3 overflow-x-auto py-1">
+          <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-teal-100 text-teal-800 shrink-0">
+            ${rosterData.status === 'published' ? '공식 배포본' : '작성중 초안'}
+          </span>
+          <h1 class="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight shrink-0">
+            ${rosterData.title}
+          </h1>
         </div>
 
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar w-full sm:w-auto py-1">
           <!-- 구글 시트 연동 버튼 -->
-          <button id="btn-sync-gsheet" class="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold rounded border border-emerald-300 flex items-center gap-1 transition shadow-sm">
-            <span class="material-symbols-outlined text-[16px] text-emerald-700">table_view</span>
-            구글 시트 실시간 동기화
+          <button id="btn-sync-gsheet" class="px-2 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[11px] font-bold rounded border border-emerald-300 flex items-center gap-1 transition shadow-sm shrink-0">
+            <span class="material-symbols-outlined text-[15px] text-emerald-700">table_view</span>
+            구글시트 동기화
           </button>
-          <a id="link-open-gsheet" href="https://docs.google.com/spreadsheets/u/0/" target="_blank" class="px-2 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded border border-slate-300 flex items-center gap-1 transition" title="작업 중인 구글 시트 웹으로 열기">
-            <span class="material-symbols-outlined text-[15px]">open_in_new</span>
-            구글 시트 열기
+          <a id="link-open-gsheet" href="https://docs.google.com/spreadsheets/u/0/" target="_blank" class="px-2 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold rounded border border-slate-300 flex items-center gap-1 transition shrink-0" title="작업 중인 구글 시트 웹으로 열기">
+            <span class="material-symbols-outlined text-[14px]">open_in_new</span>
+            시트 열기
           </a>
-          <!-- 모드 전환 (B/X vs D/OFF 모드) -->
-          <button id="btn-toggle-codemode" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded border border-slate-300 flex items-center gap-1 transition">
-            <span class="material-symbols-outlined text-[15px]">swap_horiz</span>
-            코드 표기 전환 (B/X ↔ D/OFF)
+          <button id="btn-publish-roster" class="px-2.5 py-1.5 bg-teal-700 hover:bg-teal-800 text-white text-[11px] font-bold rounded shadow-sm flex items-center gap-1 transition shrink-0">
+            <span class="material-symbols-outlined text-[15px]">send</span>
+            공식 재배포
           </button>
-          <button id="btn-open-changelog" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded border border-slate-300 flex items-center gap-1 transition">
-            <span class="material-symbols-outlined text-[15px]">history</span>
-            변경 이력 (${changeLogs.length}건)
-          </button>
-          <button id="btn-publish-roster" class="px-3 py-1.5 bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold rounded shadow-sm flex items-center gap-1 transition">
-            <span class="material-symbols-outlined text-[16px]">send</span>
-            근무기록지 공식 재배포
-          </button>
-          <button id="btn-print-excel" class="px-3 py-1.5 bg-[#004349] hover:bg-[#0d5c63] text-white text-xs font-bold rounded shadow-sm flex items-center gap-1 transition">
-            <span class="material-symbols-outlined text-[16px]">print</span>
-            A4 가로 인쇄 / PDF
+          <button id="btn-print-excel" class="hidden sm:flex px-2.5 py-1.5 bg-[#004349] hover:bg-[#0d5c63] text-white text-[11px] font-bold rounded shadow-sm items-center gap-1 transition shrink-0">
+            <span class="material-symbols-outlined text-[15px]">print</span>
+            인쇄/PDF
           </button>
         </div>
       </section>
 
-      <!-- 실제 서식 규칙 안내 바 -->
-      <section class="w-full px-6 py-1 bg-amber-50/70 border-b border-amber-200 flex items-center justify-between text-xs text-slate-600 shrink-0">
-        <div class="flex items-center gap-3">
-          <span class="font-bold text-slate-800">📋 요양병원 실제 작성 원칙:</span>
-          <span>• <b>B / D</b> : 주간</span>
-          <span>• <b>N</b> : 전반야 (23~07, 4H휴식)</span>
-          <span>• <b>N1</b> : 후반야 (23~07, 4H휴식)</span>
-          <span>• <b>X / OFF</b> : 비번 및 휴무</span>
-          <span class="text-rose-600 font-bold">• 빨간색 글자 : 희망휴무 또는 사후 대체 변경</span>
+      <!-- 실제 서식 규칙 안내 바 (모바일 가로 스크롤 가능) -->
+      <section class="w-full px-3 sm:px-6 py-1 bg-amber-50/70 border-b border-amber-200 flex items-center justify-between text-[11px] text-slate-600 shrink-0 overflow-x-auto no-scrollbar whitespace-nowrap gap-3">
+        <div class="flex items-center gap-2">
+          <span class="font-bold text-slate-800">📋 근무코드:</span>
+          <span><b>B/D</b>(주간)</span>
+          <span><b>N</b>(전반야 4H)</span>
+          <span><b>N1</b>(후반야 4H)</span>
+          <span><b>X</b>(비번)</span>
+          <span class="text-rose-600 font-bold">• 빨간색: 희망휴무/변경</span>
         </div>
-        <div class="text-[11px] text-slate-500">
-          * 셀 클릭 시 주간 ➔ N ➔ N1 ➔ 비번 ➔ 변경(빨간색) 순환 수정
+        <div class="text-[10px] text-slate-400">
+          * 셀 클릭 시 순환 수정
         </div>
       </section>
 
-      <!-- 엑셀 서식 완벽 구현 테이블 -->
-      <div class="flex-1 flex overflow-hidden p-4">
-        <div class="flex-1 overflow-auto bg-white rounded-lg border border-slate-400 shadow relative">
+      <!-- 엑셀 서식 완벽 구현 테이블 (가로/세로 독립 터치 스크롤) -->
+      <div class="flex-1 flex overflow-hidden p-2 sm:p-4">
+        <div class="flex-1 overflow-auto bg-white rounded-lg border border-slate-400 shadow relative touch-pan-x touch-pan-y">
           <table class="w-full border-collapse text-xs text-center border-slate-400 select-none">
             <!-- 상단 헤더 -->
             <thead>
@@ -239,8 +227,8 @@ export function renderRosterEditorView(container, { rosterData, violations, onUp
           </table>
         </div>
 
-        <!-- 우측 변경 이력 및 규칙 알림 모달/패널 -->
-        <div id="panel-changelog" class="w-80 ml-4 bg-white rounded-lg border border-slate-300 shadow flex flex-col shrink-0">
+        <!-- 우측 변경 이력 및 규칙 알림 패널 (모바일에서는 숨김, PC에서만 표시) -->
+        <div id="panel-changelog" class="hidden xl:flex w-80 ml-4 bg-white rounded-lg border border-slate-300 shadow flex-col shrink-0">
           <div class="p-3 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
             <h3 class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
               <span class="material-symbols-outlined text-[16px] text-teal-700">history_edu</span>

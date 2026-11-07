@@ -114,17 +114,44 @@ class CareShiftApp {
         this.navigate(path);
       });
     });
+
+    // 모바일 하단 탭 바 이벤트 연결
+    const mobileButtons = document.querySelectorAll('.mobile-nav-btn');
+    mobileButtons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const target = btn.dataset.target;
+        this.navigate(target);
+      });
+    });
   }
 
   navigate(viewName) {
     this.currentView = viewName;
     
+    // PC 네비게이션 액티브 상태 갱신
     document.querySelectorAll('nav a[data-path]').forEach(link => {
       const path = link.getAttribute('data-path');
       if (path === viewName) {
         link.className = 'px-4 py-2 transition-colors flex items-center gap-1.5 text-[#004349] font-bold border-b-2 border-[#004349] bg-[#eff4ff]/60 rounded-t-lg text-sm';
       } else {
         link.className = 'px-4 py-2 font-medium text-slate-600 hover:text-slate-900 transition-colors flex items-center gap-1.5 text-sm';
+      }
+    });
+
+    // 모바일 하단 탭 바 액티브 상태 갱신
+    document.querySelectorAll('.mobile-nav-btn').forEach(btn => {
+      const target = btn.dataset.target;
+      if (target === viewName) {
+        btn.classList.add('text-[#004349]', 'font-extrabold');
+        btn.classList.remove('text-slate-500');
+        const icon = btn.querySelector('.material-symbols-outlined');
+        if (icon) icon.classList.add('scale-110');
+      } else {
+        btn.classList.remove('text-[#004349]', 'font-extrabold');
+        btn.classList.add('text-slate-500');
+        const icon = btn.querySelector('.material-symbols-outlined');
+        if (icon) icon.classList.remove('scale-110');
       }
     });
 

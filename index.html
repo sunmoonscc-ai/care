@@ -2,11 +2,11 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8"/>
-  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
   <meta name="theme-color" content="#004349"/>
   <meta name="description" content="케어시프트 - 요양병원 간병인력 근무일정표 관리 시스템"/>
   <link rel="manifest" href="/manifest.json"/>
-  <title>케어시프트 (CareShift) - 요양보호사 근무일정표 관리</title>
+  <title>케어시프트 (CareShift)</title>
   
   <!-- Fonts & Icons -->
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
@@ -36,63 +36,58 @@
     };
   </script>
   <style>
+    /* iOS Safe Area Padding */
+    .pb-safe {
+      padding-bottom: env(safe-area-inset-bottom, 1rem);
+    }
+    .pt-safe {
+      padding-top: env(safe-area-inset-top, 0rem);
+    }
+    /* 스크롤바 숨기기 (모바일 탭) */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
     ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
+      width: 4px;
+      height: 4px;
     }
     ::-webkit-scrollbar-thumb {
       background: #CBD5E1;
-      border-radius: 3px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #F1F5F9;
+      border-radius: 2px;
     }
   </style>
 </head>
-<body class="bg-[#f8f9ff] text-slate-800 antialiased font-sans flex flex-col min-h-screen">
-  <!-- 최상단 헤더 네비게이션 -->
-  <header class="sticky top-0 left-0 right-0 z-50 bg-white border-b border-slate-200 shadow-sm">
-    <div class="max-w-[1920px] mx-auto px-6 flex flex-col justify-between pt-2">
-      <!-- 상단 정보 라인 -->
-      <div class="flex items-center justify-between w-full h-11">
-        <div class="flex items-center gap-6">
-          <div class="flex items-center gap-2.5 cursor-pointer" onclick="window.location.reload()">
-            <div class="w-8 h-8 rounded-lg bg-[#004349] flex items-center justify-center text-white font-bold text-lg shadow-sm">
+<body class="bg-[#f8f9ff] text-slate-800 antialiased font-sans flex flex-col min-h-screen overscroll-none">
+
+  <!-- 반응형 최상단 헤더 네비게이션 -->
+  <header class="sticky top-0 left-0 right-0 z-50 bg-white border-b border-slate-200 shadow-sm pt-safe">
+    <div class="max-w-[1920px] mx-auto px-3 sm:px-6">
+      
+      <!-- 상단 바 (모바일 / PC 공통 최적화) -->
+      <div class="flex items-center justify-between w-full h-13 sm:h-14 py-2">
+        <div class="flex items-center gap-2 sm:gap-4">
+          <div class="flex items-center gap-2 cursor-pointer" onclick="window.location.reload()">
+            <div class="w-8 h-8 rounded-lg bg-[#004349] flex items-center justify-center text-white font-black text-base shadow-sm shrink-0">
               C
             </div>
             <div class="flex flex-col">
-              <span class="font-bold text-slate-900 tracking-tight leading-none text-base">케어시프트</span>
-              <span class="text-[10px] text-slate-500 font-medium tracking-wide">CareShift Roster</span>
-            </div>
-          </div>
-
-          <div class="h-5 w-[1px] bg-slate-200"></div>
-
-          <div class="flex items-center gap-2">
-            <div class="flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 rounded-lg text-slate-700 text-xs">
-              <span class="text-slate-400 font-medium">의료기관</span>
-              <span class="font-semibold text-slate-800">늘푸른요양병원 본원</span>
-            </div>
-            <div class="flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 rounded-lg text-slate-700 text-xs">
-              <span class="text-slate-400 font-medium">담당병동</span>
-              <span class="font-semibold text-slate-800">제2재활병동 (54병상)</span>
+              <span class="font-extrabold text-slate-900 tracking-tight leading-none text-sm sm:text-base">케어시프트</span>
+              <span class="text-[9px] sm:text-[10px] text-slate-400 font-medium">늘푸른요양병원 2층</span>
             </div>
           </div>
         </div>
 
-        <div class="flex items-center gap-4">
-          <!-- 실시간 검증 뱃지 -->
-          <div id="header-violation-badge" class="flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 rounded-lg">
-            <span class="text-[11px] text-slate-500">실시간 검증</span>
-            <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-red-100 text-red-800 text-[11px] font-bold">위반 0</span>
+        <!-- 우측 액션 & 로그인 정보 -->
+        <div class="flex items-center gap-2 sm:gap-4">
+          <!-- 모바일에서는 위반 뱃지 축약형 -->
+          <div id="header-violation-badge" class="hidden xs:flex items-center gap-1 px-2 py-1 bg-slate-100 rounded-lg">
+            <span class="text-[10px] text-slate-500 hidden sm:inline">실시간 검증</span>
+            <span class="inline-flex items-center px-1.5 py-0.2 rounded bg-red-100 text-red-800 text-[10px] font-bold">위반 0</span>
           </div>
-
-          <div class="flex items-center gap-1 px-2.5 py-1 bg-teal-50 text-teal-800 rounded-lg text-xs font-semibold">
-            <span class="material-symbols-outlined text-[15px]">event_upcoming</span>
-            <span>11월 근무표 확정 D-3</span>
-          </div>
-
-          <div class="h-5 w-[1px] bg-slate-200"></div>
 
           <!-- 로그인 사용자 정보 & 권한 영역 -->
           <div id="header-user-info" class="flex items-center">
@@ -101,8 +96,8 @@
         </div>
       </div>
 
-      <!-- 네비게이션 탭 -->
-      <div class="flex items-end justify-between w-full mt-2">
+      <!-- PC 전용 상단 탭 네비게이션 (모바일에서는 숨김 -> 하단 탭바로 대체) -->
+      <div class="hidden md:flex items-end justify-between w-full mt-1">
         <nav class="flex items-center gap-1">
           <a class="px-4 py-2 transition-colors flex items-center gap-1.5 text-[#004349] font-bold border-b-2 border-[#004349] bg-[#eff4ff]/60 rounded-t-lg text-sm" data-path="editor" href="#">
             <span class="material-symbols-outlined text-[17px]">table_chart</span>
@@ -121,26 +116,51 @@
             휴무·교환 신청 관리
             <span class="ml-1 px-1.5 py-0.2 rounded-full bg-blue-100 text-blue-800 text-[10px] font-bold">3건</span>
           </a>
-          <a class="px-3.5 py-1.5 bg-teal-50 text-teal-800 font-bold rounded-lg border border-teal-200 transition-colors flex items-center gap-1.5 text-xs hover:bg-teal-100 ml-2" data-path="mobile" href="#" title="요양보호사 전용 휴대폰 화면 미리보기">
+          <a class="px-3.5 py-1.5 bg-teal-50 text-teal-800 font-bold rounded-lg border border-teal-200 transition-colors flex items-center gap-1.5 text-xs hover:bg-teal-100 ml-2" data-path="mobile" href="#" title="요양보호사 모바일 뷰">
             <span class="material-symbols-outlined text-[16px] text-teal-700">smartphone</span>
             [모바일] 내 근무·신청
           </a>
         </nav>
 
         <div class="flex items-center gap-1.5 pb-2 text-xs text-slate-400">
-          <span>클라우드 동기화 됨</span>
+          <span>클라우드 동기화</span>
           <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
         </div>
       </div>
+
     </div>
   </header>
 
-  <!-- 동적 뷰 렌더링 컨테이너 -->
-  <main id="view-content" class="flex-1 w-full bg-[#f8f9ff]">
+  <!-- 메인 뷰 컨테이너 (모바일에서는 하단 탭바 고려하여 pb-20 적용) -->
+  <main id="view-content" class="flex-1 w-full bg-[#f8f9ff] pb-20 md:pb-0">
     <!-- View content is injected here by main.js -->
   </main>
+
+  <!-- 📱 모바일 전용 하단 고정 탭 바 (Mobile Bottom Navigation) -->
+  <nav id="mobile-bottom-nav" class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200 pb-safe shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
+    <div class="grid grid-cols-4 h-14">
+      <button class="mobile-nav-btn flex flex-col items-center justify-center gap-0.5 text-slate-500 hover:text-[#004349]" data-target="mobile">
+        <span class="material-symbols-outlined text-[22px]">calendar_today</span>
+        <span class="text-[10px] font-bold">내 근무</span>
+      </button>
+
+      <button class="mobile-nav-btn flex flex-col items-center justify-center gap-0.5 text-slate-500 hover:text-[#004349]" data-target="requests">
+        <span class="material-symbols-outlined text-[22px]">event_busy</span>
+        <span class="text-[10px] font-bold">휴무·교환</span>
+      </button>
+
+      <button class="mobile-nav-btn flex flex-col items-center justify-center gap-0.5 text-slate-500 hover:text-[#004349]" data-target="editor">
+        <span class="material-symbols-outlined text-[22px]">table_chart</span>
+        <span class="text-[10px] font-bold">전체근무표</span>
+      </button>
+
+      <button class="mobile-nav-btn flex flex-col items-center justify-center gap-0.5 text-slate-500 hover:text-[#004349]" data-target="dashboard">
+        <span class="material-symbols-outlined text-[22px]">analytics</span>
+        <span class="text-[10px] font-bold">대시보드</span>
+      </button>
+    </div>
+  </nav>
 
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>
-
