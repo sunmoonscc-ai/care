@@ -1,5 +1,6 @@
 // 요양보호사용 전용 모바일 뷰 (터치 친화적, 반응형 카드, 어르신 친화적 큰 폰트)
 import { saveRequest } from '../services/requestService';
+import { openMobileRequestModal } from './mobileRequestModal';
 
 export function renderCaregiverMobileView(container, { rosterData, authState, currentStaffId = 'st_1', navigate }) {
   // 로그인한 사용자의 이메일이나 이름과 일치하는 직원이 있으면 자동 매칭, 없으면 선택된 직원
@@ -160,32 +161,27 @@ export function renderCaregiverMobileView(container, { rosterData, authState, cu
     renderCaregiverMobileView(container, { rosterData, authState, currentStaffId: e.target.value, navigate });
   });
 
-  // 희망 휴무 신청 모달/프롬프트
-  container.querySelector('#btn-mobile-request-off')?.addEventListener('click', async () => {
-    const day = prompt('희망 휴무를 신청할 9월 날짜를 입력하세요 (예: 18):', '18');
-    if (!day) return;
-    const reason = prompt('신청 사유를 입력하세요 (예: 정기 검진, 집안 행사):', '정기 검진') || '개인 사정';
-
-    await saveRequest({
+  // 희망 휴무 신청 모달
+  container.querySelector('#btn-mobile-request-off')?.addEventListener('click', () => {
+    openMobileRequestModal({
+      rosterData,
+      staff,
       type: 'OFF',
-      typeName: '희망 휴무(OFF)',
-      requesterId: staff.id,
-      requesterName: staff.name,
-      targetId: '',
-      targetName: '-',
-      date: `2026-09-${day.padStart(2, '0')}`,
-      fromShift: 'B',
-      toShift: 'X',
-      reason: reason,
-      status: 'PENDING_ADMIN',
-      statusText: '관리자 승인 대기중'
+      onComplete: () => {
+        renderCaregiverMobileView(container, { rosterData, authState, currentStaffId: staff.id, navigate });
+      }
     });
-
-    alert(`✅ [9월 ${day}일] 희망 휴무 신청이 수간호사님께 접수되었습니다!\n승인 시 근무표에 빨간색으로 자동 반영됩니다.`);
   });
 
-  // 맞교환 요청
+  // 맞교환 요청 모달
   container.querySelector('#btn-mobile-request-swap')?.addEventListener('click', () => {
-    navigate('requests');
+    openMobileRequestModal({
+      rosterData,
+      staff,
+      type: 'SWAP',
+      onComplete: () => {
+        renderCaregiverMobileView(container, { rosterData, authState, currentStaffId: staff.id, navigate });
+      }
+    });
   });
 }
