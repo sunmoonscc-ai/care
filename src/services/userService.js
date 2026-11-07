@@ -169,3 +169,4 @@ function getLocalUsers() {
 function saveLocalUsers(data) {
   localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(data));
 }
+

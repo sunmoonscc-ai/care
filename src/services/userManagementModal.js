@@ -183,3 +183,4 @@ export function setupUserManagementModal(staffList, onUpdated) {
 
   return openModal;
 }
+

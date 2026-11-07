@@ -57,3 +57,4 @@ export function renderPendingUserView(container, { userProfile }) {
     await logoutUser();
   });
 }
+
