@@ -1,6 +1,7 @@
 import { loadRosterData, saveRosterData } from './services/rosterService';
 import { validateRoster } from './services/ruleEngine';
 import { subscribeAuth, logoutUser } from './services/authService';
+import { subscribeRosterChanges } from './services/realtimeSync';
 import { renderDashboardView } from './views/dashboardView';
 import { renderRosterEditorView } from './views/rosterEditorView';
 import { renderAutoGenerateView } from './views/autoGenerateView';
