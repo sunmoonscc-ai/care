@@ -1,4 +1,4 @@
-import { loadRosterData, saveRosterData } from './services/rosterService';
+import { getLocalRosterData, syncRosterFromFirestore, saveRosterData } from './services/rosterService';
 import { validateRoster } from './services/ruleEngine';
 import { subscribeAuth, logoutUser } from './services/authService';
 import { subscribeRosterChanges } from './services/realtimeSync';
@@ -11,30 +11,56 @@ import { renderLoginView } from './views/loginView';
 
 class CareShiftApp {
   constructor() {
-    this.currentView = 'editor';
-    this.rosterData = null;
+    this.currentView = 'loading'; // 초기 인증 확인 전 임시 상태
+    this.rosterData = getLocalRosterData(); // ⚡ 지연 0ms: 인메모리/로컬 캐시 즉각 로드
     this.violations = [];
     this.authState = { isLoggedIn: false, user: null, isAdmin: false };
     this.container = document.getElementById('view-content');
   }
 
-  async init() {
-    this.rosterData = await loadRosterData();
+  init() {
+    // 1. 규칙 검증 및 네비게이션 리스너 등록
     this.recalculateViolations();
     this.setupNavigation();
-    this.setupAuthListener();
-  }
 
-  setupAuthListener() {
+    // 2. 인증 상태 리스너 (Firebase Auth)
     subscribeAuth((authInfo) => {
+      const prevLoggedIn = this.authState.isLoggedIn;
       this.authState = authInfo;
       this.updateHeaderUser();
-      
-      // 관리자가 아니고 일반 직원이면 기본 뷰를 모바일 뷰로 유도
-      if (this.authState.isLoggedIn && !this.authState.isAdmin && this.currentView === 'editor') {
-        this.currentView = 'mobile';
+
+      if (!this.authState.isLoggedIn) {
+        // 비로그인 상태 (처음 온 사용자이거나 로그아웃 상태) ➔ 로그인 화면을 첫 화면으로 노출
+        this.currentView = 'login';
+        this.render();
+      } else {
+        // 기존 로그인 사용자거나 방금 로그인 성공 ➔ 관리자는 editor, 요양보호사는 mobile
+        if (!prevLoggedIn || this.currentView === 'login' || this.currentView === 'loading') {
+          this.currentView = this.authState.isAdmin ? 'editor' : 'mobile';
+        }
+        this.render();
+
+        // 3. ⚡ 사용자 로그인 완료 후 백그라운드에서 조용히 Firestore 최신 데이터 동기화
+        syncRosterFromFirestore().then((remoteData) => {
+          if (remoteData) {
+            this.rosterData = remoteData;
+            this.recalculateViolations();
+            // 현재 보고 있는 화면을 부드럽게 최신 데이터로 리프레시
+            if (this.currentView !== 'login') {
+              this.render();
+            }
+          }
+        });
       }
-      this.render();
+    });
+
+    // 4. Firestore 원격 변경사항 실시간 반영 리스너 (구글 시트나 다른 관리자가 수정 시)
+    subscribeRosterChanges((remoteData) => {
+      this.rosterData = remoteData;
+      this.recalculateViolations();
+      if (this.currentView !== 'login') {
+        this.render();
+      }
     });
   }
 
@@ -49,21 +75,21 @@ class CareShiftApp {
         : `<span class="px-1.5 py-0.2 rounded bg-slate-200 text-slate-700 text-[10px] font-bold">요양보호사</span>`;
 
       userContainer.innerHTML = `
-        <div class="flex items-center gap-2">
-          ${u.photoURL ? `<img src="${u.photoURL}" class="w-7 h-7 rounded-full object-cover border border-slate-300"/>` : `
-            <div class="w-7 h-7 rounded-full bg-[#004349] flex items-center justify-center text-white text-xs font-bold">
+        <div class="flex items-center gap-1.5 sm:gap-2">
+          ${u.photoURL ? `<img src="${u.photoURL}" class="w-7 h-7 rounded-full object-cover border border-slate-300 shrink-0"/>` : `
+            <div class="w-7 h-7 rounded-full bg-[#004349] flex items-center justify-center text-white text-xs font-bold shrink-0">
               ${u.displayName.charAt(0)}
             </div>
           `}
-          <div class="text-left">
+          <div class="text-left hidden xs:block">
             <div class="flex items-center gap-1">
               <span class="text-xs font-bold text-slate-900 leading-tight">${u.displayName}</span>
               ${roleBadge}
             </div>
-            <span class="text-[10px] text-slate-500 block leading-tight truncate max-w-[130px]">${u.email}</span>
+            <span class="text-[9px] text-slate-400 block leading-tight truncate max-w-[120px]">${u.email}</span>
           </div>
-          <button id="btn-logout" class="ml-1 text-[11px] text-slate-400 hover:text-slate-700 px-1.5 py-1 rounded hover:bg-slate-100" title="로그아웃">
-            <span class="material-symbols-outlined text-[16px]">logout</span>
+          <button id="btn-logout" class="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-slate-100" title="로그아웃">
+            <span class="material-symbols-outlined text-[17px]">logout</span>
           </button>
         </div>
       `;
@@ -73,7 +99,7 @@ class CareShiftApp {
       });
     } else {
       userContainer.innerHTML = `
-        <button id="btn-header-login" class="px-3 py-1.5 bg-[#004349] hover:bg-[#0d5c63] text-white rounded-lg text-xs font-bold transition flex items-center gap-1">
+        <button id="btn-header-login" class="px-3 py-1.5 bg-[#004349] hover:bg-[#0d5c63] text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-sm">
           <span class="material-symbols-outlined text-[15px]">login</span>
           로그인
         </button>
@@ -98,16 +124,16 @@ class CareShiftApp {
     const violationBadge = document.getElementById('header-violation-badge');
     if (violationBadge) {
       violationBadge.innerHTML = `
-        <span class="text-[11px] text-slate-500">실시간 검증</span>
-        <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-red-100 text-red-800 text-[11px] font-bold">위반 ${errorCount}</span>
-        <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 text-[11px] font-bold">주의 ${warnCount}</span>
+        <span class="text-[10px] text-slate-500 hidden sm:inline">실시간 검증</span>
+        <span class="inline-flex items-center px-1.5 py-0.2 rounded bg-red-100 text-red-800 text-[10px] font-bold">위반 ${errorCount}</span>
+        <span class="inline-flex items-center px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 text-[10px] font-bold hidden xs:inline-flex">주의 ${warnCount}</span>
       `;
     }
   }
 
   setupNavigation() {
-    const navLinks = document.querySelectorAll('nav a[data-path]');
-    navLinks.forEach(link => {
+    // PC 네비게이션
+    document.querySelectorAll('nav a[data-path]').forEach(link => {
       link.addEventListener('click', (e) => {
         e.preventDefault();
         const path = link.getAttribute('data-path');
@@ -115,9 +141,8 @@ class CareShiftApp {
       });
     });
 
-    // 모바일 하단 탭 바 이벤트 연결
-    const mobileButtons = document.querySelectorAll('.mobile-nav-btn');
-    mobileButtons.forEach(btn => {
+    // 모바일 하단 탭바
+    document.querySelectorAll('.mobile-nav-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
         const target = btn.dataset.target;
@@ -129,7 +154,7 @@ class CareShiftApp {
   navigate(viewName) {
     this.currentView = viewName;
     
-    // PC 네비게이션 액티브 상태 갱신
+    // PC 헤더 탭 스타일
     document.querySelectorAll('nav a[data-path]').forEach(link => {
       const path = link.getAttribute('data-path');
       if (path === viewName) {
@@ -139,7 +164,7 @@ class CareShiftApp {
       }
     });
 
-    // 모바일 하단 탭 바 액티브 상태 갱신
+    // 모바일 하단 탭 스타일
     document.querySelectorAll('.mobile-nav-btn').forEach(btn => {
       const target = btn.dataset.target;
       if (target === viewName) {
@@ -161,7 +186,7 @@ class CareShiftApp {
   render() {
     this.container.innerHTML = '';
 
-    // 로그인이 안 되어 있는 경우 로그인 화면 표시
+    // 1. 비로그인 상태일 때 로그인 화면 표시
     if (!this.authState.isLoggedIn && this.currentView === 'login') {
       renderLoginView(this.container, () => {
         this.currentView = this.authState.isAdmin ? 'editor' : 'mobile';
@@ -176,9 +201,8 @@ class CareShiftApp {
       authState: this.authState,
       navigate: (v) => this.navigate(v),
       onUpdateRoster: (newData) => {
-        // 관리자가 아닐 경우 수정 차단
         if (!this.authState.isAdmin) {
-          alert('⚠️ 근무표 수정 및 배포 권한은 관리자(hdcc6th@gmail.com, sunmoon.scc@gmail.com)에게만 부여되어 있습니다.');
+          alert('⚠️ 근무표 수정 및 배포 권한은 관리자에게만 부여되어 있습니다.');
           return;
         }
         this.rosterData = newData;
