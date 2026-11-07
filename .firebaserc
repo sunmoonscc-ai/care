@@ -1,6 +1,15 @@
 {
   "projects": {
     "default": "care-798f1"
-  }
+  },
+  "targets": {
+    "care-798f1": {
+      "hosting": {
+        "care-hosting": [
+          "care-798f1"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }
-

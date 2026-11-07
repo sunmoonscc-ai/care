@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "target": "care-hosting",
     "public": "dist",
     "ignore": [
       "firebase.json",
@@ -17,4 +18,3 @@
     "rules": "firestore.rules"
   }
 }
-

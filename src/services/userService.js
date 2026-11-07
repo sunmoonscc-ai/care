@@ -68,18 +68,16 @@ export async function registerNewUserRequest(user) {
     email: cleanEmail,
     displayName: user.displayName || cleanEmail.split('@')[0],
     photoURL: user.photoURL || null,
-    role: 'PENDING', // 기본 상태: 승인 대기
+    role: 'PENDING',
     status: 'PENDING',
-    staffId: null, // 관리자가 승인 시 매핑
+    staffId: null,
     appliedAt: new Date().toLocaleString('ko-KR')
   };
 
-  // 로컬 저장
   const localDir = getLocalUsers();
   localDir[cleanEmail] = profile;
   saveLocalUsers(localDir);
 
-  // Firestore 저장
   if (!isOfflineFallback && db) {
     try {
       await setDoc(doc(db, 'users', cleanEmail), profile);
@@ -91,11 +89,10 @@ export async function registerNewUserRequest(user) {
   return profile;
 }
 
-// 관리자가 회원 승인 시 (정회원, 준회원, 임시회원 선택)
 export async function approveUser({ email, role, staffId }) {
   const cleanEmail = email.trim().toLowerCase();
   const updates = {
-    role: role, // 'REGULAR', 'ASSOCIATE', 'GUEST'
+    role: role,
     status: 'APPROVED',
     staffId: staffId || null,
     approvedAt: new Date().toLocaleString('ko-KR')
@@ -116,7 +113,6 @@ export async function approveUser({ email, role, staffId }) {
   }
 }
 
-// 가입 거절 또는 준회원 가입 취소
 export async function rejectOrRevokeUser(email, reason = '가입 거절 또는 권한 취소') {
   const cleanEmail = email.trim().toLowerCase();
   const updates = {
@@ -141,7 +137,6 @@ export async function rejectOrRevokeUser(email, reason = '가입 거절 또는 �
   }
 }
 
-// 전체 사용자 목록 조회 (관리자 회원 관리용)
 export async function listAllUsers() {
   if (!isOfflineFallback && db) {
     try {
@@ -169,4 +164,3 @@ function getLocalUsers() {
 function saveLocalUsers(data) {
   localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(data));
 }
-
