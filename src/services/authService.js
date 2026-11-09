@@ -22,16 +22,66 @@ export function checkIsAdmin(email) {
   return ADMIN_EMAILS.includes(email.trim().toLowerCase());
 }
 
-// 구글 로그인 실행
-export async function loginWithGoogle() {
+// 팝업 창 즉각 닫힘 감지 래퍼 함수 (Firebase 고유 7~8초 지연을 100ms로 단축)
+async function signInWithPopupImmediate(authInstance, providerInstance) {
+  let popupWindow = null;
+  const originalOpen = window.open;
+
+  window.open = function (...args) {
+    popupWindow = originalOpen.apply(window, args);
+    window.open = originalOpen;
+    return popupWindow;
+  };
+
+  let pollInterval = null;
+
   try {
-    const result = await signInWithPopup(auth, provider);
+    const popupClosedPromise = new Promise((_, reject) => {
+      pollInterval = setInterval(() => {
+        if (popupWindow && popupWindow.closed) {
+          clearInterval(pollInterval);
+          reject({
+            code: 'auth/popup-closed-by-user',
+            message: '사용자가 로그인 팝업 창을 닫았습니다.'
+          });
+        }
+      }, 100);
+    });
+
+    const signInPromise = signInWithPopup(authInstance, providerInstance);
+    return await Promise.race([signInPromise, popupClosedPromise]);
+  } finally {
+    if (pollInterval) clearInterval(pollInterval);
+    window.open = originalOpen;
+  }
+}
+
+// 구글 로그인 실행 (promptSelectAccount: true면 항상 계정 선택 창 표시)
+export async function loginWithGoogle({ promptSelectAccount = false } = {}) {
+  try {
+    const authProvider = new GoogleAuthProvider();
+    if (promptSelectAccount) {
+      authProvider.setCustomParameters({
+        prompt: 'select_account'
+      });
+    }
+    const result = await signInWithPopupImmediate(auth, authProvider);
     const user = result.user;
     const isAdmin = checkIsAdmin(user.email);
     return { success: true, user, isAdmin };
   } catch (error) {
-    console.error("Google Sign-In Error:", error);
-    return { success: false, error: error.message };
+    const code = error?.code || '';
+    const isCancelled = 
+      code === 'auth/popup-closed-by-user' || 
+      code === 'auth/cancelled-popup-request' ||
+      code === 'auth/user-cancelled';
+
+    return { 
+      success: false, 
+      error: error.message,
+      code: code,
+      isCancelled: isCancelled
+    };
   }
 }
 

@@ -1,6 +1,6 @@
 import { getLocalRosterData, syncRosterFromFirestore, saveRosterData } from './services/rosterService';
 import { validateRoster } from './services/ruleEngine';
-import { subscribeAuth, logoutUser } from './services/authService';
+import { subscribeAuth, logoutUser, loginWithGoogle } from './services/authService';
 import { getUserProfile, registerNewUserRequest, listAllUsers, subscribeUsersList } from './services/userService';
 import { subscribeRosterChanges } from './services/realtimeSync';
 
@@ -33,13 +33,15 @@ class CareShiftApp {
       this.authState.user = authInfo.user;
       this.authState.isAdmin = authInfo.isAdmin;
 
-      // 하단 탭바 노출/숨김 및 모드 업데이트
+      // 하단 탭바 및 상단 PC 네비게이션 노출/숨김 업데이트
       this.updateBottomNavVisibility();
+      this.updatePcNavVisibility();
 
       if (!this.authState.isLoggedIn) {
         // 비로그인 상태 -> 로그인 화면 표시
         this.authState.userProfile = null;
         this.updateHeaderUser();
+        this.updatePcNavVisibility();
         this.currentView = 'login';
         this.render();
       } else {
@@ -71,6 +73,7 @@ class CareShiftApp {
         }
 
         this.updateBottomNavVisibility();
+        this.updatePcNavVisibility();
         this.render();
 
         // 4. 백그라운드 Firestore 근무표 동기화
@@ -138,6 +141,9 @@ class CareShiftApp {
     badge.querySelector('#btn-goto-user-mgmt')?.addEventListener('click', () => {
       this.navigate('user-mgmt');
     });
+
+    this.updatePcNavVisibility();
+    this.updateBottomNavVisibility();
   }
 
   // 📱 모바일 하단 탭바를 로그인 상태 및 권한에 따라 동적으로 구성
@@ -196,6 +202,73 @@ class CareShiftApp {
     this.bindBottomNavEvents();
   }
 
+  // 💻 PC 상단 탭바를 로그인 상태 및 권한에 따라 동적으로 구성
+  updatePcNavVisibility() {
+    const pcNavBar = document.getElementById('pc-top-nav-bar');
+    const pcNavLinks = document.getElementById('pc-nav-links');
+    if (!pcNavBar || !pcNavLinks) return;
+
+    // 1. 비로그인 상태이거나 승인 대기(pending/rejected) 상태이면 PC 상단 탭바 완전 숨김
+    if (!this.authState.isLoggedIn || this.authState.userProfile?.status === 'PENDING' || this.authState.userProfile?.status === 'REJECTED') {
+      pcNavBar.classList.add('hidden');
+      pcNavBar.classList.remove('md:flex');
+      return;
+    }
+
+    // 로그인된 상태이면 md:flex 적용
+    pcNavBar.classList.remove('hidden');
+    pcNavBar.classList.add('md:flex');
+
+    // 2. 권한별 메뉴 분기
+    if (this.authState.isAdmin) {
+      // 👑 관리자용 상단 메뉴
+      pcNavLinks.innerHTML = `
+        <a class="px-4 py-2 transition-colors flex items-center gap-1.5 ${this.currentView === 'editor' ? 'text-[#004349] font-bold border-b-2 border-[#004349] bg-[#eff4ff]/60' : 'text-slate-600 hover:text-slate-900'} rounded-t-lg text-sm" data-path="editor" href="#">
+          <span class="material-symbols-outlined text-[17px]">table_chart</span>
+          월간 근무표 편집
+        </a>
+        <a class="px-4 py-2 transition-colors flex items-center gap-1.5 ${this.currentView === 'user-mgmt' ? 'text-[#004349] font-bold border-b-2 border-[#004349] bg-[#eff4ff]/60' : 'text-slate-600 hover:text-slate-900'} rounded-t-lg text-sm relative" data-path="user-mgmt" href="#">
+          <span class="material-symbols-outlined text-[17px]">how_to_reg</span>
+          회원 가입 승인 관리
+          ${this.pendingUsersCount > 0 ? `<span class="ml-1 px-1.5 py-0.2 rounded-full bg-rose-500 text-white text-[10px] font-black">${this.pendingUsersCount}</span>` : ''}
+        </a>
+        <a class="px-4 py-2 transition-colors flex items-center gap-1.5 ${this.currentView === 'requests' ? 'text-[#004349] font-bold border-b-2 border-[#004349] bg-[#eff4ff]/60' : 'text-slate-600 hover:text-slate-900'} rounded-t-lg text-sm" data-path="requests" href="#">
+          <span class="material-symbols-outlined text-[17px]">sync_alt</span>
+          휴무·교환 신청 관리
+        </a>
+        <a class="px-4 py-2 transition-colors flex items-center gap-1.5 ${this.currentView === 'dashboard' ? 'text-[#004349] font-bold border-b-2 border-[#004349] bg-[#eff4ff]/60' : 'text-slate-600 hover:text-slate-900'} rounded-t-lg text-sm" data-path="dashboard" href="#">
+          <span class="material-symbols-outlined text-[17px]">dashboard</span>
+          운영 대시보드
+        </a>
+        <a class="px-3.5 py-1.5 bg-teal-50 text-teal-800 font-bold rounded-lg border border-teal-200 transition-colors flex items-center gap-1.5 text-xs hover:bg-teal-100 ml-2" data-path="mobile" href="#" title="요양보호사 모바일 뷰 미리보기">
+          <span class="material-symbols-outlined text-[16px] text-teal-700">smartphone</span>
+          [미리보기] 내 근무
+        </a>
+      `;
+    } else {
+      // 👩‍⚕️ 일반 요양보호사 (정회원/준회원/임시회원) PC 상단 메뉴
+      pcNavLinks.innerHTML = `
+        <a class="px-4 py-2 transition-colors flex items-center gap-1.5 ${this.currentView === 'mobile' ? 'text-[#004349] font-bold border-b-2 border-[#004349] bg-[#eff4ff]/60' : 'text-slate-600 hover:text-slate-900'} rounded-t-lg text-sm" data-path="mobile" href="#">
+          <span class="material-symbols-outlined text-[17px]">calendar_today</span>
+          내 오늘 근무 & 월간 일정
+        </a>
+        <a class="px-4 py-2 transition-colors flex items-center gap-1.5 ${this.currentView === 'requests' ? 'text-[#004349] font-bold border-b-2 border-[#004349] bg-[#eff4ff]/60' : 'text-slate-600 hover:text-slate-900'} rounded-t-lg text-sm" data-path="requests" href="#">
+          <span class="material-symbols-outlined text-[17px]">event_busy</span>
+          휴무·교환 신청
+        </a>
+      `;
+    }
+
+    // 클릭 이벤트 다시 연결
+    pcNavLinks.querySelectorAll('a[data-path]').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const path = link.getAttribute('data-path');
+        this.navigate(path);
+      });
+    });
+  }
+
   bindBottomNavEvents() {
     document.querySelectorAll('.mobile-nav-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
@@ -215,49 +288,146 @@ class CareShiftApp {
       const profile = this.authState.userProfile;
       
       let roleBadge = `<span class="px-1.5 py-0.2 rounded bg-slate-200 text-slate-700 text-[10px] font-bold">대기중</span>`;
+      let roleTitle = '승인 대기';
       if (this.authState.isAdmin) {
         roleBadge = `<span class="px-1.5 py-0.2 rounded bg-rose-100 text-rose-800 text-[10px] font-bold">관리자</span>`;
+        roleTitle = '최고 관리자';
       } else if (profile?.role === 'REGULAR') {
         roleBadge = `<span class="px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold">정회원</span>`;
+        roleTitle = '정회원 요양보호사';
       } else if (profile?.role === 'ASSOCIATE') {
         roleBadge = `<span class="px-1.5 py-0.2 rounded bg-blue-100 text-blue-800 text-[10px] font-bold">준회원</span>`;
+        roleTitle = '준회원 요양보호사';
       } else if (profile?.role === 'GUEST') {
         roleBadge = `<span class="px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 text-[10px] font-bold">임시회원</span>`;
+        roleTitle = '임시회원 (둘러보기)';
       }
 
       userContainer.innerHTML = `
-        <div class="flex items-center gap-1.5 sm:gap-2">
-          ${u.photoURL ? `<img src="${u.photoURL}" class="w-7 h-7 rounded-full object-cover border border-slate-300 shrink-0"/>` : `
-            <div class="w-7 h-7 rounded-full bg-[#004349] flex items-center justify-center text-white text-xs font-bold shrink-0">
-              ${u.displayName.charAt(0)}
+        <div class="relative" id="user-profile-menu-container">
+          <!-- 사용자 프로필 아바타 버튼 -->
+          <button id="btn-user-avatar" class="flex items-center gap-1.5 sm:gap-2 p-1 rounded-2xl hover:bg-slate-100 transition border border-transparent hover:border-slate-200 focus:outline-none">
+            ${u.photoURL ? `<img src="${u.photoURL}" class="w-8 h-8 rounded-full object-cover border border-slate-300 shrink-0"/>` : `
+              <div class="w-8 h-8 rounded-full bg-[#004349] flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-sm">
+                ${u.displayName.charAt(0)}
+              </div>
+            `}
+            <div class="text-left hidden xs:block">
+              <div class="flex items-center gap-1">
+                <span class="text-xs font-bold text-slate-900 leading-tight">${u.displayName}</span>
+                ${roleBadge}
+              </div>
+              <span class="text-[9px] text-slate-400 block leading-tight truncate max-w-[110px]">${u.email}</span>
             </div>
-          `}
-          <div class="text-left hidden xs:block">
-            <div class="flex items-center gap-1">
-              <span class="text-xs font-bold text-slate-900 leading-tight">${u.displayName}</span>
-              ${roleBadge}
-            </div>
-            <span class="text-[9px] text-slate-400 block leading-tight truncate max-w-[120px]">${u.email}</span>
-          </div>
-          <button id="btn-logout" class="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-slate-100" title="로그아웃">
-            <span class="material-symbols-outlined text-[17px]">logout</span>
+            <span class="material-symbols-outlined text-[16px] text-slate-400">expand_more</span>
           </button>
+
+          <!-- 드롭다운 메뉴 (정보보기, 모드전환, 로그아웃) -->
+          <div id="user-dropdown-menu" class="hidden absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-slate-200/90 py-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+            <!-- 사용자 상세 정보 헤더 -->
+            <div class="px-4 py-3 border-b border-slate-100 bg-slate-50/50 rounded-t-2xl">
+              <div class="flex items-center gap-3">
+                ${u.photoURL ? `<img src="${u.photoURL}" class="w-10 h-10 rounded-full object-cover border border-slate-200"/>` : `
+                  <div class="w-10 h-10 rounded-full bg-[#004349] flex items-center justify-center text-white font-bold text-sm">
+                    ${u.displayName.charAt(0)}
+                  </div>
+                `}
+                <div class="overflow-hidden">
+                  <div class="text-xs font-bold text-slate-900 truncate">${u.displayName}</div>
+                  <div class="text-[10px] text-slate-400 truncate">${u.email}</div>
+                  <div class="mt-1">${roleBadge}</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 정보보기 영역 -->
+            <div class="px-4 py-2.5 border-b border-slate-100 text-[11px] text-slate-600 space-y-1">
+              <div class="flex justify-between">
+                <span class="text-slate-400">계정 권한</span>
+                <span class="font-bold text-slate-800">${roleTitle}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-400">소속 병동</span>
+                <span class="font-bold text-slate-800">늘푸른요양병원 2층</span>
+              </div>
+              ${profile?.staffName ? `
+                <div class="flex justify-between">
+                  <span class="text-slate-400">매칭 직원명</span>
+                  <span class="font-bold text-teal-800">${profile.staffName}</span>
+                </div>
+              ` : ''}
+            </div>
+
+            <!-- 메뉴 링크들 -->
+            <div class="py-1">
+              ${this.authState.isAdmin ? `
+                <button id="menu-btn-user-mgmt" class="w-full px-4 py-2 text-left text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2 font-medium">
+                  <span class="material-symbols-outlined text-[17px] text-slate-500">how_to_reg</span>
+                  회원 가입 승인 관리
+                  ${this.pendingUsersCount > 0 ? `<span class="ml-auto px-1.5 py-0.2 bg-rose-500 text-white rounded-full text-[10px] font-bold">${this.pendingUsersCount}</span>` : ''}
+                </button>
+              ` : ''}
+
+              <button id="menu-btn-logout" class="w-full px-4 py-2.5 text-left text-xs text-rose-600 hover:bg-rose-50 flex items-center gap-2 font-bold transition">
+                <span class="material-symbols-outlined text-[17px] text-rose-500">logout</span>
+                로그아웃
+              </button>
+            </div>
+          </div>
         </div>
       `;
 
-      userContainer.querySelector('#btn-logout')?.addEventListener('click', async () => {
-        await logoutUser();
+      const avatarBtn = userContainer.querySelector('#btn-user-avatar');
+      const dropdown = userContainer.querySelector('#user-dropdown-menu');
+
+      avatarBtn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dropdown?.classList.toggle('hidden');
+      });
+
+      // 바깥 영역 클릭 시 드롭다운 닫기
+      document.addEventListener('click', (e) => {
+        if (!userContainer.contains(e.target)) {
+          dropdown?.classList.add('hidden');
+        }
+      });
+
+      // 관리자 회원 승인 이동
+      userContainer.querySelector('#menu-btn-user-mgmt')?.addEventListener('click', () => {
+        dropdown?.classList.add('hidden');
+        this.navigate('user-mgmt');
+      });
+
+      // 로그아웃 확인 및 실행
+      userContainer.querySelector('#menu-btn-logout')?.addEventListener('click', async () => {
+        dropdown?.classList.add('hidden');
+        if (confirm('로그아웃 하시겠습니까?')) {
+          await logoutUser();
+        }
       });
     } else {
       userContainer.innerHTML = `
-        <button id="btn-header-login" class="px-3 py-1.5 bg-[#004349] hover:bg-[#0d5c63] text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-sm">
+        <button id="btn-header-login" class="px-3 py-1.5 bg-[#004349] hover:bg-[#0d5c63] text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-sm active:scale-95 touch-manipulation">
           <span class="material-symbols-outlined text-[15px]">login</span>
           로그인
         </button>
       `;
-      userContainer.querySelector('#btn-header-login')?.addEventListener('click', () => {
-        this.currentView = 'login';
-        this.render();
+      userContainer.querySelector('#btn-header-login')?.addEventListener('click', async () => {
+        const btn = userContainer.querySelector('#btn-header-login');
+        if (btn) {
+          btn.disabled = true;
+          btn.innerHTML = `<span class="inline-block w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span> 로그인 중...`;
+        }
+        const res = await loginWithGoogle();
+        if (!res.success) {
+          if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = `<span class="material-symbols-outlined text-[15px]">login</span> 로그인`;
+          }
+          if (!res.isCancelled) {
+            alert(`로그인 안내: ${res.error}\n(팝업이 차단되었거나 취소된 경우 다시 시도해 주세요)`);
+          }
+        }
       });
     }
   }
@@ -269,28 +439,29 @@ class CareShiftApp {
   }
 
   updateHeaderStats() {
+    const violationBadge = document.getElementById('header-violation-badge');
+    if (!violationBadge) return;
+
+    // 로그인 전이거나 승인 대기자에게는 위반 뱃지 숨김
+    if (!this.authState.isLoggedIn || this.authState.userProfile?.status === 'PENDING' || this.authState.userProfile?.status === 'REJECTED') {
+      violationBadge.classList.add('hidden');
+      violationBadge.classList.remove('xs:flex');
+      return;
+    }
+
     const errorCount = this.violations.filter(v => v.type === 'error').length;
     const warnCount = this.violations.filter(v => v.type === 'warning').length;
-    
-    const violationBadge = document.getElementById('header-violation-badge');
-    if (violationBadge) {
-      violationBadge.innerHTML = `
-        <span class="text-[10px] text-slate-500 hidden sm:inline">실시간 검증</span>
-        <span class="inline-flex items-center px-1.5 py-0.2 rounded bg-red-100 text-red-800 text-[10px] font-bold">위반 ${errorCount}</span>
-        <span class="inline-flex items-center px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 text-[10px] font-bold hidden xs:inline-flex">주의 ${warnCount}</span>
-      `;
-    }
+
+    violationBadge.classList.remove('hidden');
+    violationBadge.classList.add('xs:flex');
+    violationBadge.innerHTML = `
+      <span class="text-[10px] text-slate-500 hidden sm:inline">실시간 검증</span>
+      <span class="inline-flex items-center px-1.5 py-0.2 rounded bg-red-100 text-red-800 text-[10px] font-bold">위반 ${errorCount}</span>
+      <span class="inline-flex items-center px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 text-[10px] font-bold hidden xs:inline-flex">주의 ${warnCount}</span>
+    `;
   }
 
   setupNavigation() {
-    document.querySelectorAll('nav a[data-path]').forEach(link => {
-      link.addEventListener('click', (e) => {
-        e.preventDefault();
-        const path = link.getAttribute('data-path');
-        this.navigate(path);
-      });
-    });
-
     this.bindBottomNavEvents();
   }
 
@@ -300,6 +471,8 @@ class CareShiftApp {
     }
 
     this.currentView = viewName;
+    this.updatePcNavVisibility();
+    this.updateBottomNavVisibility();
     
     document.querySelectorAll('nav a[data-path]').forEach(link => {
       const path = link.getAttribute('data-path');
