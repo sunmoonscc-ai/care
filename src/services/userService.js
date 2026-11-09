@@ -101,6 +101,9 @@ export async function getUserProfile(email) {
 }
 
 export async function registerNewUserRequest(user) {
+  console.log("📝 [registerNewUserRequest] === 시작 ===");
+  console.log("   입력:", user);
+
   if (!user || !user.email) {
     console.error("❌ [registerNewUserRequest] 잘못된 사용자 정보");
     return null;
@@ -117,35 +120,54 @@ export async function registerNewUserRequest(user) {
     appliedAt: new Date().toLocaleString('ko-KR')
   };
 
+  console.log("📊 [registerNewUserRequest] 프로필:", profile);
+
   try {
-    // 로컬 저장
+    // 1️⃣ 로컬 저장
+    console.log("💾 [registerNewUserRequest] 로컬 저장 중...");
     const localDir = getLocalUsers();
     localDir[cleanEmail] = profile;
     saveLocalUsers(localDir);
+    console.log("✅ [registerNewUserRequest] 로컬 저장 완료");
 
-    if (DEBUG) {
-      console.log("💾 [registerNewUserRequest] 로컬 저장 완료:", cleanEmail);
-    }
+    // 2️⃣ Firestore 상태 확인
+    console.log(`🔍 [registerNewUserRequest] Firestore 상태: offline=${isOfflineFallback}, db=${!!db}`);
 
-    // Firestore 영구 저장
+    // 3️⃣ Firestore 영구 저장
     if (!isOfflineFallback && db) {
+      console.log("🔥 [registerNewUserRequest] Firestore 저장 시도 중...");
       try {
-        await setDoc(doc(db, 'users', cleanEmail), profile);
-        if (DEBUG) {
-          console.log("✅ [registerNewUserRequest] Firestore 저장 완료:", cleanEmail);
-        }
+        const docRef = doc(db, 'users', cleanEmail);
+        console.log(`   문서 경로: users/${cleanEmail}`);
+
+        await setDoc(docRef, profile);
+
+        console.log("✅ [registerNewUserRequest] Firestore 저장 성공!");
+        return profile;
       } catch (error) {
         console.error("❌ [registerNewUserRequest] Firestore 저장 실패:", {
           code: error.code,
-          message: error.message
+          message: error.message,
+          name: error.name
         });
-        // 로컬 저장은 성공했으므로 계속 진행
-      }
-    }
 
-    return profile;
+        // 로컬 저장은 성공했으므로 계속 진행
+        console.log("⚠️ [registerNewUserRequest] Firestore 실패했지만 로컬 저장은 성공");
+        return profile;
+      }
+    } else {
+      if (isOfflineFallback) {
+        console.warn("⚠️ [registerNewUserRequest] Firestore 오프라인 모드 - 로컬만 저장");
+      } else {
+        console.warn("⚠️ [registerNewUserRequest] db 객체 없음 - 로컬만 저장");
+      }
+      return profile;
+    }
   } catch (error) {
-    console.error("❌ [registerNewUserRequest] 예상치 못한 오류:", error.message);
+    console.error("❌ [registerNewUserRequest] 예상치 못한 오류:", {
+      message: error.message,
+      stack: error.stack
+    });
     return null;
   }
 }
