@@ -3,6 +3,7 @@ import { validateRoster } from './services/ruleEngine';
 import { subscribeAuth, logoutUser, loginWithGoogle } from './services/authService';
 import { getUserProfile, registerNewUserRequest, listAllUsers, subscribeUsersList } from './services/userService';
 import { subscribeRosterChanges } from './services/realtimeSync';
+import { DIAGNOSTICS } from './services/diagnostics';
 
 import { renderDashboardView } from './views/dashboardView';
 import { renderRosterEditorView } from './views/rosterEditorView';
@@ -30,33 +31,60 @@ class CareShiftApp {
 
     // 1. Firebase Auth 감시
     subscribeAuth(async (authInfo) => {
-      this.authState.isLoggedIn = authInfo.isLoggedIn;
-      this.authState.user = authInfo.user;
-      this.authState.isAdmin = authInfo.isAdmin;
+      try {
+        this.authState.isLoggedIn = authInfo.isLoggedIn;
+        this.authState.user = authInfo.user;
+        this.authState.isAdmin = authInfo.isAdmin;
 
-      // 하단 탭바 및 상단 PC 네비게이션 노출/숨김 업데이트
-      this.updateBottomNavVisibility();
-      this.updatePcNavVisibility();
+        console.log("🔐 [auth] 인증 상태 변경:", {
+          isLoggedIn: authInfo.isLoggedIn,
+          email: authInfo.user?.email,
+          isAdmin: authInfo.isAdmin
+        });
 
-      if (!this.authState.isLoggedIn) {
-        // 비로그인 상태 -> 로그인 화면 표시
-        this.authState.userProfile = null;
-        this.updateHeaderUser();
+        // 하단 탭바 및 상단 PC 네비게이션 노출/숨김 업데이트
+        this.updateBottomNavVisibility();
         this.updatePcNavVisibility();
-        this.currentView = 'login';
-        this.render();
-      } else {
-        // 2. 사용자 프로필 조회 (신규 사용자면 자동 가입 신청 생성)
-        let profile = await getUserProfile(authInfo.user.email);
+
+        if (!this.authState.isLoggedIn) {
+          // 비로그인 상태 -> 로그인 화면 표시
+          this.authState.userProfile = null;
+          this.updateHeaderUser();
+          this.updatePcNavVisibility();
+          this.currentView = 'login';
+          this.render();
+          return;
+        }
+
+        // 2️⃣ 사용자 프로필 조회 (신규 사용자면 자동 가입 신청 생성)
+        console.log("👤 [auth] 사용자 프로필 조회 시작:", authInfo.user.email);
+
+        let profile = null;
+
+        try {
+          profile = await getUserProfile(authInfo.user.email);
+          console.log("✅ [auth] 프로필 조회 성공:", profile);
+        } catch (error) {
+          console.error("❌ [auth] 프로필 조회 오류:", error.message);
+        }
+
+        // 신규 사용자 처리
         if (!profile && !authInfo.isAdmin) {
-          profile = await registerNewUserRequest(authInfo.user);
+          console.log("📝 [auth] 신규 사용자 - 가입 신청 생성");
+          try {
+            profile = await registerNewUserRequest(authInfo.user);
+            console.log("✅ [auth] 가입 신청 생성 완료:", profile);
+          } catch (error) {
+            console.error("❌ [auth] 가입 신청 생성 오류:", error.message);
+          }
         }
 
         this.authState.userProfile = profile;
         this.updateHeaderUser();
 
-        // 3. 권한별 화면 및 하단 탭바 분기
+        // 3️⃣ 권한별 화면 및 하단 탭바 분기
         if (this.authState.isAdmin) {
+          console.log("👑 [auth] 관리자 계정 - editor 화면 전환");
           // 관리자: 회원 가입 실시간 감시 시작
           this.listenToPendingUsers();
 
@@ -64,20 +92,25 @@ class CareShiftApp {
             this.currentView = 'editor';
           }
         } else if (profile?.status === 'PENDING' || profile?.status === 'REJECTED') {
+          console.log("⏳ [auth] 승인 대기 사용자 - pending 화면 전환");
           // 승인 대기중 / 거절된 사용자: 접속 대기 화면
           this.currentView = 'pending';
-        } else {
+        } else if (profile?.status === 'APPROVED') {
+          console.log("✅ [auth] 승인된 사용자 - mobile 화면 전환");
           // 승인된 일반 회원 (정회원/준회원/임시회원): 모바일 내 근무 화면
           if (this.currentView === 'login' || this.currentView === 'loading' || this.currentView === 'pending') {
             this.currentView = 'mobile';
           }
+        } else {
+          console.warn("⚠️ [auth] 프로필 상태 불명: ", profile?.status);
+          this.currentView = 'pending';
         }
 
         this.updateBottomNavVisibility();
         this.updatePcNavVisibility();
         this.render();
 
-        // 4. 백그라운드 Firestore 근무표 동기화
+        // 4️⃣ 백그라운드 Firestore 근무표 동기화
         syncRosterFromFirestore().then((remoteData) => {
           if (remoteData) {
             this.rosterData = remoteData;
@@ -87,6 +120,10 @@ class CareShiftApp {
             }
           }
         });
+      } catch (error) {
+        console.error("❌ [auth] 콜백 예외 발생:", error.message);
+        this.currentView = 'login';
+        this.render();
       }
     });
 
