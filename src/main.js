@@ -21,6 +21,7 @@ class CareShiftApp {
     this.authState = { isLoggedIn: false, user: null, isAdmin: false, userProfile: null };
     this.container = document.getElementById('view-content');
     this.pendingUsersCount = 0;
+    this.currentViewCleanup = null; // 이전 뷰의 정리 함수
   }
 
   init() {
@@ -502,6 +503,16 @@ class CareShiftApp {
   }
 
   render() {
+    // 이전 뷰의 정리 함수 호출
+    if (this.currentViewCleanup && typeof this.currentViewCleanup === 'function') {
+      try {
+        this.currentViewCleanup();
+      } catch (e) {
+        console.warn("❌ 뷰 정리 중 오류:", e);
+      }
+    }
+    this.currentViewCleanup = null;
+
     this.container.innerHTML = '';
 
     // 1. 비로그인 화면
@@ -548,7 +559,7 @@ class CareShiftApp {
 
     switch (this.currentView) {
       case 'user-mgmt':
-        renderUserManagementView(this.container, props);
+        this.currentViewCleanup = renderUserManagementView(this.container, props);
         break;
       case 'dashboard':
       case 'operations-dashboard':

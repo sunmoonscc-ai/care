@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auth Flow 테스트</title>
+  <style>
+    body { font-family: monospace; padding: 20px; background: #f5f5f5; }
+    .container { max-width: 1200px; margin: 0 auto; }
+    .section { background: white; margin: 10px 0; padding: 15px; border-radius: 8px; border-left: 4px solid #004349; }
+    .section h2 { margin-top: 0; color: #004349; }
+    button { padding: 10px 20px; background: #004349; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    button:hover { background: #0d5c63; }
+    .log { background: #f9f9f9; border: 1px solid #ddd; padding: 10px; margin: 10px 0; border-radius: 4px; max-height: 300px; overflow-y: auto; }
+    .log-line { padding: 2px; font-size: 12px; }
+    .log-success { color: green; }
+    .log-error { color: red; }
+    .log-info { color: #666; }
+    .log-firebase { color: #ff6b00; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>🧪 Authentication → Firestore 사용자 정보 조회 테스트</h1>
+
+  <div class="section">
+    <h2>📋 테스트 1: Firebase 초기화 확인</h2>
+    <button onclick="testFirebaseInit()">테스트 실행</button>
+    <div class="log" id="log1"></div>
+  </div>
+
+  <div class="section">
+    <h2>👤 테스트 2: 로그인 후 사용자 정보 조회</h2>
+    <button onclick="testAuthFlow()">로그인하고 테스트</button>
+    <div class="log" id="log2"></div>
+  </div>
+
+  <div class="section">
+    <h2>📊 테스트 3: Firestore 'users' 컬렉션 확인</h2>
+    <button onclick="testFirestoreData()">Firestore 데이터 조회</button>
+    <div class="log" id="log3"></div>
+  </div>
+
+  <div class="section">
+    <h2>🔍 실시간 콘솔 로그</h2>
+    <div class="log" id="console-log"></div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
+  import { getFirestore, collection, getDocs, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
+  import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyD_zh-kmFVZ6WgRgadZPNsfhS1jxe79F9Y",
+    authDomain: "care-798f1.firebaseapp.com",
+    projectId: "care-798f1",
+    storageBucket: "care-798f1.firebasestorage.app",
+    messagingSenderId: "494524801008",
+    appId: "1:494524801008:web:34f47702f75cdd4c0cc735"
+  };
+
+  let app, db, auth;
+  const consoleLogs = [];
+
+  // 콘솔 로그 캡처
+  const originalLog = console.log;
+  const originalError = console.error;
+  console.log = function(...args) {
+    originalLog.apply(console, args);
+    const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ');
+    consoleLogs.push({ type: 'log', msg });
+    updateConsoleDisplay();
+  };
+  console.error = function(...args) {
+    originalError.apply(console, args);
+    const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ');
+    consoleLogs.push({ type: 'error', msg });
+    updateConsoleDisplay();
+  };
+
+  function log(elementId, text, type = 'info') {
+    const el = document.getElementById(elementId);
+    const line = document.createElement('div');
+    line.className = `log-line log-${type}`;
+    line.textContent = text;
+    el.appendChild(line);
+    el.scrollTop = el.scrollHeight;
+  }
+
+  function updateConsoleDisplay() {
+    const el = document.getElementById('console-log');
+    el.innerHTML = '';
+    consoleLogs.slice(-50).forEach(item => {
+      const line = document.createElement('div');
+      line.className = `log-line log-${item.type}`;
+      line.textContent = item.msg;
+      el.appendChild(line);
+    });
+    el.scrollTop = el.scrollHeight;
+  }
+
+  window.testFirebaseInit = async function() {
+    const logId = 'log1';
+    document.getElementById(logId).innerHTML = '';
+
+    try {
+      app = initializeApp(firebaseConfig);
+      log(logId, '✅ Firebase App 초기화 성공', 'success');
+
+      db = getFirestore(app);
+      log(logId, '✅ Firestore 초기화 성공', 'success');
+
+      auth = getAuth(app);
+      log(logId, '✅ Firebase Auth 초기화 성공', 'success');
+
+      const currentUser = auth.currentUser;
+      if (currentUser) {
+        log(logId, `✅ 현재 로그인 사용자: ${currentUser.email}`, 'success');
+      } else {
+        log(logId, '⚠️ 현재 로그인한 사용자 없음', 'info');
+      }
+    } catch (e) {
+      log(logId, `❌ 초기화 실패: ${e.message}`, 'error');
+    }
+  };
+
+  window.testAuthFlow = async function() {
+    const logId = 'log2';
+    document.getElementById(logId).innerHTML = '';
+
+    if (!auth) {
+      log(logId, '❌ Firebase가 초기화되지 않음. 먼저 테스트 1을 실행하세요.', 'error');
+      return;
+    }
+
+    try {
+      log(logId, '🔐 Google 로그인 팝업 열기...', 'info');
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+
+      log(logId, `✅ 로그인 성공: ${user.email}`, 'success');
+      log(logId, `   ├ UID: ${user.uid}`, 'info');
+      log(logId, `   ├ 이름: ${user.displayName}`, 'info');
+      log(logId, `   └ 사진: ${user.photoURL ? '있음' : '없음'}`, 'info');
+
+      // Firestore에서 사용자 프로필 조회
+      log(logId, `\n🔍 Firestore에서 사용자 프로필 조회 중...`, 'info');
+      const userDocRef = doc(db, 'users', user.email);
+      const userSnap = await getDoc(userDocRef);
+
+      if (userSnap.exists()) {
+        const profile = userSnap.data();
+        log(logId, `✅ 프로필 찾음:`, 'success');
+        log(logId, `   ├ 이메일: ${profile.email}`, 'info');
+        log(logId, `   ├ 권한: ${profile.role}`, 'info');
+        log(logId, `   ├ 승인상태: ${profile.status}`, 'info');
+        log(logId, `   └ 직원ID: ${profile.staffId || '없음'}`, 'info');
+      } else {
+        log(logId, `⚠️ Firestore에 프로필이 없음 (신규 사용자)`, 'info');
+        log(logId, `   → 앱에서는 자동으로 가입 신청을 생성합니다.`, 'info');
+      }
+    } catch (e) {
+      log(logId, `❌ 오류: ${e.message}`, 'error');
+    }
+  };
+
+  window.testFirestoreData = async function() {
+    const logId = 'log3';
+    document.getElementById(logId).innerHTML = '';
+
+    if (!db) {
+      log(logId, '❌ Firestore가 초기화되지 않음. 먼저 테스트 1을 실행하세요.', 'error');
+      return;
+    }
+
+    try {
+      log(logId, '📊 Firestore users 컬렉션 조회 중...', 'info');
+      const snap = await getDocs(collection(db, 'users'));
+
+      if (snap.empty) {
+        log(logId, '⚠️ users 컬렉션이 비어있음', 'info');
+      } else {
+        log(logId, `✅ 총 ${snap.size}명의 사용자 데이터:`, 'success');
+        snap.forEach(d => {
+          const u = d.data();
+          log(logId, `\n   📌 ${u.email}`, 'firebase');
+          log(logId, `      ├ 이름: ${u.displayName}`, 'info');
+          log(logId, `      ├ 권한: ${u.role}`, 'info');
+          log(logId, `      ├ 상태: ${u.status}`, 'info');
+          log(logId, `      ├ 생성일: ${u.appliedAt || u.createdAt || '없음'}`, 'info');
+          log(logId, `      └ 승인일: ${u.approvedAt || '없음'}`, 'info');
+        });
+      }
+    } catch (e) {
+      log(logId, `❌ 오류: ${e.message}`, 'error');
+    }
+  };
+
+  // 페이지 로드 시 초기화
+  window.addEventListener('load', () => {
+    testFirebaseInit();
+  });
+</script>
+</body>
+</html>

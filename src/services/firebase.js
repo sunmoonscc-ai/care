@@ -1,14 +1,16 @@
 import { initializeApp, getApps } from 'firebase/app';
-import { 
-  getFirestore, 
-  collection, 
-  doc, 
+import {
+  getFirestore,
+  collection,
+  doc,
   getDoc,
-  getDocs, 
-  setDoc, 
-  updateDoc, 
-  onSnapshot 
+  getDocs,
+  setDoc,
+  updateDoc,
+  onSnapshot
 } from 'firebase/firestore';
+
+const DEBUG = import.meta.env.MODE === 'development';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyD_zh-kmFVZ6WgRgadZPNsfhS1jxe79F9Y",
@@ -24,13 +26,44 @@ let app;
 let db;
 let isOfflineFallback = false;
 
-try {
-  app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-  db = getFirestore(app);
-  console.log("🔥 Firebase initialized successfully for project:", firebaseConfig.projectId);
-} catch (error) {
-  console.warn("Firebase initialization warning (using local fallback mode):", error);
-  isOfflineFallback = true;
+if (DEBUG) {
+  console.log("🔥 [firebase.js] 초기화 시작", {
+    projectId: firebaseConfig.projectId,
+    authDomain: firebaseConfig.authDomain,
+    mode: import.meta.env.MODE
+  });
 }
 
-export { app, db, isOfflineFallback };
+try {
+  // Firebase App 초기화
+  app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+
+  if (DEBUG) console.log("✅ [firebase.js] Firebase App 초기화 완료");
+
+  // Firestore 초기화
+  db = getFirestore(app);
+
+  if (!db) {
+    throw new Error("Firestore 인스턴스 생성 실패");
+  }
+
+  isOfflineFallback = false;
+
+  if (DEBUG) {
+    console.log("✅ [firebase.js] Firestore 초기화 완료");
+    console.log("✅ [firebase.js] 상태: 온라인 모드 (데이터 동기화 활성)");
+  }
+} catch (error) {
+  console.error("❌ [firebase.js] Firebase 초기화 실패:", {
+    code: error.code,
+    message: error.message
+  });
+
+  isOfflineFallback = true;
+
+  if (DEBUG) {
+    console.warn("⚠️ [firebase.js] 오프라인 폴백 모드 활성화 (로컬 스토리지만 사용)");
+  }
+}
+
+export { app, db, isOfflineFallback, DEBUG };

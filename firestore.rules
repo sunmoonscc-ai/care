@@ -1,9 +1,41 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // 요양보호사 프로그램 개발 및 시범 운영용 규칙
+    // 인증 확인 함수
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // 관리자 확인 함수 (관리자 이메일 목록)
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.email in [
+        'hdcc6th@gmail.com',
+        'sunmoon.scc@gmail.com'
+      ];
+    }
+
+    // 사용자 프로필 컬렉션 규칙
+    // - 인증된 모든 사용자: 읽기 가능 (사용자 목록 조회용)
+    // - 관리자만: 생성/수정/삭제 가능
+    match /users/{email} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // 근무표 컬렉션 규칙 (추가 개발 예정)
+    match /rosters/{document=**} {
+      allow read, write: if isAdmin();
+    }
+
+    // 휴무 교환 신청 컬렉션 규칙 (추가 개발 예정)
+    match /requests/{document=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // 기본 규칙: 명시되지 않은 컬렉션은 접근 거부
     match /{document=**} {
-      allow read, write: if true;
+      allow read, write: if false;
     }
   }
 }
