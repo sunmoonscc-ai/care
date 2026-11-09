@@ -60,6 +60,7 @@ class CareShiftApp {
         console.log("👤 [auth] 사용자 프로필 조회 시작:", authInfo.user.email);
 
         let profile = null;
+        let isNewUserRequest = false;
 
         try {
           profile = await getUserProfile(authInfo.user.email);
@@ -74,6 +75,10 @@ class CareShiftApp {
           try {
             profile = await registerNewUserRequest(authInfo.user);
             console.log("✅ [auth] 가입 신청 생성 완료:", profile);
+            isNewUserRequest = true;
+
+            // ⚠️ 신규 가입신청이 Firestore에 저장되면 관리자에게 실시간 알림
+            // 이 후 관리자 페이지의 실시간 감시가 자동 갱신함
           } catch (error) {
             console.error("❌ [auth] 가입 신청 생성 오류:", error.message);
           }
@@ -139,16 +144,24 @@ class CareShiftApp {
 
   // 관리자 전용: 실시간 신규 가입 신청자 감시
   listenToPendingUsers() {
+    console.log("👂 [listenToPendingUsers] 시작");
+
+    // 실시간 감시 콜백
     subscribeUsersList((users) => {
       const pending = users.filter(u => u.status === 'PENDING');
+      console.log(`📡 [listenToPendingUsers] 업데이트: 대기중 ${pending.length}명`);
       this.pendingUsersCount = pending.length;
       this.updateAdminHeaderBadge();
     });
+
     // 최초 1회 목록 조회
     listAllUsers().then(users => {
       const pending = users.filter(u => u.status === 'PENDING');
+      console.log(`✅ [listenToPendingUsers] 초기 로드: 대기중 ${pending.length}명`, pending);
       this.pendingUsersCount = pending.length;
       this.updateAdminHeaderBadge();
+    }).catch(error => {
+      console.error("❌ [listenToPendingUsers] 초기 로드 실패:", error.message);
     });
   }
 
