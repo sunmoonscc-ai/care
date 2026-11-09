@@ -135,42 +135,74 @@ export async function rejectOrRevokeUser(email, reason = '가입 거절 또는 �
 }
 
 export async function listAllUsers() {
-  const localDir = getLocalUsers();
-  let usersMap = { ...localDir };
+  console.log("🔥 [listAllUsers] Firestore에서 사용자 조회 시작...");
 
+  // 1. 로컬 스토리지에서 먼저 읽기
+  let usersMap = { ...getLocalUsers() };
+  console.log("🔥 [listAllUsers] 로컬 스토리지 데이터:", Object.keys(usersMap).length, "건");
+
+  // 2. Firestore에서 최신 데이터 조회
   if (!isOfflineFallback && db) {
     try {
       const snap = await getDocs(collection(db, 'users'));
+      console.log("🔥 [listAllUsers] Firestore 조회 성공:", snap.size, "건");
+
       if (!snap.empty) {
         snap.docs.forEach(d => {
           const u = d.data();
-          usersMap[u.email] = u;
+          if (u && u.email) {
+            usersMap[u.email] = u;
+            console.log("🔥 [listAllUsers] Firestore 데이터 추가:", u.email, u.status);
+          }
         });
+        // Firestore 데이터로 로컬 스토리지 갱신
         saveLocalUsers(usersMap);
+      } else {
+        console.warn("🔥 [listAllUsers] Firestore users 컬렉션이 비어있음");
       }
     } catch (e) {
-      console.warn("Firestore listAllUsers error:", e);
+      console.error("🔥 [listAllUsers] Firestore 오류:", e.code, e.message);
     }
+  } else {
+    console.warn("🔥 [listAllUsers] Firestore 사용 불가 (오프라인 모드 또는 db 미초기화)");
   }
 
-  return Object.values(usersMap);
+  const result = Object.values(usersMap);
+  console.log("🔥 [listAllUsers] 최종 결과:", result.length, "명");
+  return result;
 }
 
-// 실시간 사용자 변경 감시 리스너 (관리자 화면에서 가입 신청 즉시 감지)
+// 실시간 사용자 변경 감시 리스너 (Firestore users 컬렉션 구독)
 export function subscribeUsersList(callback) {
-  if (isOfflineFallback || !db) return () => {};
+  if (isOfflineFallback || !db) {
+    console.warn("🔥 [subscribeUsersList] Firestore 사용 불가");
+    return () => {};
+  }
 
   try {
+    console.log("🔥 [subscribeUsersList] Firestore users 컬렉션 구독 시작...");
     return onSnapshot(collection(db, 'users'), (snap) => {
-      const users = snap.docs.map(d => d.data());
-      const localDir = getLocalUsers();
-      users.forEach(u => { localDir[u.email] = u; });
-      saveLocalUsers(localDir);
-      callback(users);
+      console.log("🔥 [subscribeUsersList] Firestore 업데이트 감지:", snap.size, "건");
+
+      // Firestore 데이터 → 로컬 스토리지
+      let usersMap = { ...getLocalUsers() };
+
+      snap.docs.forEach(d => {
+        const u = d.data();
+        if (u && u.email) {
+          usersMap[u.email] = u;
+        }
+      });
+
+      saveLocalUsers(usersMap);
+      const result = Object.values(usersMap);
+      console.log("🔥 [subscribeUsersList] 콜백 실행:", result.length, "명");
+      if (callback) callback(result);
     }, (err) => {
-      console.warn("Users subscription warning:", err);
+      console.error("🔥 [subscribeUsersList] 구독 오류:", err.code, err.message);
     });
   } catch (e) {
+    console.error("🔥 [subscribeUsersList] 예외:", e);
     return () => {};
   }
 }
