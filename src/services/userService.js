@@ -1,5 +1,6 @@
 // 사용자 회원 관리 및 권한 승인 서비스 (Firestore users 컬렉션 연동)
-import { db, isOfflineFallback } from './firebase';
+import { app, db, isOfflineFallback } from './firebase';
+import { getFirestore } from 'firebase/firestore';
 import {
   collection,
   doc,
@@ -130,12 +131,12 @@ export async function registerNewUserRequest(user) {
     saveLocalUsers(localDir);
     console.log("✅ [registerNewUserRequest] 로컬 저장 완료");
 
-    // 2️⃣ Firestore 상태 확인
-    console.log(`🔍 [registerNewUserRequest] Firestore 상태: offline=${isOfflineFallback}, db=${!!db}`);
+    // 2️⃣ Firestore 저장 (필수!)
+    console.log("🔥 [registerNewUserRequest] Firestore 저장 시도...");
+    console.log(`   상태 확인: offline=${isOfflineFallback}, db=${!!db}`);
 
-    // 3️⃣ Firestore 영구 저장
-    if (!isOfflineFallback && db) {
-      console.log("🔥 [registerNewUserRequest] Firestore 저장 시도 중...");
+    // Firestore 직접 접근 (firebase.js의 export db 사용)
+    if (db && !isOfflineFallback) {
       try {
         const docRef = doc(db, 'users', cleanEmail);
         console.log(`   문서 경로: users/${cleanEmail}`);
@@ -143,23 +144,36 @@ export async function registerNewUserRequest(user) {
         await setDoc(docRef, profile);
 
         console.log("✅ [registerNewUserRequest] Firestore 저장 성공!");
+        console.log("📝 [registerNewUserRequest] === 완료 ===\n");
         return profile;
-      } catch (error) {
-        console.error("❌ [registerNewUserRequest] Firestore 저장 실패:", {
-          code: error.code,
-          message: error.message,
-          name: error.name
+      } catch (firestoreError) {
+        console.error("❌ [registerNewUserRequest] Firestore setDoc 실패:", {
+          code: firestoreError.code,
+          message: firestoreError.message,
+          name: firestoreError.name
         });
 
-        // 로컬 저장은 성공했으므로 계속 진행
-        console.log("⚠️ [registerNewUserRequest] Firestore 실패했지만 로컬 저장은 성공");
-        return profile;
+        // Firestore 실패 시 대체 방법: app에서 새로 Firestore 인스턴스 생성해서 시도
+        console.log("🔄 [registerNewUserRequest] 대체 방법 시도 중...");
+        try {
+          const firestoreAlt = getFirestore(app);
+          const docRefAlt = doc(firestoreAlt, 'users', cleanEmail);
+          await setDoc(docRefAlt, profile);
+          console.log("✅ [registerNewUserRequest] 대체 방법으로 Firestore 저장 성공!");
+          return profile;
+        } catch (altError) {
+          console.error("❌ [registerNewUserRequest] 대체 방법도 실패:", altError.message);
+          console.log("⚠️ [registerNewUserRequest] Firestore 저장 실패, 로컬만 유지");
+          return profile; // 로컬 저장은 성공했으므로 반환
+        }
       }
     } else {
+      console.warn("⚠️ [registerNewUserRequest] Firestore 사용 불가:");
       if (isOfflineFallback) {
-        console.warn("⚠️ [registerNewUserRequest] Firestore 오프라인 모드 - 로컬만 저장");
-      } else {
-        console.warn("⚠️ [registerNewUserRequest] db 객체 없음 - 로컬만 저장");
+        console.warn("   - 오프라인 모드");
+      }
+      if (!db) {
+        console.warn("   - db 객체 없음");
       }
       return profile;
     }
