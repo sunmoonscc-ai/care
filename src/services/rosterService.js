@@ -42,27 +42,38 @@ export function getLocalRosterData() {
   return cachedRoster;
 }
 
-// 2. 백그라운드 비동기 Firestore 동기화 (최대 2.5초 타임아웃 방어)
-export async function syncRosterFromFirestore() {
+// 2. 백그라운드 비동기 Firestore 동기화 (캐시와 DB 비교 후 필요 시 업데이트)
+export async function syncRosterFromFirestore(force = false) {
   if (isOfflineFallback || !db) return getLocalRosterData();
 
   try {
     const fetchPromise = getDoc(doc(db, 'rosters', '202609_2fl'));
     const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Firestore timeout')), 2500)
+      setTimeout(() => reject(new Error('Firestore timeout')), 3500)
     );
 
     const rosterDoc = await Promise.race([fetchPromise, timeoutPromise]);
     if (rosterDoc && rosterDoc.exists()) {
-      cachedRoster = rosterDoc.data();
-      localStorage.setItem(STORAGE_KEY_ROSTER, JSON.stringify(cachedRoster));
-      return cachedRoster;
+      const remoteData = rosterDoc.data();
+      const localStr = localStorage.getItem(STORAGE_KEY_ROSTER);
+      const remoteStr = JSON.stringify(remoteData);
+
+      if (localStr !== remoteStr || force) {
+        console.log("🔄 [syncRosterFromFirestore] 근무표 DB 변경사항 감지 -> 캐시 갱신 완료");
+        cachedRoster = remoteData;
+        localStorage.setItem(STORAGE_KEY_ROSTER, remoteStr);
+        return { updated: true, data: cachedRoster };
+      } else {
+        console.log("✅ [syncRosterFromFirestore] 근무표 로컬 캐시와 Firestore DB 일치함");
+        cachedRoster = remoteData;
+        return { updated: false, data: cachedRoster };
+      }
     }
   } catch (e) {
     console.log("Firestore background sync skipped (network timeout or offline):", e.message);
   }
 
-  return getLocalRosterData();
+  return { updated: false, data: getLocalRosterData() };
 }
 
 // 3. 근무표 데이터 저장 (로컬 즉시 반영 + 파이어베이스 백그라운드 저장)

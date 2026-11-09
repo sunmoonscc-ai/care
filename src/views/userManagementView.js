@@ -1,5 +1,5 @@
 // 회원 승인 및 가입 관리 전용 뷰 (관리자 상단 및 탭에서 언제든 바로 접근 가능)
-import { listAllUsers, approveUser, rejectOrRevokeUser, subscribeUsersList } from '../services/userService';
+import { listAllUsers, approveUser, rejectOrRevokeUser, subscribeUsersList, syncUsersWithFirestore } from '../services/userService';
 
 export function renderUserManagementView(container, { staffList = [], onUpdated, navigate }) {
   let activeTab = 'PENDING'; // 'PENDING', 'APPROVED', 'REVOKED', 'ALL'
@@ -17,10 +17,18 @@ export function renderUserManagementView(container, { staffList = [], onUpdated,
           <p class="text-xs text-slate-500 mt-0.5">신규 가입 신청자를 확인하고 <b>정회원, 준회원(가입취소 가능), 임시회원(둘러보기)</b> 등급으로 승인 또는 재부여합니다.</p>
         </div>
 
-        <button id="btn-back-to-editor" class="self-start sm:self-auto px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl flex items-center gap-1.5 transition">
-          <span class="material-symbols-outlined text-[16px]">arrow_back</span>
-          근무표로 돌아가기
-        </button>
+        <div class="flex items-center gap-2">
+          <!-- DB 비교 및 최신 동기화 버튼 -->
+          <button id="btn-sync-users-now" class="px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-xl text-xs font-bold flex items-center gap-1.5 transition shadow-sm active:scale-95" title="자체 캐시와 실시간 파이어베이스 DB를 즉시 비교하여 갱신합니다">
+            <span class="material-symbols-outlined text-[17px] text-emerald-700">sync</span>
+            <span>DB 실시간 동기화</span>
+          </button>
+
+          <button id="btn-back-to-editor" class="self-start sm:self-auto px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl flex items-center gap-1.5 transition">
+            <span class="material-symbols-outlined text-[16px]">arrow_back</span>
+            근무표로 돌아가기
+          </button>
+        </div>
       </div>
 
       <!-- 탭 & 사용자 목록 컨테이너 -->
@@ -52,6 +60,31 @@ export function renderUserManagementView(container, { staffList = [], onUpdated,
 
   container.querySelector('#btn-back-to-editor')?.addEventListener('click', () => {
     navigate('editor');
+  });
+
+  // DB 실시간 동기화 버튼 클릭 이벤트
+  container.querySelector('#btn-sync-users-now')?.addEventListener('click', async () => {
+    const btn = container.querySelector('#btn-sync-users-now');
+    const origHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<span class="inline-block w-3.5 h-3.5 border-2 border-emerald-700 border-t-transparent rounded-full animate-spin"></span> <span>동기화 중...</span>`;
+
+    try {
+      const res = await syncUsersWithFirestore();
+      await loadAndRenderList();
+      if (onUpdated) onUpdated();
+
+      if (res.updated) {
+        alert('🔄 실시간 데이터베이스의 최신 변경사항을 캐시에 업데이트했습니다.');
+      } else {
+        alert('✅ 캐시와 실시간 데이터베이스가 이미 완벽하게 일치합니다.');
+      }
+    } catch (e) {
+      alert(`동기화 실패: ${e.message}`);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = origHtml;
+    }
   });
 
   const loadAndRenderList = async () => {

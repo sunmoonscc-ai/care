@@ -1,6 +1,6 @@
 // 실제 요양병원 양식 그대로 재현한 월간 근무기록지 편집 & 배포 뷰
 import { realShiftTypes } from '../services/realRosterData';
-import { saveRosterData } from '../services/rosterService';
+import { saveRosterData, syncRosterFromFirestore } from '../services/rosterService';
 import { getSheetConfig, saveSheetConfig, syncRosterToGoogleSheet } from '../services/googleSheetService';
 import { setupGoogleSheetModal } from '../services/googleSheetModal';
 import { exportRosterToCSV } from '../services/excelService';
@@ -28,6 +28,11 @@ export function renderRosterEditorView(container, { rosterData, violations, onUp
         </div>
 
         <div class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar w-full sm:w-auto py-1">
+          <!-- DB 비교 및 최신 동기화 버튼 -->
+          <button id="btn-sync-roster-db" class="px-2 py-1.5 bg-sky-50 hover:bg-sky-100 text-sky-800 text-[11px] font-bold rounded border border-sky-300 flex items-center gap-1 transition shadow-sm shrink-0" title="자체 캐시와 실시간 DB를 비교하여 근무표를 최신화합니다">
+            <span class="material-symbols-outlined text-[15px] text-sky-700">sync</span>
+            DB 실시간 동기화
+          </button>
           <!-- 구글 시트 연동 버튼 -->
           <button id="btn-sync-gsheet" class="px-2 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[11px] font-bold rounded border border-emerald-300 flex items-center gap-1 transition shadow-sm shrink-0">
             <span class="material-symbols-outlined text-[15px] text-emerald-700">table_view</span>
@@ -347,5 +352,30 @@ export function renderRosterEditorView(container, { rosterData, violations, onUp
   // A4 가로 인쇄 기능
   container.querySelector('#btn-print-excel')?.addEventListener('click', () => {
     window.print();
+  });
+
+  // DB 실시간 동기화 버튼 이벤트
+  container.querySelector('#btn-sync-roster-db')?.addEventListener('click', async () => {
+    const btn = container.querySelector('#btn-sync-roster-db');
+    const origHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<span class="inline-block w-3 h-3 border-2 border-sky-700 border-t-transparent rounded-full animate-spin"></span> 동기화 중...`;
+
+    try {
+      const res = await syncRosterFromFirestore(true);
+      if (res.data) {
+        onUpdateRoster(res.data);
+      }
+      if (res.updated) {
+        alert('🔄 실시간 데이터베이스의 최신 근무표를 캐시에 업데이트했습니다.');
+      } else {
+        alert('✅ 캐시와 실시간 데이터베이스가 이미 완벽하게 일치합니다.');
+      }
+    } catch (e) {
+      alert(`동기화 실패: ${e.message}`);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = origHtml;
+    }
   });
 }

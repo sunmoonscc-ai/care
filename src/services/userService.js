@@ -227,8 +227,8 @@ export async function rejectOrRevokeUser(email, reason = '가입 거절 또는 �
   }
 }
 
-export async function listAllUsers() {
-  console.log("🔥 [listAllUsers] Firestore에서 사용자 조회 시작...");
+export async function listAllUsers(forceRefresh = false) {
+  console.log("🔥 [listAllUsers] Firestore에서 사용자 조회 시작... (forceRefresh:", forceRefresh, ")");
 
   let usersMap = { ...getLocalUsers() };
 
@@ -252,21 +252,81 @@ export async function listAllUsers() {
       const snap = await getDocs(collection(db, 'users'));
       console.log("🔥 [listAllUsers] Firestore 조회 성공:", snap.size, "건");
 
-      if (!snap.empty) {
-        snap.docs.forEach(d => {
-          const u = d.data();
-          if (u && u.email) {
-            usersMap[u.email.toLowerCase()] = u;
-          }
-        });
-        saveLocalUsers(usersMap);
-      }
+      // Firestore 결과로 완전 최신 맵 구성
+      const freshMap = {};
+      ADMIN_EMAILS.forEach(adminEmail => {
+        freshMap[adminEmail] = usersMap[adminEmail];
+      });
+
+      snap.docs.forEach(d => {
+        const u = d.data();
+        if (u && u.email) {
+          freshMap[u.email.toLowerCase()] = u;
+        }
+      });
+
+      // 캐시와 Firestore가 다르면 캐시 완전 덮어쓰기 업데이트
+      saveLocalUsers(freshMap);
+      return Object.values(freshMap);
     } catch (e) {
       console.error("🔥 [listAllUsers] Firestore 오류:", e.code, e.message);
     }
   }
 
   return Object.values(usersMap);
+}
+
+// 로컬 캐시와 원격 Firestore 데이터베이스를 명시적으로 비교하여 동기화
+export async function syncUsersWithFirestore() {
+  if (isOfflineFallback || !db) return { updated: false, users: Object.values(getLocalUsers()) };
+
+  try {
+    const localDir = getLocalUsers();
+    const snap = await getDocs(collection(db, 'users'));
+    
+    const remoteMap = {};
+    snap.docs.forEach(docSnap => {
+      const data = docSnap.data();
+      if (data && data.email) {
+        remoteMap[data.email.toLowerCase()] = data;
+      }
+    });
+
+    // 관리자 기본 정보 병합
+    ADMIN_EMAILS.forEach(adminEmail => {
+      if (!remoteMap[adminEmail]) {
+        remoteMap[adminEmail] = localDir[adminEmail] || {
+          email: adminEmail,
+          displayName: adminEmail === 'sunmoon.scc@gmail.com' ? 'Jun (관리자)' : '관리자',
+          realName: '관리자',
+          phoneNumber: '',
+          role: 'ADMIN',
+          status: 'APPROVED',
+          staffId: 'admin',
+          appliedAt: '2026-11-07'
+        };
+      }
+    });
+
+    const localStr = JSON.stringify(localDir);
+    const remoteStr = JSON.stringify(remoteMap);
+
+    const isDifferent = localStr !== remoteStr;
+    if (isDifferent) {
+      console.log("🔄 [syncUsersWithFirestore] 로컬 캐시와 Firestore DB 차이 감지 -> 로컬 캐시 갱신 완료");
+      saveLocalUsers(remoteMap);
+    } else {
+      console.log("✅ [syncUsersWithFirestore] 로컬 캐시와 Firestore DB 일치함");
+    }
+
+    return {
+      updated: isDifferent,
+      users: Object.values(remoteMap)
+    };
+  } catch (err) {
+    console.warn("⚠️ [syncUsersWithFirestore] 동기화 중 오류 발생:", err);
+    return { updated: false, users: Object.values(getLocalUsers()) };
+  }
 }
 
 export function subscribeUsersList(callback) {

@@ -1,7 +1,7 @@
 import { getLocalRosterData, syncRosterFromFirestore, saveRosterData } from './services/rosterService';
 import { validateRoster } from './services/ruleEngine';
 import { subscribeAuth, logoutUser, loginWithGoogle, checkRedirectLoginResult } from './services/authService';
-import { getUserProfile, registerNewUserRequest, listAllUsers, subscribeUsersList } from './services/userService';
+import { getUserProfile, registerNewUserRequest, listAllUsers, subscribeUsersList, syncUsersWithFirestore } from './services/userService';
 import { openUserProfileModal } from './services/userProfileModal';
 import { subscribeRosterChanges } from './services/realtimeSync';
 import { DIAGNOSTICS } from './services/diagnostics';
@@ -24,6 +24,7 @@ class CareShiftApp {
     this.container = document.getElementById('view-content');
     this.pendingUsersCount = 0;
     this.currentViewCleanup = null; // 이전 뷰의 정리 함수
+    this.periodicSyncInterval = null; // 정기 동기화 인터벌
   }
 
   init() {
@@ -32,6 +33,9 @@ class CareShiftApp {
 
     // 0. 모바일 리디렉션 로그인 결과 체크
     checkRedirectLoginResult();
+
+    // 정기적(2분 주기) 백그라운드 캐시 vs DB 비교 동기화 타이머 시작
+    this.startPeriodicSync();
 
     // 1. Firebase Auth 감시
     subscribeAuth(async (authInfo) => {
@@ -150,16 +154,8 @@ class CareShiftApp {
         this.updatePcNavVisibility();
         this.render();
 
-        // 4️⃣ 백그라운드 Firestore 근무표 동기화
-        syncRosterFromFirestore().then((remoteData) => {
-          if (remoteData) {
-            this.rosterData = remoteData;
-            this.recalculateViolations();
-            if (this.currentView !== 'login' && this.currentView !== 'pending') {
-              this.render();
-            }
-          }
-        });
+        // 4️⃣ 관리자 및 로그인 사용자: 백그라운드로 자체 캐시 vs 실시간 DB 비교 후 업데이트
+        this.runBackgroundSyncComparison();
       } catch (error) {
         console.error("❌ [auth] 콜백 예외 발생:", error.message);
         this.currentView = 'login';
@@ -175,6 +171,53 @@ class CareShiftApp {
         this.render();
       }
     });
+  }
+
+  // 백그라운드 캐시 vs 실시간 데이터베이스 비교 및 업데이트 수행
+  async runBackgroundSyncComparison() {
+    console.log("🔍 [SyncComparison] 백그라운드 DB vs 캐시 비교 검사 시작...");
+
+    try {
+      // 1. 근무표 동기화
+      const rosterRes = await syncRosterFromFirestore();
+      if (rosterRes && rosterRes.updated) {
+        console.log("📢 [SyncComparison] 근무표 데이터베이스 변경 감지 -> UI 갱신");
+        this.rosterData = rosterRes.data;
+        this.recalculateViolations();
+        if (this.currentView !== 'login' && this.currentView !== 'pending') {
+          this.render();
+        }
+      }
+
+      // 2. 관리자인 경우 사용자 명단 DB vs 캐시 비교
+      if (this.authState.isAdmin) {
+        const userRes = await syncUsersWithFirestore();
+        if (userRes && userRes.updated) {
+          console.log("📢 [SyncComparison] 회원 데이터베이스 변경 감지 -> 뱃지 및 목록 갱신");
+          const pending = userRes.users.filter(u => u.status === 'PENDING');
+          this.pendingUsersCount = pending.length;
+          this.updateAdminHeaderBadge();
+          if (this.currentView === 'user-mgmt') {
+            this.render();
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("⚠️ [SyncComparison] 비교 동기화 예외:", e.message);
+    }
+  }
+
+  // 정기적(2분 주기) 백그라운드 비교 타이머 가동
+  startPeriodicSync() {
+    if (this.periodicSyncInterval) clearInterval(this.periodicSyncInterval);
+
+    // 2분마다 정기 비교 수행 (120,000ms)
+    this.periodicSyncInterval = setInterval(() => {
+      if (this.authState.isLoggedIn) {
+        console.log("⏰ [PeriodicSync] 정기 백그라운드 DB 비교 실행...");
+        this.runBackgroundSyncComparison();
+      }
+    }, 2 * 60 * 1000);
   }
 
   // 관리자 전용: 실시간 신규 가입 신청자 감시
