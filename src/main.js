@@ -57,31 +57,50 @@ class CareShiftApp {
         }
 
         // 2️⃣ 사용자 프로필 조회 (신규 사용자면 자동 가입 신청 생성)
-        console.log("👤 [auth] 사용자 프로필 조회 시작:", authInfo.user.email);
+        console.log("👤 [auth] 사용자 프로필 조회 시작:", {
+          email: authInfo.user.email,
+          isAdmin: authInfo.isAdmin
+        });
 
         let profile = null;
         let isNewUserRequest = false;
 
         try {
           profile = await getUserProfile(authInfo.user.email);
-          console.log("✅ [auth] 프로필 조회 성공:", profile);
+          console.log("✅ [auth] 프로필 조회 결과:", {
+            found: !!profile,
+            profile: profile
+          });
         } catch (error) {
           console.error("❌ [auth] 프로필 조회 오류:", error.message);
+          profile = null;
         }
 
         // 신규 사용자 처리
+        console.log("🔍 [auth] 신규 사용자 조건 체크:", {
+          profileExists: !!profile,
+          isAdmin: authInfo.isAdmin,
+          shouldRegister: !profile && !authInfo.isAdmin
+        });
+
         if (!profile && !authInfo.isAdmin) {
-          console.log("📝 [auth] 신규 사용자 - 가입 신청 생성");
+          console.log("📝 [auth] === 신규 사용자 가입 신청 시작 ===");
           try {
             profile = await registerNewUserRequest(authInfo.user);
-            console.log("✅ [auth] 가입 신청 생성 완료:", profile);
+            console.log("✅ [auth] === 가입 신청 완료 ===");
+            console.log("✅ [auth] 결과 프로필:", profile);
             isNewUserRequest = true;
-
-            // ⚠️ 신규 가입신청이 Firestore에 저장되면 관리자에게 실시간 알림
-            // 이 후 관리자 페이지의 실시간 감시가 자동 갱신함
           } catch (error) {
-            console.error("❌ [auth] 가입 신청 생성 오류:", error.message);
+            console.error("❌ [auth] === 가입 신청 실패 ===");
+            console.error("❌ [auth] 오류:", {
+              message: error.message,
+              stack: error.stack
+            });
           }
+        } else if (authInfo.isAdmin) {
+          console.log("👑 [auth] 관리자 계정 - 신규 가입 신청 생략");
+        } else if (profile) {
+          console.log("✅ [auth] 기존 사용자 - 신규 가입 신청 생략");
         }
 
         this.authState.userProfile = profile;
