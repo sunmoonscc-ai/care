@@ -53,11 +53,25 @@ export function renderUserManagementView(container, { staffList, onUpdated, navi
 
   const loadAndRenderList = async () => {
     try {
+      console.log("=== [userManagementView] loadAndRenderList 시작 ===");
       const users = await listAllUsers();
+
+      console.log("📊 [userManagementView] 조회 결과:", {
+        total: users.length,
+        emails: users.map(u => u.email),
+        statuses: users.map(u => `${u.email}:${u.status}`)
+      });
 
       // 카운트 갱신
       const pendingList = users.filter(u => u.status === 'PENDING');
       const approvedList = users.filter(u => u.status === 'APPROVED');
+
+      console.log("📈 [userManagementView] 필터링 결과:", {
+        pending: pendingList.length,
+        approved: approvedList.length,
+        pendingEmails: pendingList.map(u => u.email),
+        approvedEmails: approvedList.map(u => u.email)
+      });
 
       const countPendingEl = container.querySelector('#tab-count-pending');
       const countApprovedEl = container.querySelector('#tab-count-approved');
@@ -211,10 +225,25 @@ export function renderUserManagementView(container, { staffList, onUpdated, navi
         });
       });
     } catch (error) {
-      console.error("❌ [userManagementView] 오류:", error);
+      console.error("❌ [userManagementView] 오류 발생:", {
+        name: error.name,
+        message: error.message,
+        code: error.code,
+        stack: error.stack
+      });
+
       const listContent = container.querySelector('#users-list-content');
       if (listContent) {
-        listContent.innerHTML = `<div class="p-4 text-red-600 text-sm">오류 발생: ${error.message}</div>`;
+        listContent.innerHTML = `
+          <div class="p-4 bg-red-50 border border-red-200 rounded text-red-700 text-sm space-y-2">
+            <div class="font-bold">❌ 오류 발생</div>
+            <div>${error.message}</div>
+            <div class="text-xs text-red-600 font-mono">${error.name}: ${error.code || 'unknown'}</div>
+            <div class="text-xs text-red-500 mt-2 p-2 bg-red-100 rounded font-mono">
+              F12 콘솔에서 자세한 정보를 확인하세요
+            </div>
+          </div>
+        `;
       }
     }
   };
