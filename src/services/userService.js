@@ -24,9 +24,13 @@ export async function getUserProfile(email, uid = null) {
 
   // 관리자는 영구 승인 상태
   if (ADMIN_EMAILS.includes(cleanEmail)) {
+    const localDir = getLocalUsers();
+    const adminCustom = localDir[cleanEmail] || {};
     return {
       email: cleanEmail,
-      displayName: cleanEmail === 'sunmoon.scc@gmail.com' ? 'Jun (관리자)' : '관리자',
+      displayName: adminCustom.realName || (cleanEmail === 'sunmoon.scc@gmail.com' ? 'Jun (관리자)' : '관리자'),
+      realName: adminCustom.realName || '관리자',
+      phoneNumber: adminCustom.phoneNumber || '',
       role: 'ADMIN',
       status: 'APPROVED',
       staffId: 'admin',
@@ -34,9 +38,10 @@ export async function getUserProfile(email, uid = null) {
     };
   }
 
-  // 1. Firestore에서 조회
+  // 1. Firestore에서 실시간 최신 정보 직접 조회 (로컬 캐시보다 Firestore를 절대 우선)
   if (!isOfflineFallback && db) {
     try {
+      console.log(`🔍 [getUserProfile] Firestore 실시간 조회 중: ${cleanEmail}`);
       let userDoc = await getDoc(doc(db, 'users', cleanEmail));
       if (!userDoc.exists() && uid) {
         userDoc = await getDoc(doc(db, 'users', uid));
@@ -44,29 +49,80 @@ export async function getUserProfile(email, uid = null) {
 
       if (userDoc.exists()) {
         const data = userDoc.data();
+        console.log(`✅ [getUserProfile] Firestore 실시간 문서 확인됨:`, data);
+        // 최신 Firestore 데이터로 로컬 캐시 동기화
         const localDir = getLocalUsers();
         localDir[cleanEmail] = data;
         saveLocalUsers(localDir);
         return data;
+      } else {
+        console.log(`ℹ️ [getUserProfile] Firestore에 ${cleanEmail} 문서 없음 (삭제되었거나 신규)`);
+        // Firestore에 없으면 로컬 캐시에서도 제거하여 완전 신규 사용자로 인식시킴
+        const localDir = getLocalUsers();
+        delete localDir[cleanEmail];
+        saveLocalUsers(localDir);
+        return null;
       }
     } catch (e) {
-      console.warn("⚠️ [getUserProfile] Firestore 조회 실패:", e.message);
+      console.warn("⚠️ [getUserProfile] Firestore 실시간 조회 실패 (오프라인):", e.message);
     }
   }
 
-  // 2. 로컬 스토리지 확인
+  // 2. Firestore 조회가 네트워크 오류 등으로 불가능할 때만 비상용 로컬 스토리지 확인
   const localDir = getLocalUsers();
   return localDir[cleanEmail] || null;
 }
 
-export async function registerNewUserRequest(user) {
+// 사용자 프로필 정보 (이름, 휴대전화번호 등) 업데이트
+export async function updateUserProfileInfo({ email, uid, realName, displayName, phoneNumber }) {
+  if (!email) throw new Error("이메일 정보가 없습니다.");
+  const cleanEmail = email.trim().toLowerCase();
+
+  const updates = {
+    realName: realName || displayName,
+    displayName: realName || displayName,
+    phoneNumber: phoneNumber || '',
+    updatedAt: new Date().toISOString()
+  };
+
+  // 1. 로컬 캐시 갱신
+  const localDir = getLocalUsers();
+  localDir[cleanEmail] = { ...(localDir[cleanEmail] || { email: cleanEmail, role: 'PENDING', status: 'PENDING' }), ...updates };
+  saveLocalUsers(localDir);
+
+  // 2. Firestore 동기화
+  if (!isOfflineFallback && db) {
+    try {
+      console.log(`🔥 [Firestore] users/${cleanEmail} 정보 수정 저장...`);
+      await setDoc(doc(db, 'users', cleanEmail), updates, { merge: true });
+      if (uid) {
+        try {
+          await setDoc(doc(db, 'users', uid), updates, { merge: true });
+        } catch(e) {}
+      }
+      console.log("✅ [Firestore] 사용자 정보 수정 완료:", cleanEmail);
+    } catch (e) {
+      console.error("❌ [Firestore] 사용자 정보 수정 실패:", e.code, e.message);
+      throw new Error(`Firestore 저장 실패 (${e.code}): ${e.message}`);
+    }
+  }
+
+  return localDir[cleanEmail];
+}
+
+export async function registerNewUserRequest(user, additionalInfo = {}) {
   const cleanEmail = user.email.trim().toLowerCase();
   const uid = user.uid || null;
+
+  const realName = additionalInfo.realName || user.displayName || cleanEmail.split('@')[0];
+  const phoneNumber = additionalInfo.phoneNumber || '';
 
   const profile = {
     uid: uid,
     email: cleanEmail,
-    displayName: user.displayName || cleanEmail.split('@')[0],
+    displayName: realName,
+    realName: realName,
+    phoneNumber: phoneNumber,
     photoURL: user.photoURL || null,
     role: 'PENDING',
     status: 'PENDING',
@@ -80,7 +136,7 @@ export async function registerNewUserRequest(user) {
   localDir[cleanEmail] = profile;
   saveLocalUsers(localDir);
 
-  // 2. Firestore 저장 실행 (에러 발생 시 즉시 화면에 원인 노출)
+  // 2. Firestore 저장 실행
   if (!isOfflineFallback && db) {
     try {
       console.log(`🔥 [Firestore] users/${cleanEmail} 문서 저장 시도...`);
@@ -90,7 +146,6 @@ export async function registerNewUserRequest(user) {
     } catch (e) {
       console.error("❌ [Firestore] users/" + cleanEmail + " 저장 실패:", e.code, e.message);
 
-      // UID로 대체 저장 시도
       if (uid) {
         try {
           console.log(`🔄 [Firestore] users/${uid} (UID 키)로 대체 저장 시도...`);
@@ -102,19 +157,14 @@ export async function registerNewUserRequest(user) {
         }
       }
 
-      // 🚨 사용자 화면에 왜 Firestore에 안 들어갔는지 명확하게 Alert 알림!
       let alertMsg = `⚠️ [Firestore 저장 실패 안내]\n원인: ${e.code || '알 수 없음'} (${e.message})\n\n`;
       if (e.code === 'permission-denied') {
         alertMsg += `👉 해결 방법: Firebase 콘솔의 Firestore 규칙(Rules)이 쓰기를 차단하고 있습니다.\n콘솔에서 'allow read, write: if true;'로 변경 후 게시(Publish)해야 저장됩니다.`;
-      } else if (e.code === 'unavailable' || e.message.includes('offline')) {
-        alertMsg += `👉 해결 방법: Firestore 데이터베이스가 활성화되지 않았거나 네트워크 차단 상태입니다.`;
       } else {
         alertMsg += `👉 콘솔 에러를 확인해주세요.`;
       }
       alert(alertMsg);
     }
-  } else {
-    alert("⚠️ Firestore 데이터베이스 객체(db)가 연결되지 않아 로컬 모드로만 동작 중입니다.\nFirebase 콘솔에서 Firestore Database 생성을 확인해주세요.");
   }
 
   return profile;
@@ -187,6 +237,8 @@ export async function listAllUsers() {
       usersMap[adminEmail] = {
         email: adminEmail,
         displayName: adminEmail === 'sunmoon.scc@gmail.com' ? 'Jun (관리자)' : '관리자',
+        realName: '관리자',
+        phoneNumber: '',
         role: 'ADMIN',
         status: 'APPROVED',
         staffId: 'admin',
@@ -231,6 +283,8 @@ export function subscribeUsersList(callback) {
           usersMap[adminEmail] = {
             email: adminEmail,
             displayName: adminEmail === 'sunmoon.scc@gmail.com' ? 'Jun (관리자)' : '관리자',
+            realName: '관리자',
+            phoneNumber: '',
             role: 'ADMIN',
             status: 'APPROVED',
             staffId: 'admin',

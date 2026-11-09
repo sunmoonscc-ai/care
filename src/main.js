@@ -1,7 +1,8 @@
 import { getLocalRosterData, syncRosterFromFirestore, saveRosterData } from './services/rosterService';
 import { validateRoster } from './services/ruleEngine';
-import { subscribeAuth, logoutUser, loginWithGoogle } from './services/authService';
+import { subscribeAuth, logoutUser, loginWithGoogle, checkRedirectLoginResult } from './services/authService';
 import { getUserProfile, registerNewUserRequest, listAllUsers, subscribeUsersList } from './services/userService';
+import { openUserProfileModal } from './services/userProfileModal';
 import { subscribeRosterChanges } from './services/realtimeSync';
 import { DIAGNOSTICS } from './services/diagnostics';
 
@@ -28,6 +29,9 @@ class CareShiftApp {
   init() {
     this.recalculateViolations();
     this.setupNavigation();
+
+    // 0. 모바일 리디렉션 로그인 결과 체크
+    checkRedirectLoginResult();
 
     // 1. Firebase Auth 감시
     subscribeAuth(async (authInfo) => {
@@ -76,27 +80,39 @@ class CareShiftApp {
           profile = null;
         }
 
-        // 신규 사용자 처리
-        console.log("🔍 [auth] 신규 사용자 조건 체크:", {
+        // 신규 사용자 또는 실명/연락처 미입력 사용자 판별
+        const isProfileIncomplete = profile && (!profile.realName || !profile.phoneNumber);
+
+        console.log("🔍 [auth] 신규/정보미입력 사용자 조건 체크:", {
           profileExists: !!profile,
+          isProfileIncomplete,
           isAdmin: authInfo.isAdmin,
-          shouldRegister: !profile && !authInfo.isAdmin
+          shouldShowRegistrationModal: (!profile || isProfileIncomplete) && !authInfo.isAdmin
         });
 
-        if (!profile && !authInfo.isAdmin) {
-          console.log("📝 [auth] === 신규 사용자 가입 신청 시작 ===");
-          try {
-            profile = await registerNewUserRequest(authInfo.user);
-            console.log("✅ [auth] === 가입 신청 완료 ===");
-            console.log("✅ [auth] 결과 프로필:", profile);
-            isNewUserRequest = true;
-          } catch (error) {
-            console.error("❌ [auth] === 가입 신청 실패 ===");
-            console.error("❌ [auth] 오류:", {
-              message: error.message,
-              stack: error.stack
-            });
-          }
+        if ((!profile || isProfileIncomplete) && !authInfo.isAdmin) {
+          console.log("📝 [auth] === 이름/연락처 미입력 사용자 -> 정보 입력 팝업 강제 호출 ===");
+          // 팝업 띄우기
+          openUserProfileModal({
+            user: authInfo.user,
+            userProfile: profile,
+            isFirstRegistration: true,
+            onSaveSuccess: (newProfile) => {
+              this.authState.userProfile = newProfile;
+              this.updateHeaderUser();
+              this.currentView = 'pending';
+              this.updateBottomNavVisibility();
+              this.updatePcNavVisibility();
+              this.render();
+            },
+            onCancel: () => {
+              this.currentView = 'login';
+              this.updateBottomNavVisibility();
+              this.updatePcNavVisibility();
+              this.render();
+            }
+          });
+          return;
         } else if (authInfo.isAdmin) {
           console.log("👑 [auth] 관리자 계정 - 신규 가입 신청 생략");
         } else if (profile) {
@@ -221,8 +237,9 @@ class CareShiftApp {
     const nav = document.getElementById('mobile-bottom-nav');
     if (!nav) return;
 
-    // 1. 비로그인 상태이거나 승인 대기(pending) 상태이면 하단 탭바 완전 숨김
-    if (!this.authState.isLoggedIn || this.authState.userProfile?.status === 'PENDING' || this.authState.userProfile?.status === 'REJECTED') {
+    // 1. 비로그인 상태이거나 승인 대기(pending/rejected) 상태이거나 관리자가 아닌 경우 하단 탭바 숨김
+    const isPendingOrRejected = this.authState.userProfile?.status === 'PENDING' || this.authState.userProfile?.status === 'REJECTED' || !this.authState.userProfile?.status;
+    if (!this.authState.isLoggedIn || (!this.authState.isAdmin && isPendingOrRejected) || this.currentView === 'pending' || this.currentView === 'login') {
       nav.classList.add('hidden');
       return;
     }
@@ -279,7 +296,8 @@ class CareShiftApp {
     if (!pcNavBar || !pcNavLinks) return;
 
     // 1. 비로그인 상태이거나 승인 대기(pending/rejected) 상태이면 PC 상단 탭바 완전 숨김
-    if (!this.authState.isLoggedIn || this.authState.userProfile?.status === 'PENDING' || this.authState.userProfile?.status === 'REJECTED') {
+    const isPendingOrRejected = this.authState.userProfile?.status === 'PENDING' || this.authState.userProfile?.status === 'REJECTED' || !this.authState.userProfile?.status;
+    if (!this.authState.isLoggedIn || (!this.authState.isAdmin && isPendingOrRejected) || this.currentView === 'pending' || this.currentView === 'login') {
       pcNavBar.classList.add('hidden');
       pcNavBar.classList.remove('md:flex');
       return;
@@ -430,8 +448,13 @@ class CareShiftApp {
 
             <!-- 메뉴 링크들 -->
             <div class="py-1">
+              <button id="menu-btn-user-profile" class="w-full px-4 py-2 text-left text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2 font-medium transition">
+                <span class="material-symbols-outlined text-[17px] text-teal-700">badge</span>
+                내 정보 보기 / 수정
+              </button>
+
               ${this.authState.isAdmin ? `
-                <button id="menu-btn-user-mgmt" class="w-full px-4 py-2 text-left text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2 font-medium">
+                <button id="menu-btn-user-mgmt" class="w-full px-4 py-2 text-left text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2 font-medium transition">
                   <span class="material-symbols-outlined text-[17px] text-slate-500">how_to_reg</span>
                   회원 가입 승인 관리
                   ${this.pendingUsersCount > 0 ? `<span class="ml-auto px-1.5 py-0.2 bg-rose-500 text-white rounded-full text-[10px] font-bold">${this.pendingUsersCount}</span>` : ''}
@@ -460,6 +483,23 @@ class CareShiftApp {
         if (!userContainer.contains(e.target)) {
           dropdown?.classList.add('hidden');
         }
+      });
+
+      // 내 정보 보기 및 수정 팝업 열기
+      userContainer.querySelector('#menu-btn-user-profile')?.addEventListener('click', () => {
+        dropdown?.classList.add('hidden');
+        openUserProfileModal({
+          user: this.authState.user,
+          userProfile: this.authState.userProfile,
+          isFirstRegistration: false,
+          onSaveSuccess: (updatedProfile) => {
+            this.authState.userProfile = updatedProfile;
+            this.updateHeaderUser();
+            if (this.currentView === 'pending') {
+              this.render();
+            }
+          }
+        });
       });
 
       // 관리자 회원 승인 이동
@@ -592,7 +632,16 @@ class CareShiftApp {
 
     // 2. 가입 대기 / 거절 화면
     if (this.currentView === 'pending') {
-      renderPendingUserView(this.container, { userProfile: this.authState.userProfile });
+      this.updateBottomNavVisibility();
+      this.updatePcNavVisibility();
+      renderPendingUserView(this.container, { 
+        userProfile: this.authState.userProfile,
+        onProfileUpdated: (updated) => {
+          this.authState.userProfile = updated;
+          this.updateHeaderUser();
+          this.render();
+        }
+      });
       return;
     }
 

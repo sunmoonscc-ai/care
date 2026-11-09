@@ -1,7 +1,8 @@
 // 가입 승인 대기 및 거절 상태 안내 화면
 import { logoutUser } from '../services/authService';
+import { openUserProfileModal } from '../services/userProfileModal';
 
-export function renderPendingUserView(container, { userProfile }) {
+export function renderPendingUserView(container, { userProfile, onProfileUpdated }) {
   const isRejected = userProfile?.status === 'REJECTED';
 
   container.innerHTML = `
@@ -33,10 +34,18 @@ export function renderPendingUserView(container, { userProfile }) {
 
         ${!isRejected ? `
           <div class="p-4 bg-amber-50/70 rounded-2xl border border-amber-200/80 text-left text-xs space-y-2 text-slate-700">
-            <div class="font-extrabold text-amber-900 flex items-center gap-1.5">
-              <span class="material-symbols-outlined text-amber-700 text-[18px]">verified_user</span>
-              가입 승인 안내
+            <div class="font-extrabold text-amber-900 flex items-center justify-between">
+              <span class="flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-amber-700 text-[18px]">verified_user</span>
+                가입 신청 정보
+              </span>
+              <button id="btn-edit-profile-from-pending" class="px-2.5 py-1 bg-amber-200 hover:bg-amber-300 text-amber-900 font-bold rounded-lg text-[11px] transition flex items-center gap-1">
+                <span class="material-symbols-outlined text-[14px]">edit</span>
+                정보 수정
+              </button>
             </div>
+            <p>• 성함: <b>${userProfile?.realName || userProfile?.displayName || '미입력'}</b></p>
+            <p>• 연락처: <b>${userProfile?.phoneNumber || '미입력'}</b></p>
             <p>• 신청 계정: <b>${userProfile?.email || ''}</b></p>
             <p>• 신청 일시: ${userProfile?.appliedAt || '방금 전'}</p>
             <p class="text-[11px] text-amber-800 leading-normal pt-1 border-t border-amber-200/60">
@@ -58,6 +67,16 @@ export function renderPendingUserView(container, { userProfile }) {
 
   container.querySelector('#btn-pending-logout')?.addEventListener('click', async () => {
     await logoutUser();
+  });
+
+  container.querySelector('#btn-edit-profile-from-pending')?.addEventListener('click', () => {
+    openUserProfileModal({
+      userProfile: userProfile,
+      isFirstRegistration: false,
+      onSaveSuccess: (updated) => {
+        if (onProfileUpdated) onProfileUpdated(updated);
+      }
+    });
   });
 }
 

@@ -3,6 +3,8 @@ import { app, DEBUG } from './firebase';
 import {
   getAuth,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   GoogleAuthProvider,
   signOut,
   onAuthStateChanged
@@ -32,41 +34,12 @@ export function checkIsAdmin(email) {
   return isAdmin;
 }
 
-// 팝업 창 즉각 닫힘 감지 래퍼 함수 (Firebase 고유 7~8초 지연을 100ms로 단축)
-async function signInWithPopupImmediate(authInstance, providerInstance) {
-  let popupWindow = null;
-  const originalOpen = window.open;
-
-  window.open = function (...args) {
-    popupWindow = originalOpen.apply(window, args);
-    window.open = originalOpen;
-    return popupWindow;
-  };
-
-  let pollInterval = null;
-
-  try {
-    const popupClosedPromise = new Promise((_, reject) => {
-      pollInterval = setInterval(() => {
-        if (popupWindow && popupWindow.closed) {
-          clearInterval(pollInterval);
-          reject({
-            code: 'auth/popup-closed-by-user',
-            message: '사용자가 로그인 팝업 창을 닫았습니다.'
-          });
-        }
-      }, 100);
-    });
-
-    const signInPromise = signInWithPopup(authInstance, providerInstance);
-    return await Promise.race([signInPromise, popupClosedPromise]);
-  } finally {
-    if (pollInterval) clearInterval(pollInterval);
-    window.open = originalOpen;
-  }
+// 모바일 기기 감지 (iOS, Android 등)
+export function isMobileDevice() {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (window.innerWidth <= 768);
 }
 
-// 구글 로그인 실행 (promptSelectAccount: true면 항상 계정 선택 창 표시)
+// 구글 로그인 실행 (PC는 팝업, 모바일은 안정적인 표준 팝업/리디렉트 처리)
 export async function loginWithGoogle({ promptSelectAccount = false } = {}) {
   try {
     const authProvider = new GoogleAuthProvider();
@@ -77,9 +50,10 @@ export async function loginWithGoogle({ promptSelectAccount = false } = {}) {
       });
     }
 
-    if (DEBUG) console.log("🔐 [loginWithGoogle] 로그인 시도");
+    if (DEBUG) console.log("🔐 [loginWithGoogle] 로그인 시도 (모바일 여부:", isMobileDevice(), ")");
 
-    const result = await signInWithPopupImmediate(auth, authProvider);
+    // 팝업 차단 위험이 높은 모바일 브라우저를 고려하여 순수 signInWithPopup 호출 (외부 창 감시 간섭 제거)
+    const result = await signInWithPopup(auth, authProvider);
     const user = result.user;
     const isAdmin = checkIsAdmin(user.email);
 
@@ -99,11 +73,24 @@ export async function loginWithGoogle({ promptSelectAccount = false } = {}) {
       code === 'auth/cancelled-popup-request' ||
       code === 'auth/user-cancelled';
 
-    if (!isCancelled) {
-      console.error("❌ [loginWithGoogle] 로그인 실패:", {
-        code,
-        message: error.message
-      });
+    console.error("❌ [loginWithGoogle] 로그인 에러:", {
+      code,
+      message: error.message
+    });
+
+    // 팝업이 차단된 모바일 환경인 경우 signInWithRedirect로 자동 폴백
+    if (code === 'auth/popup-blocked' || (isMobileDevice() && !isCancelled)) {
+      console.log("🔄 모바일 팝업 차단 감지 -> signInWithRedirect로 자동 전환");
+      try {
+        const authProvider = new GoogleAuthProvider();
+        if (promptSelectAccount) {
+          authProvider.setCustomParameters({ prompt: 'select_account' });
+        }
+        await signInWithRedirect(auth, authProvider);
+        return { success: true, redirecting: true };
+      } catch (redirectError) {
+        console.error("❌ redirect 로그인 실패:", redirectError);
+      }
     }
 
     return {
@@ -113,6 +100,20 @@ export async function loginWithGoogle({ promptSelectAccount = false } = {}) {
       isCancelled: isCancelled
     };
   }
+}
+
+// 리디렉션 로그인 결과 확인 (페이지 로드 시)
+export async function checkRedirectLoginResult() {
+  try {
+    const result = await getRedirectResult(auth);
+    if (result && result.user) {
+      console.log("✅ [checkRedirectLoginResult] 모바일 리디렉션 로그인 성공:", result.user.email);
+      return { success: true, user: result.user };
+    }
+  } catch (e) {
+    console.warn("리디렉션 로그인 확인 중 오류/미해당:", e.message);
+  }
+  return null;
 }
 
 // 로그아웃 실행
@@ -189,4 +190,3 @@ export function subscribeAuth(callback) {
 }
 
 export { auth };
-
