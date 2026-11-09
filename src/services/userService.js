@@ -201,15 +201,9 @@ export async function rejectOrRevokeUser(email, reason = '가입 거절 또는 �
 export async function listAllUsers() {
   if (DEBUG) console.log("📋 [listAllUsers] 사용자 목록 조회 시작");
 
-  // 1️⃣ 로컬 스토리지에서 먼저 읽기
-  let usersMap = { ...getLocalUsers() };
-  const localCount = Object.keys(usersMap).length;
+  let usersMap = {};
 
-  if (DEBUG) {
-    console.log(`💾 [listAllUsers] 로컬 캐시: ${localCount}명`);
-  }
-
-  // 2️⃣ Firestore에서 최신 데이터 조회
+  // 1️⃣ Firestore에서 최신 데이터 우선 조회 (캐시 무시)
   if (!isOfflineFallback && db) {
     try {
       if (DEBUG) console.log("🔍 [listAllUsers] Firestore 조회 중...");
@@ -217,7 +211,7 @@ export async function listAllUsers() {
       const snap = await getDocs(collection(db, 'users'));
 
       if (!snap.empty) {
-        let updateCount = 0;
+        let validCount = 0;
 
         snap.docs.forEach(d => {
           const userData = d.data();
@@ -229,14 +223,14 @@ export async function listAllUsers() {
           }
 
           usersMap[userData.email] = userData;
-          updateCount++;
+          validCount++;
         });
 
-        // Firestore 데이터로 로컬 스토리지 갱신
+        // Firestore 데이터를 로컬 스토리지 갱신
         saveLocalUsers(usersMap);
 
         if (DEBUG) {
-          console.log(`✅ [listAllUsers] Firestore: ${snap.size}명, 추가/갱신: ${updateCount}명`);
+          console.log(`✅ [listAllUsers] Firestore에서 로드: ${snap.size}명 (유효: ${validCount}명)`);
         }
       } else {
         if (DEBUG) {
@@ -244,19 +238,25 @@ export async function listAllUsers() {
         }
       }
     } catch (error) {
-      console.error("❌ [listAllUsers] Firestore 오류:", {
+      console.error("❌ [listAllUsers] Firestore 조회 실패:", {
         code: error.code,
         message: error.message
       });
+
+      // Firestore 실패 시에만 로컬 캐시 폴백
+      if (DEBUG) console.log("💾 [listAllUsers] Firestore 실패 → 로컬 캐시 폴백");
+      usersMap = { ...getLocalUsers() };
     }
-  } else if (DEBUG && isOfflineFallback) {
-    console.warn("⚠️ [listAllUsers] Firestore 오프라인 모드");
+  } else if (isOfflineFallback) {
+    // 오프라인 모드: 로컬 캐시만 사용
+    if (DEBUG) console.warn("⚠️ [listAllUsers] Firestore 오프라인 모드 → 로컬 캐시만 사용");
+    usersMap = { ...getLocalUsers() };
   }
 
   const result = Object.values(usersMap);
 
   if (DEBUG) {
-    console.log(`✅ [listAllUsers] 최종 결과: ${result.length}명`);
+    console.log(`✅ [listAllUsers] 최종 결과: ${result.length}명`, result.map(u => u.email));
   }
 
   return result;
@@ -281,10 +281,11 @@ export function subscribeUsersList(callback) {
       collection(db, 'users'),
       (snap) => {
         try {
-          if (DEBUG) console.log(`📡 [subscribeUsersList] 업데이트: ${snap.size}건`);
+          if (DEBUG) console.log(`📡 [subscribeUsersList] Firestore 변경 감지: ${snap.size}건`);
 
-          // Firestore 데이터 → 로컬 스토리지
-          let usersMap = { ...getLocalUsers() };
+          // ⚠️ Firestore 데이터가 절대 진실 (single source of truth)
+          // 로컬 캐시는 완전히 Firestore 데이터로 대체
+          let usersMap = {}; // 기존 로컬 데이터 무시
           let validCount = 0;
 
           snap.docs.forEach(d => {
@@ -299,11 +300,15 @@ export function subscribeUsersList(callback) {
             }
           });
 
+          // Firestore 데이터로 로컬 캐시 완전 갱신
           saveLocalUsers(usersMap);
           const result = Object.values(usersMap);
 
           if (DEBUG) {
-            console.log(`✅ [subscribeUsersList] 콜백 실행: ${result.length}명 (유효: ${validCount}건)`);
+            console.log(`✅ [subscribeUsersList] 콜백 실행: 총 ${result.length}명 (새로운: ${validCount}명)`);
+            if (validCount > 0) {
+              console.log(`   📧 이메일:`, result.map(u => u.email).join(', '));
+            }
           }
 
           callback(result);
