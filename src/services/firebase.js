@@ -10,7 +10,7 @@ import {
   onSnapshot
 } from 'firebase/firestore';
 
-const DEBUG = import.meta.env.MODE === 'development';
+const DEBUG = true; // 항상 로그 활성화 (프로덕션에서는 false로 변경)
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyD_zh-kmFVZ6WgRgadZPNsfhS1jxe79F9Y",
@@ -26,44 +26,43 @@ let app;
 let db;
 let isOfflineFallback = false;
 
-if (DEBUG) {
-  console.log("🔥 [firebase.js] 초기화 시작", {
-    projectId: firebaseConfig.projectId,
-    authDomain: firebaseConfig.authDomain,
-    mode: import.meta.env.MODE
-  });
-}
+console.log("🔥 [firebase.js] === 초기화 시작 ===");
 
 try {
   // Firebase App 초기화
   app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-
-  if (DEBUG) console.log("✅ [firebase.js] Firebase App 초기화 완료");
+  console.log("✅ [firebase.js] Firebase App 초기화 완료");
 
   // Firestore 초기화
   db = getFirestore(app);
+  console.log("✅ [firebase.js] Firestore 초기화 완료");
+  console.log(`   db 객체: ${!!db ? '있음' : '없음'}`);
 
   if (!db) {
     throw new Error("Firestore 인스턴스 생성 실패");
   }
 
   isOfflineFallback = false;
+  console.log("✅ [firebase.js] === 초기화 성공 ===");
+  console.log("   상태: 온라인 모드");
+  console.log("   Firestore: 준비 완료");
 
-  if (DEBUG) {
-    console.log("✅ [firebase.js] Firestore 초기화 완료");
-    console.log("✅ [firebase.js] 상태: 온라인 모드 (데이터 동기화 활성)");
-  }
 } catch (error) {
-  console.error("❌ [firebase.js] Firebase 초기화 실패:", {
-    code: error.code,
-    message: error.message
-  });
+  console.error("❌ [firebase.js] === 초기화 실패 ===");
+  console.error("   코드:", error.code);
+  console.error("   메시지:", error.message);
+  console.error("   상세:", error);
 
   isOfflineFallback = true;
-
-  if (DEBUG) {
-    console.warn("⚠️ [firebase.js] 오프라인 폴백 모드 활성화 (로컬 스토리지만 사용)");
-  }
+  console.warn("⚠️ [firebase.js] 오프라인 폴백 모드 활성화");
+  console.warn("   로컬 스토리지만 사용합니다");
 }
+
+// 전역 확인 함수
+window.__firebaseStatus = () => ({
+  dbReady: !!db,
+  offline: isOfflineFallback,
+  configValid: firebaseConfig.projectId === 'care-798f1'
+});
 
 export { app, db, isOfflineFallback, DEBUG };
