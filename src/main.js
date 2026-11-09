@@ -4,9 +4,6 @@ import { subscribeAuth, logoutUser, loginWithGoogle } from './services/authServi
 import { getUserProfile, registerNewUserRequest, listAllUsers, subscribeUsersList } from './services/userService';
 import { subscribeRosterChanges } from './services/realtimeSync';
 import { DIAGNOSTICS } from './services/diagnostics';
-import { getFirestore } from 'firebase/firestore';
-import { doc, setDoc } from 'firebase/firestore';
-import { app } from './services/firebase';
 
 import { renderDashboardView } from './views/dashboardView';
 import { renderRosterEditorView } from './views/rosterEditorView';
@@ -93,36 +90,6 @@ class CareShiftApp {
             console.log("✅ [auth] === 가입 신청 완료 ===");
             console.log("✅ [auth] 결과 프로필:", profile);
             isNewUserRequest = true;
-
-            // 🔥 직접 Firestore에도 저장 (중복 저장이라도 괜찮음)
-            // 이 부분이 실패해도 렌더링은 계속되어야 함
-            setTimeout(async () => {
-              try {
-                console.log("🔥 [auth] Firestore 직접 저장 시도...");
-                if (!app) {
-                  console.error("⚠️ [auth] app 객체 없음");
-                  return;
-                }
-
-                const cleanEmail = authInfo.user.email.trim().toLowerCase();
-                const db = getFirestore(app);
-
-                const directProfile = {
-                  email: cleanEmail,
-                  displayName: authInfo.user.displayName || cleanEmail.split('@')[0],
-                  photoURL: authInfo.user.photoURL || null,
-                  role: 'PENDING',
-                  status: 'PENDING',
-                  staffId: null,
-                  appliedAt: new Date().toLocaleString('ko-KR')
-                };
-
-                await setDoc(doc(db, 'users', cleanEmail), directProfile);
-                console.log("✅ [auth] Firestore 직접 저장 성공!");
-              } catch (firestoreError) {
-                console.error("⚠️ [auth] Firestore 직접 저장 실패:", firestoreError.message);
-              }
-            }, 100);
           } catch (error) {
             console.error("❌ [auth] === 가입 신청 실패 ===");
             console.error("❌ [auth] 오류:", {
