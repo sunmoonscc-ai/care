@@ -563,11 +563,33 @@ export async function renderMonthlyGeneratorView(container, { rosterData, onAppl
     }
 
     try {
+      // 1. 백엔드에서 초기화
       await deleteDecemberRoster();
-      alert('✅ 12월 근무표가 초기화되었습니다.\n페이지를 새로고침합니다.');
-      location.reload();
+      console.log('✅ deleteDecemberRoster() 완료');
+
+      // 2. 로컬 상태 즉시 업데이트
+      if (onApplyRoster) {
+        onApplyRoster({
+          title: '2026년 12월 직원근무표 (초기화됨)',
+          year: 2026,
+          month: 12,
+          floor: '2층 요양보호사',
+          status: 'draft',
+          version: '초기화됨',
+          staffList: [],
+          assignments: {},
+          changeLogs: []
+        });
+        console.log('✅ onApplyRoster() 호출됨');
+      }
+
+      // 3. 강제 새로고침 (캐시 무시)
+      await new Promise(resolve => setTimeout(resolve, 500));
+      console.log('🔄 페이지 강제 새로고침 중...');
+      window.location.href = window.location.href.split('?')[0] + '?' + Date.now();
     } catch (e) {
-      alert(`❌ 초기화 중 오류가 발생했습니다: ${e.message}`);
+      console.error('초기화 오류:', e);
+      alert(`❌ 초기화 중 오류가 발생했습니다: ${e.message}\n\n콘솔(F12)을 확인하세요.`);
     }
   });
 

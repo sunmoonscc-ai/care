@@ -1,5 +1,5 @@
 import { db, isOfflineFallback } from './firebase';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import { buildDynamicStaffList, generateRealHospitalRoster } from './realRosterData';
 import { getAppSettings } from './settingsService';
 import { getRegisteredMembers } from './userService';
@@ -137,54 +137,60 @@ export async function saveRosterData(data) {
   console.log(`💾 [근무표 저장] ${data.year}년 ${data.month}월 (키: ${storageKey})`);
 }
 
-// 12월 근무표 초기화 (관리자 전용)
+// 12월 근무표 완전 초기화 (관리자 전용)
 export async function deleteDecemberRoster() {
-  // 동적 키 생성 (year:2026, month:12)
-  const storageKey = 'careshift_roster_202612';
-  const firestoreKey = '202612_2fl';
+  console.log(`🗑️ [12월 근무표 초기화 시작]`);
 
-  console.log(`🗑️ [12월 근무표 초기화 시작] 스토리지키: ${storageKey}, Firestore키: ${firestoreKey}`);
-
-  // 1. 캐시 초기화 (가장 중요!)
+  // 1. 캐시 초기화
   cachedRoster = null;
+  console.log(`✅ 인메모리 캐시 초기화`);
 
-  // 2. 로컬스토리지에서 12월 데이터 삭제
-  localStorage.removeItem(storageKey);
-  localStorage.removeItem('careshift_real_roster_202609'); // 기존 키도 제거 (호환성)
-  console.log(`📋 로컬스토리지 삭제 완료`);
+  // 2. 로컬스토리지 완전 삭제 - 모든 가능한 키 제거
+  const keysToRemove = [
+    'careshift_roster_202612',        // 새 형식 (12월)
+    'careshift_real_roster_202609',   // 기존 형식 (9월)
+    'careshift_real_roster_202612',   // 기존 형식 변형
+    'careshift_roster_2026-12',       // 대체 형식
+    'december_roster',                // 기타 형식들
+    'roster_december',
+    'roster_2026_12'
+  ];
 
-  // 3. Firestore에서 12월 데이터 삭제
+  keysToRemove.forEach(key => {
+    if (localStorage.getItem(key)) {
+      localStorage.removeItem(key);
+      console.log(`  • ${key} 삭제됨`);
+    }
+  });
+  console.log(`✅ 로컬스토리지 완전 초기화`);
+
+  // 3. Firestore 완전 삭제
   if (!isOfflineFallback && db) {
     try {
-      // 빈 데이터로 덮어쓰기 (문서 삭제 대신)
-      setDoc(doc(db, 'rosters', firestoreKey), {
-        title: '',
-        year: 2026,
-        month: 12,
-        status: 'draft',
-        staffList: [],
-        assignments: {},
-        changeLogs: [],
-        deletedAt: new Date().toISOString()
-      }).catch(err => {
-        console.warn("Firestore December roster reset warning:", err);
-      });
+      const firestoreKeysToDelete = [
+        '202612_2fl',     // 새 형식
+        '202609_2fl',     // 기존 형식
+        '2026-12-2fl',    // 대체 형식
+        'december_roster' // 기타 형식
+      ];
 
-      // 기존 키도 초기화 (호환성)
-      setDoc(doc(db, 'rosters', '202609_2fl'), {
-        title: '',
-        status: 'draft',
-        staffList: [],
-        assignments: {},
-        changeLogs: [],
-        deletedAt: new Date().toISOString()
-      }).catch(() => {});
+      for (const key of firestoreKeysToDelete) {
+        try {
+          await deleteDoc(doc(db, 'rosters', key));
+          console.log(`  • Firestore: ${key} 삭제됨`);
+        } catch (e) {
+          // 문서가 없으면 에러 무시
+          if (!e.message.includes('not-found')) {
+            console.warn(`  ⚠️ ${key} 삭제 실패:`, e.message);
+          }
+        }
+      }
 
-      console.log(`🔥 Firestore 초기화 완료`);
+      console.log(`✅ Firestore 완전 초기화`);
     } catch (e) {
-      console.warn("December roster reset error:", e);
+      console.error("Firestore 초기화 중 심각한 오류:", e);
     }
   }
 
-  console.log("✅ 12월 근무표 초기화 완료");
+  console.log("🎉 12월 근무표 초기화 완료");
 }
