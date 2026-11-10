@@ -1,3 +1,17 @@
+/* 모바일 화면(768px 미만)에서는 #pc-top-nav-bar 강제 숨김 */
+@media (max-width: 767.98px) {
+  #pc-top-nav-bar {
+    display: none !important;
+  }
+}
+
+/* PC 화면(768px 이상)에서는 모바일 하단 네비게이션 강제 숨김 */
+@media (min-width: 768px) {
+  #mobile-bottom-nav {
+    display: none !important;
+  }
+}
+
 @media print {
   /* 인쇄 시 헤더와 네비게이션, 툴바, 사이드바 숨김 */
   header, 
@@ -59,4 +73,3 @@
     color: #dc2626 !important;
   }
 }
-

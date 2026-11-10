@@ -160,9 +160,17 @@ class CareShiftApp {
           this.currentView = 'pending';
         }
 
+        // 이미 동일한 뷰에 머물고 있고 모바일 화면이 로드된 상태라면 불필요한 전체 재렌더링 방지
         this.updateBottomNavVisibility();
         this.updatePcNavVisibility();
-        this.render();
+
+        const currentActiveView = this.currentView;
+        const isAlreadyRendered = this.container.children.length > 0;
+        if (!isAlreadyRendered || currentActiveView === 'loading' || currentActiveView === 'login' || currentActiveView === 'pending') {
+          this.render();
+        } else {
+          console.log("🛡️ [auth] 이미 화면이 표시 중이므로 불필요한 새로고침 차단");
+        }
 
         // 4️⃣ 관리자 및 로그인 사용자: 백그라운드로 자체 캐시 vs 실시간 DB 비교 후 업데이트
         this.runBackgroundSyncComparison();
@@ -173,11 +181,21 @@ class CareShiftApp {
       }
     });
 
-    // 5. 원격 근무표 변경 감시
+    // 5. 원격 근무표 변경 감시 (정숙한 데이터 갱신)
     subscribeRosterChanges((remoteData) => {
       this.rosterData = remoteData;
       this.recalculateViolations();
-      if (this.currentView !== 'login' && this.currentView !== 'pending') {
+
+      // 모바일 화면(mobile, caregiver-mobile)이거나 팝업 모달이 열려있을 때는 화면을 강제 리렌더하지 않음 (리로드/깜빡임 차단)
+      const isMobileView = (this.currentView === 'mobile' || this.currentView === 'caregiver-mobile');
+      const isModalOpen = !!document.getElementById('modal-mobile-request') || !!document.getElementById('modal-user-profile');
+      if (isMobileView || isModalOpen) {
+        console.log("🤫 [subscribeRosterChanges] 모바일 화면 또는 모달 상태이므로 백그라운드 데이터만 갱신 (화면 깜빡임 방지)");
+        return;
+      }
+
+      // 근무표 실시간 반영이 필요한 뷰(근무표편집 등)에서만 정숙하게 재렌더
+      if (this.currentView === 'editor' || this.currentView === 'dashboard') {
         this.render();
       }
     });
@@ -191,10 +209,14 @@ class CareShiftApp {
       // 1. 근무표 동기화
       const rosterRes = await syncRosterFromFirestore();
       if (rosterRes && rosterRes.updated) {
-        console.log("📢 [SyncComparison] 근무표 데이터베이스 변경 감지 -> UI 갱신");
+        console.log("📢 [SyncComparison] 근무표 데이터베이스 변경 감지 -> 데이터 갱신");
         this.rosterData = rosterRes.data;
         this.recalculateViolations();
-        if (this.currentView !== 'login' && this.currentView !== 'pending') {
+
+        // 모바일 화면이거나 팝업 모달이 떠 있을 때는 화면 새로고침 금지
+        const isMobileView = (this.currentView === 'mobile' || this.currentView === 'caregiver-mobile');
+        const isModalOpen = !!document.getElementById('modal-mobile-request') || !!document.getElementById('modal-user-profile');
+        if (!isMobileView && !isModalOpen && (this.currentView === 'editor' || this.currentView === 'dashboard')) {
           this.render();
         }
       }
@@ -221,9 +243,10 @@ class CareShiftApp {
   startPeriodicSync() {
     if (this.periodicSyncInterval) clearInterval(this.periodicSyncInterval);
 
-    // 2분마다 정기 비교 수행 (120,000ms)
+    // 모바일 환경에서의 불필요한 배터리 소모 및 통신 방지를 위해 모바일 화면이 아닐 때만 주기적 비교
     this.periodicSyncInterval = setInterval(() => {
-      if (this.authState.isLoggedIn) {
+      const isMobileView = (this.currentView === 'mobile' || this.currentView === 'caregiver-mobile');
+      if (this.authState.isLoggedIn && !isMobileView) {
         console.log("⏰ [PeriodicSync] 정기 백그라운드 DB 비교 실행...");
         this.runBackgroundSyncComparison();
       }
@@ -355,14 +378,12 @@ class CareShiftApp {
     // 1. 비로그인 상태이거나 승인 대기(pending/rejected) 상태이면 PC 상단 탭바 완전 숨김
     const isPendingOrRejected = this.authState.userProfile?.status === 'PENDING' || this.authState.userProfile?.status === 'REJECTED' || !this.authState.userProfile?.status;
     if (!this.authState.isLoggedIn || (!this.authState.isAdmin && isPendingOrRejected) || this.currentView === 'pending' || this.currentView === 'login') {
-      pcNavBar.classList.add('hidden');
-      pcNavBar.classList.remove('md:flex');
+      pcNavBar.className = 'hidden';
       return;
     }
 
-    // 로그인된 상태이면 md:flex 적용
-    pcNavBar.classList.remove('hidden');
-    pcNavBar.classList.add('md:flex');
+    // 모바일(md 미만)에서는 무조건 숨기고, PC(md:flex)에서만 노출
+    pcNavBar.className = 'hidden md:flex items-end justify-between w-full mt-1';
 
     // 2. 권한별 메뉴 분기
     if (this.authState.isAdmin) {
@@ -439,6 +460,8 @@ class CareShiftApp {
     if (this.authState.isLoggedIn && this.authState.user) {
       const u = this.authState.user;
       const profile = this.authState.userProfile;
+      // 구글 계정 이름보다 사용자가 입력/수정한 실명(realName)을 최우선 운영 이름으로 적용
+      const operationalName = profile?.realName || profile?.displayName || u.displayName || u.email.split('@')[0];
       
       let roleBadge = `<span class="px-1.5 py-0.2 rounded bg-slate-200 text-slate-700 text-[10px] font-bold">대기중</span>`;
       let roleTitle = '승인 대기';
@@ -462,15 +485,15 @@ class CareShiftApp {
           <button id="btn-user-avatar" class="flex items-center gap-1.5 sm:gap-2 p-1 rounded-2xl hover:bg-slate-100 transition border border-transparent hover:border-slate-200 focus:outline-none">
             ${u.photoURL ? `<img src="${u.photoURL}" class="w-8 h-8 rounded-full object-cover border border-slate-300 shrink-0"/>` : `
               <div class="w-8 h-8 rounded-full bg-[#004349] flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-sm">
-                ${u.displayName.charAt(0)}
+                ${operationalName.charAt(0)}
               </div>
             `}
             <div class="text-left hidden xs:block">
               <div class="flex items-center gap-1">
-                <span class="text-xs font-bold text-slate-900 leading-tight">${u.displayName}</span>
+                <span class="text-xs font-bold text-slate-900 leading-tight">${operationalName}</span>
                 ${roleBadge}
               </div>
-              <span class="text-[9px] text-slate-400 block leading-tight truncate max-w-[110px]">${u.email}</span>
+              <span class="text-[9px] text-slate-400 block leading-tight truncate max-w-[110px]">${profile?.phoneNumber || u.email}</span>
             </div>
             <span class="material-symbols-outlined text-[16px] text-slate-400">expand_more</span>
           </button>
@@ -482,12 +505,13 @@ class CareShiftApp {
               <div class="flex items-center gap-3">
                 ${u.photoURL ? `<img src="${u.photoURL}" class="w-10 h-10 rounded-full object-cover border border-slate-200"/>` : `
                   <div class="w-10 h-10 rounded-full bg-[#004349] flex items-center justify-center text-white font-bold text-sm">
-                    ${u.displayName.charAt(0)}
+                    ${operationalName.charAt(0)}
                   </div>
                 `}
                 <div class="overflow-hidden">
-                  <div class="text-xs font-bold text-slate-900 truncate">${u.displayName}</div>
+                  <div class="text-xs font-bold text-slate-900 truncate">${operationalName}</div>
                   <div class="text-[10px] text-slate-400 truncate">${u.email}</div>
+                  ${profile?.phoneNumber ? `<div class="text-[10px] text-slate-500 font-semibold truncate">📞 ${profile.phoneNumber}</div>` : ''}
                   <div class="mt-1">${roleBadge}</div>
                 </div>
               </div>
