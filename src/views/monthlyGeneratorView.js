@@ -207,29 +207,20 @@ export async function renderMonthlyGeneratorView(container, { rosterData, onAppl
     const resolvedOffDays = {};
     const dailyOffCount = Array(daysInMonth + 1).fill(0);
 
-    // 1단계: 1순위 신청을 날짜별 정원(maxOffPerDay) 한도 내에서 배정, 초과 시 2순위/3순위 순차 fallback
+    // 1단계: 1순위 신청만 배정 (2순위/3순위는 무시)
+    // 1순위가 날짜별 정원 한도를 초과하면 1순위 신청은 배정하지 않음
     staffList.forEach(s => {
       const pref = findStaffPreference(s);
       if (!pref || pref.rank1.length === 0) return;
 
+      // 1순위만 검증: 모든 1순위 날짜가 정원 범위 내면 배정, 그렇지 않으면 무시
       const canFitRank1 = pref.rank1.every(d => dailyOffCount[d] < maxOffPerDay);
       if (canFitRank1) {
         resolvedOffDays[s.id] = [...pref.rank1];
         pref.rank1.forEach(d => dailyOffCount[d]++);
         pref.appliedRank = 1;
-      } else if (pref.rank2 && pref.rank2.length > 0 && pref.rank2.every(d => dailyOffCount[d] < maxOffPerDay)) {
-        resolvedOffDays[s.id] = [...pref.rank2];
-        pref.rank2.forEach(d => dailyOffCount[d]++);
-        pref.appliedRank = 2;
-      } else if (pref.rank3 && pref.rank3.length > 0 && pref.rank3.every(d => dailyOffCount[d] < maxOffPerDay)) {
-        resolvedOffDays[s.id] = [...pref.rank3];
-        pref.rank3.forEach(d => dailyOffCount[d]++);
-        pref.appliedRank = 3;
-      } else {
-        resolvedOffDays[s.id] = [...pref.rank1];
-        pref.rank1.forEach(d => dailyOffCount[d]++);
-        pref.appliedRank = 1;
       }
+      // 1순위가 안 되면 2순위, 3순위는 무시하고 배정하지 않음
     });
 
     staffList.forEach(s => {
