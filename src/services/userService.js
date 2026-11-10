@@ -1,16 +1,18 @@
 // 사용자 회원 관리 및 권한 승인 서비스 (Firestore users 컬렉션 연동)
 import { db, isOfflineFallback, app } from './firebase';
-import { 
-  collection, 
-  doc, 
-  getDoc, 
-  setDoc, 
-  updateDoc, 
-  getDocs, 
-  onSnapshot 
+import {
+  collection,
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  getDocs,
+  onSnapshot
 } from 'firebase/firestore';
+import { logger } from './loggerService';
+import { STORAGE_KEYS } from '../constants';
 
-const STORAGE_KEY_USERS = 'careshift_users_directory';
+const STORAGE_KEY_USERS = STORAGE_KEYS.USERS;
 
 // 관리자 2인 고정
 export const ADMIN_EMAILS = [
@@ -38,10 +40,9 @@ export async function getUserProfile(email, uid = null) {
     };
   }
 
-  // 1. Firestore에서 실시간 최신 정보 직접 조회 (로컬 캐시보다 Firestore를 절대 우선)
+  // 1. Firestore에서 실시간 최신 정보 직접 조회
   if (!isOfflineFallback && db) {
     try {
-      console.log(`🔍 [getUserProfile] Firestore 실시간 조회 중: ${cleanEmail}`);
       let userDoc = await getDoc(doc(db, 'users', cleanEmail));
       if (!userDoc.exists() && uid) {
         userDoc = await getDoc(doc(db, 'users', uid));
@@ -49,22 +50,20 @@ export async function getUserProfile(email, uid = null) {
 
       if (userDoc.exists()) {
         const data = userDoc.data();
-        console.log(`✅ [getUserProfile] Firestore 실시간 문서 확인됨:`, data);
         // 최신 Firestore 데이터로 로컬 캐시 동기화
         const localDir = getLocalUsers();
         localDir[cleanEmail] = data;
         saveLocalUsers(localDir);
         return data;
       } else {
-        console.log(`ℹ️ [getUserProfile] Firestore에 ${cleanEmail} 문서 없음 (삭제되었거나 신규)`);
-        // Firestore에 없으면 로컬 캐시에서도 제거하여 완전 신규 사용자로 인식시킴
+        // Firestore에 없으면 로컬 캐시에서도 제거
         const localDir = getLocalUsers();
         delete localDir[cleanEmail];
         saveLocalUsers(localDir);
         return null;
       }
     } catch (e) {
-      console.warn("⚠️ [getUserProfile] Firestore 실시간 조회 실패 (오프라인):", e.message);
+      logger.warn('UserService', 'Firestore 조회 실패', e.message);
     }
   }
 
@@ -93,16 +92,16 @@ export async function updateUserProfileInfo({ email, uid, realName, displayName,
   // 2. Firestore 동기화
   if (!isOfflineFallback && db) {
     try {
-      console.log(`🔥 [Firestore] users/${cleanEmail} 정보 수정 저장...`);
       await setDoc(doc(db, 'users', cleanEmail), updates, { merge: true });
       if (uid) {
         try {
           await setDoc(doc(db, 'users', uid), updates, { merge: true });
-        } catch(e) {}
+        } catch (e) {
+          logger.warn('UserService', 'UID 대체 저장 실패', e.message);
+        }
       }
-      console.log("✅ [Firestore] 사용자 정보 수정 완료:", cleanEmail);
     } catch (e) {
-      console.error("❌ [Firestore] 사용자 정보 수정 실패:", e.code, e.message);
+      logger.error('UserService', '사용자 정보 수정 실패', e);
       throw new Error(`Firestore 저장 실패 (${e.code}): ${e.message}`);
     }
   }
@@ -139,30 +138,19 @@ export async function registerNewUserRequest(user, additionalInfo = {}) {
   // 2. Firestore 저장 실행
   if (!isOfflineFallback && db) {
     try {
-      console.log(`🔥 [Firestore] users/${cleanEmail} 문서 저장 시도...`);
       await setDoc(doc(db, 'users', cleanEmail), profile, { merge: true });
-      console.log("✅ [Firestore] 신규 가입 신청 Firestore 저장 완료:", cleanEmail);
       return profile;
     } catch (e) {
-      console.error("❌ [Firestore] users/" + cleanEmail + " 저장 실패:", e.code, e.message);
-
       if (uid) {
         try {
-          console.log(`🔄 [Firestore] users/${uid} (UID 키)로 대체 저장 시도...`);
           await setDoc(doc(db, 'users', uid), profile, { merge: true });
-          console.log("✅ [Firestore] UID 키로 Firestore 저장 성공:", uid);
           return profile;
         } catch (uidErr) {
-          console.error("❌ [Firestore] UID 키 저장도 실패:", uidErr.code, uidErr.message);
+          logger.error('UserService', 'Firestore 저장 실패 (이메일/UID 모두)', uidErr);
         }
       }
 
-      let alertMsg = `⚠️ [Firestore 저장 실패 안내]\n원인: ${e.code || '알 수 없음'} (${e.message})\n\n`;
-      if (e.code === 'permission-denied') {
-        alertMsg += `👉 해결 방법: Firebase 콘솔의 Firestore 규칙(Rules)이 쓰기를 차단하고 있습니다.\n콘솔에서 'allow read, write: if true;'로 변경 후 게시(Publish)해야 저장됩니다.`;
-      } else {
-        alertMsg += `👉 콘솔 에러를 확인해주세요.`;
-      }
+      const alertMsg = `⚠️ [Firestore 저장 실패]\n${e.code || '알 수 없음'}: ${e.message}`;
       alert(alertMsg);
     }
   }
@@ -189,12 +177,12 @@ export async function approveUser({ email, role, staffId }) {
   if (!isOfflineFallback && db) {
     try {
       await updateDoc(doc(db, 'users', cleanEmail), updates);
-      console.log("✅ [Firestore] 사용자 승인 상태 업데이트 완료:", cleanEmail);
     } catch (e) {
-      console.error("Firestore user approve error:", e);
       try {
         await setDoc(doc(db, 'users', cleanEmail), updates, { merge: true });
-      } catch (err2) {}
+      } catch (err2) {
+        logger.warn('UserService', '사용자 승인 상태 업데이트 실패', err2);
+      }
     }
   }
 }
@@ -219,17 +207,16 @@ export async function rejectOrRevokeUser(email, reason = '가입 거절 또는 �
     try {
       await updateDoc(doc(db, 'users', cleanEmail), updates);
     } catch (e) {
-      console.error("Firestore user revoke error:", e);
       try {
         await setDoc(doc(db, 'users', cleanEmail), updates, { merge: true });
-      } catch (err2) {}
+      } catch (err2) {
+        logger.warn('UserService', '사용자 권한 취소 실패', err2);
+      }
     }
   }
 }
 
 export async function listAllUsers(forceRefresh = false) {
-  console.log("🔥 [listAllUsers] Firestore에서 사용자 조회 시작... (forceRefresh:", forceRefresh, ")");
-
   let usersMap = { ...getLocalUsers() };
 
   ADMIN_EMAILS.forEach(adminEmail => {
@@ -250,7 +237,6 @@ export async function listAllUsers(forceRefresh = false) {
   if (!isOfflineFallback && db) {
     try {
       const snap = await getDocs(collection(db, 'users'));
-      console.log("🔥 [listAllUsers] Firestore 조회 성공:", snap.size, "건");
 
       // Firestore 결과로 완전 최신 맵 구성
       const freshMap = {};
@@ -269,7 +255,7 @@ export async function listAllUsers(forceRefresh = false) {
       saveLocalUsers(freshMap);
       return Object.values(freshMap);
     } catch (e) {
-      console.error("🔥 [listAllUsers] Firestore 오류:", e.code, e.message);
+      logger.error('UserService', 'Firestore 사용자 조회 실패', e.message);
     }
   }
 

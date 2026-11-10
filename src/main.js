@@ -7,6 +7,7 @@ import { openSettingsModal } from './services/settingsModal';
 import { syncAppSettingsFromFirestore } from './services/settingsService';
 import { subscribeRosterChanges } from './services/realtimeSync';
 import { DIAGNOSTICS } from './services/diagnostics';
+import { ROSTER_SYNC_INTERVAL, USER_STATUS } from './constants';
 
 import { renderDashboardView } from './views/dashboardView';
 import { renderRosterEditorView } from './views/rosterEditorView';
@@ -239,18 +240,16 @@ class CareShiftApp {
     }
   }
 
-  // 정기적(2분 주기) 백그라운드 비교 타이머 가동
+  // 정기적 백그라운드 비교 타이머 가동
   startPeriodicSync() {
     if (this.periodicSyncInterval) clearInterval(this.periodicSyncInterval);
 
-    // 모바일 환경에서의 불필요한 배터리 소모 및 통신 방지를 위해 모바일 화면이 아닐 때만 주기적 비교
     this.periodicSyncInterval = setInterval(() => {
       const isMobileView = (this.currentView === 'mobile' || this.currentView === 'caregiver-mobile');
       if (this.authState.isLoggedIn && !isMobileView) {
-        console.log("⏰ [PeriodicSync] 정기 백그라운드 DB 비교 실행...");
         this.runBackgroundSyncComparison();
       }
-    }, 2 * 60 * 1000);
+    }, ROSTER_SYNC_INTERVAL);
   }
 
   // 관리자 전용: 실시간 신규 가입 신청자 감시

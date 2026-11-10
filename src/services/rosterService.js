@@ -3,11 +3,12 @@ import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import { buildDynamicStaffList, generateRealHospitalRoster } from './realRosterData';
 import { getAppSettings } from './settingsService';
 import { getRegisteredMembers } from './userService';
+import { logger } from './loggerService';
+import { cacheManager, CACHE_TTL } from './cacheService';
+import { DEFAULT_YEAR, DEFAULT_MONTH, FLOOR_NAME, FIRESTORE_TIMEOUT, STORAGE_KEYS } from '../constants';
 
-const STORAGE_KEY_ROSTER = 'careshift_real_roster_202609';
-
-// 캐시된 인메모리 데이터 (즉각적인 화면 렌더링용)
-let cachedRoster = null;
+const STORAGE_KEY_ROSTER = STORAGE_KEYS.ROSTER;
+const CACHE_KEY_ROSTER = 'roster_cached';
 
 // 최신 설정값과 가입 회원 명단을 바탕으로 동적 기본 근무표 생성
 export function createDefaultRoster() {
@@ -15,21 +16,19 @@ export function createDefaultRoster() {
   const members = getRegisteredMembers();
   const staffList = buildDynamicStaffList(settings.totalStaffCount, members);
   const assignments = generateRealHospitalRoster(staffList);
+  const now = new Date();
 
   return {
-    title: '2026년 09 월 직원근무표 ( 2층 요양보호사)',
-    year: 2026,
-    month: 9,
-    floor: '2층 요양보호사',
-    printedAt: '2026-08-24 11:47',
-    status: 'published',
-    version: '배포본 v1.0',
+    title: `${DEFAULT_YEAR}년 ${String(DEFAULT_MONTH).padStart(2, '0')} 월 직원근무표 (${FLOOR_NAME})`,
+    year: DEFAULT_YEAR,
+    month: DEFAULT_MONTH,
+    floor: FLOOR_NAME,
+    printedAt: now.toLocaleDateString('ko-KR'),
+    status: 'draft',
+    version: '기본값',
     staffList: staffList,
     assignments: assignments,
-    changeLogs: [
-      { id: 'log_1', date: '2026-08-24', content: '2026년 9월 정규 근무표 최초 배포 (수간호사 승인)', author: '수간호사' },
-      { id: 'log_2', date: '2026-08-28', content: '윤인국 10일 N 대체근무 지정 (빨간색 표시)', author: '팀장' }
-    ]
+    changeLogs: []
   };
 }
 
@@ -39,8 +38,9 @@ export function getLocalRosterData() {
   const members = getRegisteredMembers();
   const expectedStaffList = buildDynamicStaffList(settings.totalStaffCount, members);
 
+  // 메모리 캐시 확인
+  let cachedRoster = cacheManager.get(CACHE_KEY_ROSTER);
   if (cachedRoster) {
-    // 직원 목록이 동적으로 변경되었는지 확인 및 동기화
     cachedRoster.staffList = expectedStaffList;
     expectedStaffList.forEach(s => {
       if (!cachedRoster.assignments[s.id]) {
@@ -51,6 +51,7 @@ export function getLocalRosterData() {
     return cachedRoster;
   }
 
+  // localStorage에서 로드
   const localRoster = localStorage.getItem(STORAGE_KEY_ROSTER);
   if (localRoster) {
     try {
@@ -62,15 +63,17 @@ export function getLocalRosterData() {
           cachedRoster.assignments[s.id] = fresh[s.id];
         }
       });
+      cacheManager.set(CACHE_KEY_ROSTER, cachedRoster, CACHE_TTL.LONG);
       return cachedRoster;
     } catch (e) {
-      console.warn("Local storage parse error, generating fresh data:", e);
+      logger.warn('RosterService', 'localStorage 파싱 실패', e.message);
     }
   }
 
-  // 로컬에도 없으면 즉시 동적 기본 서식 반환
+  // 로컬에도 없으면 기본값 생성
   cachedRoster = createDefaultRoster();
   localStorage.setItem(STORAGE_KEY_ROSTER, JSON.stringify(cachedRoster));
+  cacheManager.set(CACHE_KEY_ROSTER, cachedRoster, CACHE_TTL.LONG);
   return cachedRoster;
 }
 
@@ -79,9 +82,10 @@ export async function syncRosterFromFirestore(force = false) {
   if (isOfflineFallback || !db) return getLocalRosterData();
 
   try {
-    const fetchPromise = getDoc(doc(db, 'rosters', '202609_2fl'));
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Firestore timeout')), 3500)
+    const firestoreKey = `${DEFAULT_YEAR}${String(DEFAULT_MONTH).padStart(2, '0')}_2fl`;
+    const fetchPromise = getDoc(doc(db, 'rosters', firestoreKey));
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Firestore timeout')), FIRESTORE_TIMEOUT)
     );
 
     const rosterDoc = await Promise.race([fetchPromise, timeoutPromise]);
@@ -91,27 +95,24 @@ export async function syncRosterFromFirestore(force = false) {
       const remoteStr = JSON.stringify(remoteData);
 
       if (localStr !== remoteStr || force) {
-        console.log("🔄 [syncRosterFromFirestore] 근무표 DB 변경사항 감지 -> 캐시 갱신 완료");
-        cachedRoster = remoteData;
-        
         // 동적 직원 정보 동기화
         const settings = getAppSettings();
         const members = getRegisteredMembers();
-        cachedRoster.staffList = buildDynamicStaffList(settings.totalStaffCount, members);
+        remoteData.staffList = buildDynamicStaffList(settings.totalStaffCount, members);
 
-        localStorage.setItem(STORAGE_KEY_ROSTER, JSON.stringify(cachedRoster));
-        return { updated: true, data: cachedRoster };
+        localStorage.setItem(STORAGE_KEY_ROSTER, JSON.stringify(remoteData));
+        cacheManager.set(CACHE_KEY_ROSTER, remoteData, CACHE_TTL.LONG);
+        return { updated: true, data: remoteData };
       } else {
-        console.log("✅ [syncRosterFromFirestore] 근무표 로컬 캐시와 Firestore DB 일치함");
-        cachedRoster = remoteData;
         const settings = getAppSettings();
         const members = getRegisteredMembers();
-        cachedRoster.staffList = buildDynamicStaffList(settings.totalStaffCount, members);
-        return { updated: false, data: cachedRoster };
+        remoteData.staffList = buildDynamicStaffList(settings.totalStaffCount, members);
+        cacheManager.set(CACHE_KEY_ROSTER, remoteData, CACHE_TTL.LONG);
+        return { updated: false, data: remoteData };
       }
     }
   } catch (e) {
-    console.log("Firestore background sync skipped (network timeout or offline):", e.message);
+    logger.debug('RosterService', 'Firestore 동기화 스킵', e.message);
   }
 
   return { updated: false, data: getLocalRosterData() };
@@ -119,78 +120,62 @@ export async function syncRosterFromFirestore(force = false) {
 
 // 3. 근무표 데이터 저장 (로컬 즉시 반영 + 파이어베이스 백그라운드 저장)
 export async function saveRosterData(data) {
-  cachedRoster = data;
+  cacheManager.set(CACHE_KEY_ROSTER, data, CACHE_TTL.LONG);
 
   // 년월 기반 동적 키 생성
-  const storageKey = `careshift_roster_${data.year}${String(data.month).padStart(2, '0')}`;
+  const storageKey = `${STORAGE_KEY_ROSTER}_${data.year}${String(data.month).padStart(2, '0')}`;
   const firestoreKey = `${data.year}${String(data.month).padStart(2, '0')}_2fl`;
 
   localStorage.setItem(storageKey, JSON.stringify(data));
 
   if (!isOfflineFallback && db) {
-    // UI 멈춤 없이 백그라운드에서 조용히 저장
     setDoc(doc(db, 'rosters', firestoreKey), data).catch(err => {
-      console.warn("Background Firestore save warning:", err);
+      logger.warn('RosterService', '근무표 저장 실패', err);
     });
   }
-
-  console.log(`💾 [근무표 저장] ${data.year}년 ${data.month}월 (키: ${storageKey})`);
 }
 
 // 12월 근무표 완전 초기화 (관리자 전용)
 export async function deleteDecemberRoster() {
-  console.log(`🗑️ [12월 근무표 초기화 시작]`);
-
   // 1. 캐시 초기화
-  cachedRoster = null;
-  console.log(`✅ 인메모리 캐시 초기화`);
+  cacheManager.delete(CACHE_KEY_ROSTER);
 
-  // 2. 로컬스토리지 완전 삭제 - 모든 가능한 키 제거
+  // 2. 로컬스토리지 완전 삭제
   const keysToRemove = [
-    'careshift_roster_202612',        // 새 형식 (12월)
-    'careshift_real_roster_202609',   // 기존 형식 (9월)
-    'careshift_real_roster_202612',   // 기존 형식 변형
-    'careshift_roster_2026-12',       // 대체 형식
-    'december_roster',                // 기타 형식들
+    'careshift_roster_202612',
+    'careshift_real_roster_202609',
+    'careshift_real_roster_202612',
+    'careshift_roster_2026-12',
+    'december_roster',
     'roster_december',
     'roster_2026_12'
   ];
 
   keysToRemove.forEach(key => {
-    if (localStorage.getItem(key)) {
-      localStorage.removeItem(key);
-      console.log(`  • ${key} 삭제됨`);
-    }
+    localStorage.removeItem(key);
   });
-  console.log(`✅ 로컬스토리지 완전 초기화`);
 
   // 3. Firestore 완전 삭제
   if (!isOfflineFallback && db) {
     try {
       const firestoreKeysToDelete = [
-        '202612_2fl',     // 새 형식
-        '202609_2fl',     // 기존 형식
-        '2026-12-2fl',    // 대체 형식
-        'december_roster' // 기타 형식
+        '202612_2fl',
+        '202609_2fl',
+        '2026-12-2fl',
+        'december_roster'
       ];
 
       for (const key of firestoreKeysToDelete) {
         try {
           await deleteDoc(doc(db, 'rosters', key));
-          console.log(`  • Firestore: ${key} 삭제됨`);
         } catch (e) {
-          // 문서가 없으면 에러 무시
           if (!e.message.includes('not-found')) {
-            console.warn(`  ⚠️ ${key} 삭제 실패:`, e.message);
+            logger.warn('RosterService', `근무표 삭제 실패: ${key}`, e.message);
           }
         }
       }
-
-      console.log(`✅ Firestore 완전 초기화`);
     } catch (e) {
-      console.error("Firestore 초기화 중 심각한 오류:", e);
+      logger.error('RosterService', '근무표 초기화 실패', e);
     }
   }
-
-  console.log("🎉 12월 근무표 초기화 완료");
 }

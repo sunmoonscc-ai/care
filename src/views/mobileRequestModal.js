@@ -1,11 +1,10 @@
 // 휴무 신청 모달 (단순화: 1개 날짜만 선택)
 import { replaceStaffMonthlyOffRequests } from '../services/requestService';
+import { MAX_OFF_DAYS } from '../constants';
 
 export function openMobileRequestModal({ rosterData, staff, type = 'OFF', existingSelections = null, onComplete }) {
   let modal = document.getElementById('modal-mobile-request');
   if (modal) modal.remove();
-
-  const maxOffDays = 2; // 고정: 선택한 날부터 2일 휴무
 
   // 현재 날짜 기반으로 다음 달 계산
   const now = new Date();
@@ -223,51 +222,29 @@ export function openMobileRequestModal({ rosterData, staff, type = 'OFF', existi
     }
 
     const reason = modal.querySelector('#input-req-reason').value.trim() || '개인 사정';
+    const monthStr = `${targetYear}-${String(targetMonth).padStart(2, '0')}`;
 
-    // 선택한 날짜부터 2일간 휴무 신청
+    // 선택한 날짜부터 MAX_OFF_DAYS간 휴무 신청
     const nextDay = selectedDay + 1 <= daysInMonth ? selectedDay + 1 : daysInMonth;
 
-    const monthStr = `${targetYear}-${String(targetMonth).padStart(2, '0')}`;
-    console.log(`📝 [신청 생성] 사용자: ${staff.name}, 선택일: ${selectedDay}일, 다음날: ${nextDay}일, 월: ${monthStr}`);
-
-    const newItems = [
-      {
-        type: 'OFF',
-        typeName: '희망 휴무(OFF)',
-        requesterId: staff.id || '',
-        requesterName: staff.name || '',
-        requesterEmail: (staff.email || '').toLowerCase().trim(),
-        requesterPhone: (staff.phoneNumber || '').replace(/[^0-9]/g, ''),
-        targetId: '',
-        targetName: '-',
-        date: `${monthStr}-${String(selectedDay).padStart(2, '0')}`,
-        fromShift: 'D',
-        toShift: 'OFF',
-        reason: reason,
-        rank: 1,
-        month: monthStr,
-        status: 'PENDING_ADMIN',
-        statusText: '관리자(수간호사) 승인 대기중'
-      },
-      {
-        type: 'OFF',
-        typeName: '희망 휴무(OFF)',
-        requesterId: staff.id || '',
-        requesterName: staff.name || '',
-        requesterEmail: (staff.email || '').toLowerCase().trim(),
-        requesterPhone: (staff.phoneNumber || '').replace(/[^0-9]/g, ''),
-        targetId: '',
-        targetName: '-',
-        date: `${monthStr}-${String(nextDay).padStart(2, '0')}`,
-        fromShift: 'D',
-        toShift: 'OFF',
-        reason: reason,
-        rank: 1,
-        month: monthStr,
-        status: 'PENDING_ADMIN',
-        statusText: '관리자(수간호사) 승인 대기중'
-      }
-    ];
+    const newItems = Array.from({ length: Math.min(MAX_OFF_DAYS, nextDay - selectedDay + 1) }, (_, i) => ({
+      type: 'OFF',
+      typeName: '희망 휴무(OFF)',
+      requesterId: staff.id || '',
+      requesterName: staff.name || '',
+      requesterEmail: (staff.email || '').toLowerCase().trim(),
+      requesterPhone: (staff.phoneNumber || '').replace(/[^0-9]/g, ''),
+      targetId: '',
+      targetName: '-',
+      date: `${monthStr}-${String(selectedDay + i).padStart(2, '0')}`,
+      fromShift: 'D',
+      toShift: 'OFF',
+      reason: reason,
+      rank: 1,
+      month: monthStr,
+      status: 'PENDING_ADMIN',
+      statusText: '관리자(수간호사) 승인 대기중'
+    }));
 
     await replaceStaffMonthlyOffRequests(staff.id, staff.name, monthStr, newItems);
 

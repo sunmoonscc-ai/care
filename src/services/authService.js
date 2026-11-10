@@ -9,6 +9,7 @@ import {
   signOut,
   onAuthStateChanged
 } from 'firebase/auth';
+import { logger } from './loggerService';
 
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
@@ -26,11 +27,6 @@ export function checkIsAdmin(email) {
 
   const cleanEmail = email.trim().toLowerCase();
   const isAdmin = ADMIN_EMAILS.includes(cleanEmail);
-
-  if (DEBUG && isAdmin) {
-    console.log(`✅ [checkIsAdmin] 관리자 인증: ${cleanEmail}`);
-  }
-
   return isAdmin;
 }
 
@@ -50,20 +46,10 @@ export async function loginWithGoogle({ promptSelectAccount = false } = {}) {
       });
     }
 
-    if (DEBUG) console.log("🔐 [loginWithGoogle] 로그인 시도 (모바일 여부:", isMobileDevice(), ")");
-
-    // 팝업 차단 위험이 높은 모바일 브라우저를 고려하여 순수 signInWithPopup 호출 (외부 창 감시 간섭 제거)
+    // 팝업 차단 위험이 높은 모바일 브라우저를 고려하여 순수 signInWithPopup 호출
     const result = await signInWithPopup(auth, authProvider);
     const user = result.user;
     const isAdmin = checkIsAdmin(user.email);
-
-    if (DEBUG) {
-      console.log("✅ [loginWithGoogle] 로그인 성공", {
-        email: user.email,
-        uid: user.uid,
-        isAdmin
-      });
-    }
 
     return { success: true, user, isAdmin };
   } catch (error) {
@@ -73,10 +59,9 @@ export async function loginWithGoogle({ promptSelectAccount = false } = {}) {
       code === 'auth/cancelled-popup-request' ||
       code === 'auth/user-cancelled';
 
-    console.error("❌ [loginWithGoogle] 로그인 에러:", {
-      code,
-      message: error.message
-    });
+    if (!isCancelled) {
+      logger.error('AuthService', '로그인 에러', error.message);
+    }
 
     // 팝업이 차단된 모바일 환경인 경우 signInWithRedirect로 자동 폴백
     if (code === 'auth/popup-blocked' || (isMobileDevice() && !isCancelled)) {
