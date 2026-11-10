@@ -95,22 +95,19 @@ export async function renderCaregiverMobileView(container, { rosterData, authSta
   const settings = await import('../services/settingsService').then(m => m.getAppSettings());
   const maxOffDays = settings.monthlyOffLimit || 2;
 
-  // 각 신청의 rank 필드를 사용하여 복원 (단순 로직)
-  const myRanks = { 1: [], 2: [], 3: [] };
+  // 1순위만 사용 (모든 휴무 요청이 rank=1)
+  const myRanks = { 1: [] };
   myOffReqs.forEach(r => {
     const day = parseInt(r.date.split('-')[2], 10);
-    const rank = r.rank || 1;
-    if (myRanks[rank] && !myRanks[rank].includes(day)) {
-      myRanks[rank].push(day);
+    if (!myRanks[1].includes(day)) {
+      myRanks[1].push(day);
     }
   });
 
-  // 각 순위별 maxOffDays 제한
-  Object.keys(myRanks).forEach(rank => {
-    if (myRanks[rank].length > maxOffDays) {
-      myRanks[rank] = myRanks[rank].slice(0, maxOffDays);
-    }
-  });
+  // 최대 2개까지만 (그 첫 번째 날짜가 시작점)
+  if (myRanks[1].length > maxOffDays) {
+    myRanks[1] = myRanks[1].slice(0, maxOffDays);
+  }
 
   const hasMyRequests = myRanks[1].length > 0 || myRanks[2].length > 0 || myRanks[3].length > 0;
 
@@ -222,12 +219,10 @@ export async function renderCaregiverMobileView(container, { rosterData, authSta
 
         ${hasMyRequests ? `
           <div class="bg-slate-50 rounded-xl p-3 border border-slate-200/80 space-y-1">
-            ${formatRankList(myRanks[1], '1순위 (필수)', 'text-teal-800')}
-            ${formatRankList(myRanks[2], '2순위 (대안)', 'text-blue-700')}
-            ${formatRankList(myRanks[3], '3순위 (추가)', 'text-amber-700')}
+            ${formatRankList(myRanks[1], '휴무 요청일', 'text-teal-800')}
             <div class="pt-1.5 mt-1 border-t border-slate-200 flex items-center justify-between text-[11px] text-slate-500">
               <span>상태: <b class="text-teal-700 font-extrabold">관리자 근무표 편성 대기중</b></span>
-              <span class="text-[10px] text-slate-400">변경 희망 시 위 [날짜 변경] 클릭</span>
+              <span class="text-[10px] text-slate-400">변경 희망 시 위 [신청하기] 클릭</span>
             </div>
           </div>
         ` : `

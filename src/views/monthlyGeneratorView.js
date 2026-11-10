@@ -154,25 +154,24 @@ export async function renderMonthlyGeneratorView(container, { rosterData, onAppl
         email: r.requesterEmail || '',
         phone: cleanPhone(r.requesterPhone),
         id: r.requesterId || '',
-        rank1: [],
-        rank2: [],
-        rank3: []
+        startDay: null // 휴무 시작일 (숫자 1개)
       };
     }
+
+    // 모든 신청이 rank=1이고, startDay가 없으면 첫 신청의 날짜를 저장
     const day = parseInt(r.date.split('-')[2], 10);
-    const rank = r.rank || 1;
-    if (rank === 1 && !staffPreferenceMap[key].rank1.includes(day)) staffPreferenceMap[key].rank1.push(day);
-    if (rank === 2 && !staffPreferenceMap[key].rank2.includes(day)) staffPreferenceMap[key].rank2.push(day);
-    if (rank === 3 && !staffPreferenceMap[key].rank3.includes(day)) staffPreferenceMap[key].rank3.push(day);
+    if (!staffPreferenceMap[key].startDay) {
+      staffPreferenceMap[key].startDay = day;
+    }
   });
 
   // 📊 파싱 후 최종 신청 데이터
-  console.log(`\n📊 [최종 신청 데이터 구조]:`);
+  console.log(`\n📊 [최종 신청 데이터]:`);
   Object.entries(staffPreferenceMap).forEach(([key, pref]) => {
-    console.log(`  ${pref.name || pref.email}:`);
-    console.log(`    ├─ 1순위: [${pref.rank1}]`);
-    console.log(`    ├─ 2순위: [${pref.rank2}]`);
-    console.log(`    └─ 3순위: [${pref.rank3}]`);
+    if (pref.startDay) {
+      const endDay = Math.min(pref.startDay + 1, daysInMonth);
+      console.log(`  ${pref.name || pref.email}: ${pref.startDay}일~${endDay}일 휴무`);
+    }
   });
 
   // 직원 듀티 배정 매칭 헬퍼 함수 (3중 비교: 이름, 전화번호, 이메일)
@@ -218,23 +217,23 @@ export async function renderMonthlyGeneratorView(container, { rosterData, onAppl
     const resolvedOffDays = {};
     const dailyOffCount = Array(daysInMonth + 1).fill(0);
 
-    // 1단계: 1순위 신청만 배정 (2순위/3순위는 무시)
-    // 1순위가 날짜별 정원 한도를 초과하면 1순위 신청은 배정하지 않음
+    // 1단계: 휴무 신청 배정 (시작일부터 maxOffDays일)
     staffList.forEach(s => {
       const pref = findStaffPreference(s);
-      if (!pref || pref.rank1.length === 0) return;
+      if (!pref || !pref.startDay) return;
 
-      // 1순위는 최대 maxOffDays까지만 취함 (과도한 신청 데이터 방어)
-      const validRank1 = pref.rank1.slice(0, maxOffDays);
-
-      // 1순위만 검증: 모든 1순위 날짜가 정원 범위 내면 배정, 그렇지 않으면 무시
-      const canFitRank1 = validRank1.every(d => dailyOffCount[d] < maxOffPerDay);
-      if (canFitRank1) {
-        resolvedOffDays[s.id] = [...validRank1];
-        validRank1.forEach(d => dailyOffCount[d]++);
-        pref.appliedRank = 1;
+      // 시작일부터 maxOffDays만큼 휴무 생성
+      const offDays = [];
+      for (let i = 0; i < maxOffDays && pref.startDay + i <= daysInMonth; i++) {
+        offDays.push(pref.startDay + i);
       }
-      // 1순위가 안 되면 2순위, 3순위는 무시하고 배정하지 않음
+
+      // 날짜별 정원 확인
+      const canFit = offDays.every(d => dailyOffCount[d] < maxOffPerDay);
+      if (canFit) {
+        resolvedOffDays[s.id] = offDays;
+        offDays.forEach(d => dailyOffCount[d]++);
+      }
     });
 
     staffList.forEach(s => {
