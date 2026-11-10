@@ -120,39 +120,67 @@ export async function syncRosterFromFirestore(force = false) {
 // 3. 근무표 데이터 저장 (로컬 즉시 반영 + 파이어베이스 백그라운드 저장)
 export async function saveRosterData(data) {
   cachedRoster = data;
-  localStorage.setItem(STORAGE_KEY_ROSTER, JSON.stringify(data));
+
+  // 년월 기반 동적 키 생성
+  const storageKey = `careshift_roster_${data.year}${String(data.month).padStart(2, '0')}`;
+  const firestoreKey = `${data.year}${String(data.month).padStart(2, '0')}_2fl`;
+
+  localStorage.setItem(storageKey, JSON.stringify(data));
 
   if (!isOfflineFallback && db) {
     // UI 멈춤 없이 백그라운드에서 조용히 저장
-    setDoc(doc(db, 'rosters', '202609_2fl'), data).catch(err => {
+    setDoc(doc(db, 'rosters', firestoreKey), data).catch(err => {
       console.warn("Background Firestore save warning:", err);
     });
   }
+
+  console.log(`💾 [근무표 저장] ${data.year}년 ${data.month}월 (키: ${storageKey})`);
 }
 
 // 12월 근무표 초기화 (관리자 전용)
 export async function deleteDecemberRoster() {
-  const decemberKey = '202612_2fl';
+  // 동적 키 생성 (year:2026, month:12)
+  const storageKey = 'careshift_roster_202612';
+  const firestoreKey = '202612_2fl';
 
-  // 로컬스토리지에서 12월 데이터 삭제
-  localStorage.removeItem(decemberKey);
+  console.log(`🗑️ [12월 근무표 초기화 시작] 스토리지키: ${storageKey}, Firestore키: ${firestoreKey}`);
 
-  // Firestore에서 12월 데이터 삭제
+  // 1. 캐시 초기화 (가장 중요!)
+  cachedRoster = null;
+
+  // 2. 로컬스토리지에서 12월 데이터 삭제
+  localStorage.removeItem(storageKey);
+  localStorage.removeItem('careshift_real_roster_202609'); // 기존 키도 제거 (호환성)
+  console.log(`📋 로컬스토리지 삭제 완료`);
+
+  // 3. Firestore에서 12월 데이터 삭제
   if (!isOfflineFallback && db) {
     try {
-      const docRef = doc(db, 'rosters', decemberKey);
-      // deleteDoc을 사용하면 문서를 완전히 삭제하므로, 빈 객체로 설정하거나 직접 삭제
-      setDoc(docRef, {
+      // 빈 데이터로 덮어쓰기 (문서 삭제 대신)
+      setDoc(doc(db, 'rosters', firestoreKey), {
         title: '',
         year: 2026,
         month: 12,
         status: 'draft',
         staffList: [],
         assignments: {},
-        changeLogs: []
+        changeLogs: [],
+        deletedAt: new Date().toISOString()
       }).catch(err => {
         console.warn("Firestore December roster reset warning:", err);
       });
+
+      // 기존 키도 초기화 (호환성)
+      setDoc(doc(db, 'rosters', '202609_2fl'), {
+        title: '',
+        status: 'draft',
+        staffList: [],
+        assignments: {},
+        changeLogs: [],
+        deletedAt: new Date().toISOString()
+      }).catch(() => {});
+
+      console.log(`🔥 Firestore 초기화 완료`);
     } catch (e) {
       console.warn("December roster reset error:", e);
     }
