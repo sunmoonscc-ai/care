@@ -85,26 +85,37 @@ export async function renderCaregiverMobileView(container, { rosterData, authSta
 
   // 2. 내가 신청한 12월 희망 휴무 내역 실시간 조회
   const allReqs = await loadRequests();
-  const myOffReqs = allReqs.filter(r => 
-    r.type === 'OFF' && 
+  const myOffReqs = allReqs.filter(r =>
+    r.type === 'OFF' &&
     (r.requesterId === staff.id || r.requesterName === displayName || (authState.user?.email && r.requesterEmail === authState.user.email)) &&
     r.date && r.date.startsWith('2026-12')
   );
+
+  // 설정에서 maxOffDays 로드 (기본 2)
+  const settings = await import('../services/settingsService').then(m => m.getAppSettings());
+  const maxOffDays = settings.monthlyOffLimit || 2;
 
   // 가장 최근에 제출된 신청건의 ranks 구조 우선 복원
   const myRanks = { 1: [], 2: [], 3: [] };
   const latestWithRanks = myOffReqs.find(r => r.ranks);
 
   if (latestWithRanks && latestWithRanks.ranks) {
-    if (latestWithRanks.ranks.rank1) myRanks[1] = [...latestWithRanks.ranks.rank1];
-    if (latestWithRanks.ranks.rank2) myRanks[2] = [...latestWithRanks.ranks.rank2];
-    if (latestWithRanks.ranks.rank3) myRanks[3] = [...latestWithRanks.ranks.rank3];
+    // ranks 데이터가 maxOffDays를 초과하면 제한 (방어)
+    if (latestWithRanks.ranks.rank1) myRanks[1] = latestWithRanks.ranks.rank1.slice(0, maxOffDays);
+    if (latestWithRanks.ranks.rank2) myRanks[2] = latestWithRanks.ranks.rank2.slice(0, maxOffDays);
+    if (latestWithRanks.ranks.rank3) myRanks[3] = latestWithRanks.ranks.rank3.slice(0, maxOffDays);
   } else {
     myOffReqs.forEach(r => {
       const day = parseInt(r.date.split('-')[2], 10);
       const rank = r.rank || 1;
       if (myRanks[rank] && !myRanks[rank].includes(day)) {
         myRanks[rank].push(day);
+      }
+    });
+    // 개별 요청으로 수집한 경우에도 maxOffDays 제한
+    Object.keys(myRanks).forEach(rank => {
+      if (myRanks[rank].length > maxOffDays) {
+        myRanks[rank] = myRanks[rank].slice(0, maxOffDays);
       }
     });
   }
