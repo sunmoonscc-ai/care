@@ -164,12 +164,6 @@ export async function renderMonthlyGeneratorView(container, { rosterData, onAppl
     if (rank === 1 && !staffPreferenceMap[key].rank1.includes(day)) staffPreferenceMap[key].rank1.push(day);
     if (rank === 2 && !staffPreferenceMap[key].rank2.includes(day)) staffPreferenceMap[key].rank2.push(day);
     if (rank === 3 && !staffPreferenceMap[key].rank3.includes(day)) staffPreferenceMap[key].rank3.push(day);
-
-    if (r.ranks) {
-      if (r.ranks.rank1) staffPreferenceMap[key].rank1 = [...new Set([...staffPreferenceMap[key].rank1, ...r.ranks.rank1])];
-      if (r.ranks.rank2) staffPreferenceMap[key].rank2 = [...new Set([...staffPreferenceMap[key].rank2, ...r.ranks.rank2])];
-      if (r.ranks.rank3) staffPreferenceMap[key].rank3 = [...new Set([...staffPreferenceMap[key].rank3, ...r.ranks.rank3])];
-    }
   });
 
   // 📊 파싱 후 최종 신청 데이터
