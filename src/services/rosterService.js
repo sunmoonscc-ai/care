@@ -129,3 +129,34 @@ export async function saveRosterData(data) {
     });
   }
 }
+
+// 12월 근무표 초기화 (관리자 전용)
+export async function deleteDecemberRoster() {
+  const decemberKey = '202612_2fl';
+
+  // 로컬스토리지에서 12월 데이터 삭제
+  localStorage.removeItem(decemberKey);
+
+  // Firestore에서 12월 데이터 삭제
+  if (!isOfflineFallback && db) {
+    try {
+      const docRef = doc(db, 'rosters', decemberKey);
+      // deleteDoc을 사용하면 문서를 완전히 삭제하므로, 빈 객체로 설정하거나 직접 삭제
+      setDoc(docRef, {
+        title: '',
+        year: 2026,
+        month: 12,
+        status: 'draft',
+        staffList: [],
+        assignments: {},
+        changeLogs: []
+      }).catch(err => {
+        console.warn("Firestore December roster reset warning:", err);
+      });
+    } catch (e) {
+      console.warn("December roster reset error:", e);
+    }
+  }
+
+  console.log("✅ 12월 근무표 초기화 완료");
+}

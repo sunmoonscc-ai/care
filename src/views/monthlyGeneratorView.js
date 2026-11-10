@@ -2,7 +2,7 @@
 import { getAppSettings, calculateStaffingRequirements } from '../services/settingsService';
 import { getRegisteredMembers, listAllUsers } from '../services/userService';
 import { buildDynamicStaffList } from '../services/realRosterData';
-import { saveRosterData } from '../services/rosterService';
+import { saveRosterData, deleteDecemberRoster } from '../services/rosterService';
 import { loadRequests } from '../services/requestService';
 
 export async function renderMonthlyGeneratorView(container, { rosterData, onApplyRoster, navigate }) {
@@ -345,9 +345,13 @@ export async function renderMonthlyGeneratorView(container, { rosterData, onAppl
             </div>
           </div>
           <div class="flex items-center gap-2 shrink-0">
+            <button id="btn-reset-december-roster" class="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-[16px]">restore</span>
+              초기화
+            </button>
             <button id="btn-goto-roster-editor-shortcut" class="px-4 py-2.5 bg-teal-800 hover:bg-teal-900 text-white font-extrabold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5">
               <span class="material-symbols-outlined text-[16px]">table_chart</span>
-              12월 근무표 편집 바로가기
+              편집 바로가기
             </button>
           </div>
         </div>
@@ -550,6 +554,22 @@ export async function renderMonthlyGeneratorView(container, { rosterData, onAppl
     alert(`🎉 [${targetYear}년 ${targetMonth}월 근무표]가 [${draftName}] 기준으로 확정되었습니다!\n월간 근무표 편집 화면으로 이동합니다.`);
     navigate('editor');
   };
+
+  // 12월 근무표 초기화 버튼
+  container.querySelector('#btn-reset-december-roster')?.addEventListener('click', async () => {
+    const confirmMsg = `⚠️ [12월 근무표 초기화]\n\n현재 생성된 12월 근무표를 완전히 삭제하겠습니까?\n이 작업은 되돌릴 수 없습니다.\n\n초기화 후 다시 근무표를 작성할 수 있습니다.`;
+    if (!confirm(confirmMsg)) {
+      return;
+    }
+
+    try {
+      await deleteDecemberRoster();
+      alert('✅ 12월 근무표가 초기화되었습니다.\n페이지를 새로고침합니다.');
+      location.reload();
+    } catch (e) {
+      alert(`❌ 초기화 중 오류가 발생했습니다: ${e.message}`);
+    }
+  });
 
   container.querySelector('#btn-goto-roster-editor-shortcut')?.addEventListener('click', () => {
     navigate('editor');
