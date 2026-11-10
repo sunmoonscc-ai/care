@@ -98,38 +98,30 @@ export async function saveRequest(newReq) {
 
 // 특정 직원의 특정 월 기존 희망휴무 신청 건 전체 일괄 삭제/교체
 export async function replaceStaffMonthlyOffRequests(staffId, staffName, monthPrefix, newRequestItems = []) {
-  // 정규화 헬퍼 함수
-  const normalizeString = (s) => (s || '').trim().toLowerCase();
-  const normalizePhone = (p) => (p || '').replace(/[^0-9]/g, '');
-
   // 1. 현재 로컬 및 DB에 등록된 전체 목록 로드
   const all = await loadRequests();
 
-  // 2. 삭제 대상 필터링: 신청자 식별 정보가 일치하고, 해당 월의 모든 OFF 신청 건
-  const normalizedStaffId = normalizeString(staffId);
-  const normalizedStaffName = normalizeString(staffName);
-
+  // 2. 삭제 대상 필터링: staffId 기반 매칭 (가장 정확한 방법)
+  // staffId가 없으면 staffName으로 매칭, 모두 없으면 이메일로 매칭
   const toDelete = all.filter(r => {
     if (r.type !== 'OFF' || !r.date || !r.date.startsWith(monthPrefix)) return false;
 
-    // ID 매칭 (최우선)
-    if (r.requesterId && normalizeString(r.requesterId) === normalizedStaffId) return true;
+    const rStaffId = (r.requesterId || '').trim().toLowerCase();
+    const rStaffName = (r.requesterName || '').trim().toLowerCase();
+    const rEmail = (r.requesterEmail || '').trim().toLowerCase();
 
-    // 이름 매칭
-    if (r.requesterName && normalizeString(r.requesterName) === normalizedStaffName) return true;
+    const inputStaffId = (staffId || '').trim().toLowerCase();
+    const inputStaffName = (staffName || '').trim().toLowerCase();
+    const inputEmail = newRequestItems.length > 0 ? (newRequestItems[0].requesterEmail || '').trim().toLowerCase() : '';
 
-    // newRequestItems에 있는 신청자의 이메일/전화번호로 매칭 (이전 신청 제거)
-    if (newRequestItems.length > 0) {
-      const firstNew = newRequestItems[0];
-      if (firstNew.requesterEmail && r.requesterEmail &&
-          normalizeString(r.requesterEmail) === normalizeString(firstNew.requesterEmail)) {
-        return true;
-      }
-      if (firstNew.requesterPhone && r.requesterPhone &&
-          normalizePhone(r.requesterPhone) === normalizePhone(firstNew.requesterPhone)) {
-        return true;
-      }
-    }
+    // staffId 매칭 (최우선)
+    if (inputStaffId && rStaffId === inputStaffId) return true;
+
+    // staffName 매칭
+    if (inputStaffName && rStaffName === inputStaffName) return true;
+
+    // 이메일 매칭
+    if (inputEmail && rEmail === inputEmail) return true;
 
     return false;
   });
@@ -144,56 +136,48 @@ export async function replaceStaffMonthlyOffRequests(staffId, staffName, monthPr
     createdAt: new Date().toLocaleString('ko-KR')
   }));
 
-  // 4. 로컬 캐시 즉시 갱신 (과거 건이 싹 사라지고 새 건만 남음)
+  // 4. 로컬 캐시 즉시 갱신
   const updatedList = [...preparedNew, ...remaining];
   localStorage.setItem(STORAGE_KEY_REQUESTS, JSON.stringify(updatedList));
 
-  // 5. Firestore 원격 동기화 (원격 DB에서도 이전 건 전부 삭제 및 새 건 등록)
+  // 5. Firestore 동기화 (로컬 업데이트 후 원격 동기화)
   if (!isOfflineFallback && db) {
     try {
-      // Firestore에 남아있을 과거 신청 문서 모두 조회 후 삭제
       const q = query(collection(db, 'requests'));
       const snap = await getDocs(q);
       const deletePromises = [];
+
+      const inputStaffId = (staffId || '').trim().toLowerCase();
+      const inputStaffName = (staffName || '').trim().toLowerCase();
+      const inputEmail = newRequestItems.length > 0 ? (newRequestItems[0].requesterEmail || '').trim().toLowerCase() : '';
 
       snap.forEach(docSnap => {
         const data = docSnap.data();
         if (data.type !== 'OFF' || !data.date || !data.date.startsWith(monthPrefix)) return;
 
-        // ID 매칭
-        if (data.requesterId && normalizeString(data.requesterId) === normalizedStaffId) {
-          deletePromises.push(deleteDoc(doc(db, 'requests', docSnap.id)).catch(() => {}));
-          return;
-        }
+        const rStaffId = (data.requesterId || '').trim().toLowerCase();
+        const rStaffName = (data.requesterName || '').trim().toLowerCase();
+        const rEmail = (data.requesterEmail || '').trim().toLowerCase();
 
-        // 이름 매칭
-        if (data.requesterName && normalizeString(data.requesterName) === normalizedStaffName) {
-          deletePromises.push(deleteDoc(doc(db, 'requests', docSnap.id)).catch(() => {}));
-          return;
-        }
-
-        // 이메일/전화번호 매칭
-        if (newRequestItems.length > 0) {
-          const firstNew = newRequestItems[0];
-          if (firstNew.requesterEmail && data.requesterEmail &&
-              normalizeString(data.requesterEmail) === normalizeString(firstNew.requesterEmail)) {
-            deletePromises.push(deleteDoc(doc(db, 'requests', docSnap.id)).catch(() => {}));
-            return;
-          }
-          if (firstNew.requesterPhone && data.requesterPhone &&
-              normalizePhone(data.requesterPhone) === normalizePhone(firstNew.requesterPhone)) {
-            deletePromises.push(deleteDoc(doc(db, 'requests', docSnap.id)).catch(() => {}));
-          }
+        if ((inputStaffId && rStaffId === inputStaffId) ||
+            (inputStaffName && rStaffName === inputStaffName) ||
+            (inputEmail && rEmail === inputEmail)) {
+          deletePromises.push(deleteDoc(doc(db, 'requests', docSnap.id)));
         }
       });
 
-      await Promise.all(deletePromises);
+      // 삭제 완료 대기
+      if (deletePromises.length > 0) {
+        await Promise.all(deletePromises);
+      }
 
       // 새 건 등록
-      const addPromises = preparedNew.map(item => addDoc(collection(db, 'requests'), item).catch(() => {}));
-      await Promise.all(addPromises);
+      if (preparedNew.length > 0) {
+        const addPromises = preparedNew.map(item => addDoc(collection(db, 'requests'), item));
+        await Promise.all(addPromises);
+      }
     } catch (e) {
-      console.warn("Firestore replace warning:", e);
+      console.warn("Firestore replace error:", e);
     }
   }
 

@@ -479,15 +479,9 @@ export function openMobileRequestModal({ rosterData, staff, type = 'OFF', existi
         console.warn(`[선택 초과 보정] 1순위: ${rankSelections[1].length}일 -> ${validRank1.length}일`);
       }
 
-      const rankData = {
-        rank1: validRank1,
-        rank2: validRank2,
-        rank3: validRank3
-      };
-
       const newItems = [];
 
-      // 1순위 항목들 - 각 개별 날짜마다 신청 생성 (근무표 생성 시 정확한 매칭 위해)
+      // 1순위 항목들 - 각 개별 날짜마다 신청 생성 (rank 필드만 사용)
       for (const day of validRank1) {
         newItems.push({
           type: 'OFF',
@@ -503,7 +497,6 @@ export function openMobileRequestModal({ rosterData, staff, type = 'OFF', existi
           toShift: 'OFF',
           reason: `${reason}`,
           rank: 1,
-          ranks: rankData,
           month: '2026-12',
           status: 'PENDING_ADMIN',
           statusText: '관리자(수간호사) 승인 대기중'
@@ -527,7 +520,6 @@ export function openMobileRequestModal({ rosterData, staff, type = 'OFF', existi
             toShift: 'OFF',
             reason: `${reason} (2순위 예비)`,
             rank: 2,
-            ranks: rankData,
             month: '2026-12',
             status: 'PENDING_ADMIN',
             statusText: '2순위 예비 휴무 (조정 대기)'
@@ -552,7 +544,6 @@ export function openMobileRequestModal({ rosterData, staff, type = 'OFF', existi
             toShift: 'OFF',
             reason: `${reason} (3순위 예비)`,
             rank: 3,
-            ranks: rankData,
             month: '2026-12',
             status: 'PENDING_ADMIN',
             statusText: '3순위 예비 휴무 (조정 대기)'

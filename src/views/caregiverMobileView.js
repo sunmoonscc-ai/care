@@ -95,30 +95,22 @@ export async function renderCaregiverMobileView(container, { rosterData, authSta
   const settings = await import('../services/settingsService').then(m => m.getAppSettings());
   const maxOffDays = settings.monthlyOffLimit || 2;
 
-  // 가장 최근에 제출된 신청건의 ranks 구조 우선 복원
+  // 각 신청의 rank 필드를 사용하여 복원 (단순 로직)
   const myRanks = { 1: [], 2: [], 3: [] };
-  const latestWithRanks = myOffReqs.find(r => r.ranks);
+  myOffReqs.forEach(r => {
+    const day = parseInt(r.date.split('-')[2], 10);
+    const rank = r.rank || 1;
+    if (myRanks[rank] && !myRanks[rank].includes(day)) {
+      myRanks[rank].push(day);
+    }
+  });
 
-  if (latestWithRanks && latestWithRanks.ranks) {
-    // ranks 데이터가 maxOffDays를 초과하면 제한 (방어)
-    if (latestWithRanks.ranks.rank1) myRanks[1] = latestWithRanks.ranks.rank1.slice(0, maxOffDays);
-    if (latestWithRanks.ranks.rank2) myRanks[2] = latestWithRanks.ranks.rank2.slice(0, maxOffDays);
-    if (latestWithRanks.ranks.rank3) myRanks[3] = latestWithRanks.ranks.rank3.slice(0, maxOffDays);
-  } else {
-    myOffReqs.forEach(r => {
-      const day = parseInt(r.date.split('-')[2], 10);
-      const rank = r.rank || 1;
-      if (myRanks[rank] && !myRanks[rank].includes(day)) {
-        myRanks[rank].push(day);
-      }
-    });
-    // 개별 요청으로 수집한 경우에도 maxOffDays 제한
-    Object.keys(myRanks).forEach(rank => {
-      if (myRanks[rank].length > maxOffDays) {
-        myRanks[rank] = myRanks[rank].slice(0, maxOffDays);
-      }
-    });
-  }
+  // 각 순위별 maxOffDays 제한
+  Object.keys(myRanks).forEach(rank => {
+    if (myRanks[rank].length > maxOffDays) {
+      myRanks[rank] = myRanks[rank].slice(0, maxOffDays);
+    }
+  });
 
   const hasMyRequests = myRanks[1].length > 0 || myRanks[2].length > 0 || myRanks[3].length > 0;
 
