@@ -219,6 +219,7 @@ export async function renderMonthlyGeneratorView(container, { rosterData, onAppl
     const targetEveningCount = staffing.eveningCount;
     const targetNightCount = staffing.nightCount;
     const maxOffPerDay = Math.max(1, staffing.totalStaff - staffing.dailyStaff);
+    const maxOffDays = currentSettings.monthlyOffLimit || 2;
 
     const resolvedOffDays = {};
     const dailyOffCount = Array(daysInMonth + 1).fill(0);
