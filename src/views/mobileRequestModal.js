@@ -6,9 +6,17 @@ export function openMobileRequestModal({ rosterData, staff, type = 'OFF', existi
   if (modal) modal.remove();
 
   const maxOffDays = 2; // 고정: 선택한 날부터 2일 휴무
-  const targetYear = 2026;
-  const targetMonth = 12;
-  const daysInMonth = 31;
+
+  // 현재 날짜 기반으로 다음 달 계산
+  const now = new Date();
+  let targetYear = now.getFullYear();
+  let targetMonth = now.getMonth() + 2; // 다음 달
+  if (targetMonth > 12) {
+    targetMonth = 1;
+    targetYear += 1;
+  }
+
+  const daysInMonth = new Date(targetYear, targetMonth, 0).getDate();
 
   const weekDayNames = ['일', '월', '화', '수', '목', '금', '토'];
 
@@ -113,7 +121,7 @@ export function openMobileRequestModal({ rosterData, staff, type = 'OFF', existi
 
         <!-- 달력 -->
         <div>
-          <label class="block font-black text-slate-800 mb-1.5">2026년 12월 달력</label>
+          <label class="block font-black text-slate-800 mb-1.5">${targetYear}년 ${targetMonth}월 달력</label>
 
           <!-- 요일 헤더 -->
           <div class="grid grid-cols-7 gap-1 text-center font-bold text-[10px] mb-1">
@@ -219,6 +227,7 @@ export function openMobileRequestModal({ rosterData, staff, type = 'OFF', existi
     // 선택한 날짜부터 2일간 휴무 신청
     const nextDay = selectedDay + 1 <= daysInMonth ? selectedDay + 1 : daysInMonth;
 
+    const monthStr = `${targetYear}-${String(targetMonth).padStart(2, '0')}`;
     const newItems = [
       {
         type: 'OFF',
@@ -229,12 +238,12 @@ export function openMobileRequestModal({ rosterData, staff, type = 'OFF', existi
         requesterPhone: (staff.phoneNumber || '').replace(/[^0-9]/g, ''),
         targetId: '',
         targetName: '-',
-        date: `2026-12-${String(selectedDay).padStart(2, '0')}`,
+        date: `${monthStr}-${String(selectedDay).padStart(2, '0')}`,
         fromShift: 'D',
         toShift: 'OFF',
         reason: reason,
         rank: 1,
-        month: '2026-12',
+        month: monthStr,
         status: 'PENDING_ADMIN',
         statusText: '관리자(수간호사) 승인 대기중'
       },
@@ -247,21 +256,21 @@ export function openMobileRequestModal({ rosterData, staff, type = 'OFF', existi
         requesterPhone: (staff.phoneNumber || '').replace(/[^0-9]/g, ''),
         targetId: '',
         targetName: '-',
-        date: `2026-12-${String(nextDay).padStart(2, '0')}`,
+        date: `${monthStr}-${String(nextDay).padStart(2, '0')}`,
         fromShift: 'D',
         toShift: 'OFF',
         reason: reason,
         rank: 1,
-        month: '2026-12',
+        month: monthStr,
         status: 'PENDING_ADMIN',
         statusText: '관리자(수간호사) 승인 대기중'
       }
     ];
 
-    await replaceStaffMonthlyOffRequests(staff.id, staff.name, '2026-12', newItems);
+    await replaceStaffMonthlyOffRequests(staff.id, staff.name, monthStr, newItems);
 
     modal.remove();
-    alert(`🎉 12월 ${selectedDay}일~${nextDay}일 휴무 신청이 완료되었습니다!\n\n관리자 승인 후 근무표에 반영됩니다.`);
+    alert(`🎉 ${targetYear}년 ${targetMonth}월 ${selectedDay}일~${nextDay}일 휴무 신청이 완료되었습니다!\n\n관리자 승인 후 근무표에 반영됩니다.`);
 
     if (onComplete) onComplete();
   });

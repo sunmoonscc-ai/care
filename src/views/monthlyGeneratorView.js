@@ -22,12 +22,17 @@ export async function renderMonthlyGeneratorView(container, { rosterData, onAppl
 
   const staffList = buildDynamicStaffList(staffing.totalStaff, members);
 
-  // 대상 월 (기본 2026년 12월)
-  let targetYear = 2026;
-  let targetMonth = 12;
-  const daysInMonth = 31; // 12월은 31일
+  // 현재 날짜 기반으로 다음 달 계산
+  const now = new Date();
+  let targetYear = now.getFullYear();
+  let targetMonth = now.getMonth() + 2; // 다음 달
+  if (targetMonth > 12) {
+    targetMonth = 1;
+    targetYear += 1;
+  }
+  const daysInMonth = new Date(targetYear, targetMonth, 0).getDate();
 
-  // 0. 이미 해당 월(2026년 12월)의 근무표가 작성 및 배포되었는지 점검
+  // 0. 이미 해당 월의 근무표가 작성 및 배포되었는지 점검
   const isAlreadyGenerated = Boolean(
     rosterData &&
     parseInt(rosterData.year, 10) === targetYear &&
@@ -333,7 +338,7 @@ export async function renderMonthlyGeneratorView(container, { rosterData, onAppl
             <span class="px-2 py-0.5 rounded bg-teal-100 text-teal-800 text-xs font-bold">월별 듀티표 생성기</span>
             <span class="text-xs text-slate-400">환자 수 기준 & 1/2/3순위 휴무 신청 연동</span>
           </div>
-          <h1 class="text-xl font-black text-slate-900 mt-1">2026년 12월 근무표 작성 & 인력 산출</h1>
+          <h1 class="text-xl font-black text-slate-900 mt-1">${targetYear}년 ${String(targetMonth).padStart(2, '0')}월 근무표 작성 & 인력 산출</h1>
           <p class="text-xs text-slate-500 mt-0.5">
             병동 환자 수 <b>${staffing.patientCount}명</b>(하루 ${staffing.dailyStaff}명 출근: 낮 ${staffing.dayCount}명, 저녁 ${staffing.eveningCount}명, 밤 ${staffing.nightCount}명)에 맞춰 작성합니다.
           </p>
@@ -590,9 +595,9 @@ export async function renderMonthlyGeneratorView(container, { rosterData, onAppl
       // 2. 로컬 상태 즉시 업데이트
       if (onApplyRoster) {
         onApplyRoster({
-          title: '2026년 12월 직원근무표 (초기화됨)',
-          year: 2026,
-          month: 12,
+          title: `${targetYear}년 ${String(targetMonth).padStart(2, '0')}월 직원근무표 (초기화됨)`,
+          year: targetYear,
+          month: targetMonth,
           floor: '2층 요양보호사',
           status: 'draft',
           version: '초기화됨',
