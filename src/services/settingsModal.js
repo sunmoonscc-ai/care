@@ -1,7 +1,7 @@
 // 관리자 전용 근무표 및 휴무 정책 설정 모달
 import { getAppSettings, saveAppSettings } from './settingsService';
 
-export function openSettingsModal({ onSaved }) {
+export function openSettingsModal({ onSaved, onNavigate }) {
   let modal = document.getElementById('modal-app-settings');
   if (modal) modal.remove();
 
@@ -82,7 +82,7 @@ export function openSettingsModal({ onSaved }) {
             </p>
           </div>
 
-          <!-- 버튼 -->
+          <!-- 액션 버튼 -->
           <div class="pt-2 flex gap-2">
             <button type="button" id="btn-cancel-settings" class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs rounded-xl transition">
               취소
@@ -90,6 +90,14 @@ export function openSettingsModal({ onSaved }) {
             <button type="submit" id="btn-submit-settings" class="flex-[2] py-3 bg-[#004349] hover:bg-[#0d5c63] active:bg-[#002f34] text-white font-extrabold text-xs rounded-xl shadow-md transition flex items-center justify-center gap-1.5">
               <span class="material-symbols-outlined text-[16px]">save</span>
               설정값 저장 및 적용
+            </button>
+          </div>
+
+          <!-- 시간표 작성 기준 세부 설정 바로가기 링크 -->
+          <div class="pt-1 text-center border-t border-slate-100">
+            <button type="button" id="btn-modal-goto-schedule-config" class="text-xs font-bold text-teal-700 hover:text-teal-900 hover:underline flex items-center justify-center gap-1 mx-auto py-1">
+              <span class="material-symbols-outlined text-[16px]">tune</span>
+              시간표 작성 세부 기준(근무 형태 선택 및 역듀티 규칙) 조정하기 ➔
             </button>
           </div>
         </form>
@@ -108,6 +116,11 @@ export function openSettingsModal({ onSaved }) {
 
   modal.querySelector('#btn-close-settings-modal')?.addEventListener('click', closeModal);
   modal.querySelector('#btn-cancel-settings')?.addEventListener('click', closeModal);
+
+  modal.querySelector('#btn-modal-goto-schedule-config')?.addEventListener('click', () => {
+    closeModal();
+    if (onNavigate) onNavigate('schedule-config');
+  });
 
   // 저장 처리
   modal.querySelector('#form-app-settings')?.addEventListener('submit', async (e) => {

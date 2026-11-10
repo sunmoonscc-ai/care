@@ -16,6 +16,8 @@ import { renderCaregiverMobileView } from './views/caregiverMobileView';
 import { renderLoginView } from './views/loginView';
 import { renderPendingUserView } from './views/pendingUserView';
 import { renderUserManagementView } from './views/userManagementView';
+import { renderScheduleConfigView } from './views/scheduleConfigView';
+import { renderMonthlyGeneratorView } from './views/monthlyGeneratorView';
 
 class CareShiftApp {
   constructor() {
@@ -299,25 +301,29 @@ class CareShiftApp {
 
     // 2. 권한별 메뉴 분기
     if (this.authState.isAdmin) {
-      // 👑 관리자용 하단 메뉴 4개: [근무표편집, 가입승인관리, 휴무교환, 대시보드]
+      // 👑 관리자용 하단 메뉴 5개 (직관적인 탭 구성: 기준설정 ➔ 월별작성 ➔ 근무표 ➔ 휴무승인 ➔ 회원승인)
       nav.innerHTML = `
-        <div class="grid grid-cols-4 h-14">
-          <button class="mobile-nav-btn flex flex-col items-center justify-center gap-0.5 text-slate-500 hover:text-[#004349]" data-target="editor">
-            <span class="material-symbols-outlined text-[20px]">table_chart</span>
-            <span class="text-[10px] font-bold">근무표편집</span>
+        <div class="grid grid-cols-5 h-14">
+          <button class="mobile-nav-btn flex flex-col items-center justify-center gap-0.5 text-slate-500 hover:text-[#004349]" data-target="schedule-config">
+            <span class="material-symbols-outlined text-[19px]">tune</span>
+            <span class="text-[9px] font-bold">작성기준</span>
           </button>
-          <button class="mobile-nav-btn flex flex-col items-center justify-center gap-0.5 text-slate-500 hover:text-[#004349] relative" data-target="user-mgmt">
-            <span class="material-symbols-outlined text-[20px]">how_to_reg</span>
-            <span class="text-[10px] font-bold">회원승인</span>
-            ${this.pendingUsersCount > 0 ? `<span class="absolute top-1 right-5 w-2 h-2 rounded-full bg-rose-600 animate-ping"></span>` : ''}
+          <button class="mobile-nav-btn flex flex-col items-center justify-center gap-0.5 text-slate-500 hover:text-[#004349]" data-target="monthly-generator">
+            <span class="material-symbols-outlined text-[19px]">calendar_month</span>
+            <span class="text-[9px] font-bold">월별작성</span>
+          </button>
+          <button class="mobile-nav-btn flex flex-col items-center justify-center gap-0.5 text-slate-500 hover:text-[#004349]" data-target="editor">
+            <span class="material-symbols-outlined text-[19px]">table_chart</span>
+            <span class="text-[9px] font-bold">근무표편집</span>
           </button>
           <button class="mobile-nav-btn flex flex-col items-center justify-center gap-0.5 text-slate-500 hover:text-[#004349]" data-target="requests">
-            <span class="material-symbols-outlined text-[20px]">sync_alt</span>
-            <span class="text-[10px] font-bold">휴무승인</span>
+            <span class="material-symbols-outlined text-[19px]">sync_alt</span>
+            <span class="text-[9px] font-bold">휴무승인</span>
           </button>
-          <button class="mobile-nav-btn flex flex-col items-center justify-center gap-0.5 text-slate-500 hover:text-[#004349]" data-target="dashboard">
-            <span class="material-symbols-outlined text-[20px]">analytics</span>
-            <span class="text-[10px] font-bold">대시보드</span>
+          <button class="mobile-nav-btn flex flex-col items-center justify-center gap-0.5 text-slate-500 hover:text-[#004349] relative" data-target="user-mgmt">
+            <span class="material-symbols-outlined text-[19px]">how_to_reg</span>
+            <span class="text-[9px] font-bold">회원승인</span>
+            ${this.pendingUsersCount > 0 ? `<span class="absolute top-1 right-3 w-2 h-2 rounded-full bg-rose-600 animate-ping"></span>` : ''}
           </button>
         </div>
       `;
@@ -360,26 +366,34 @@ class CareShiftApp {
 
     // 2. 권한별 메뉴 분기
     if (this.authState.isAdmin) {
-      // 👑 관리자용 상단 메뉴
+      // 👑 관리자용 상단 5대 정예 메뉴 (업무 흐름 순서: 작성기준 ➔ 월별작성 ➔ 근무표편집 ➔ 휴무승인 ➔ 회원승인)
       pcNavLinks.innerHTML = `
-        <a class="px-4 py-2 transition-colors flex items-center gap-1.5 ${this.currentView === 'editor' ? 'text-[#004349] font-bold border-b-2 border-[#004349] bg-[#eff4ff]/60' : 'text-slate-600 hover:text-slate-900'} rounded-t-lg text-sm" data-path="editor" href="#">
-          <span class="material-symbols-outlined text-[17px]">table_chart</span>
+        <a class="px-3.5 py-2 transition-colors flex items-center gap-1.5 ${this.currentView === 'schedule-config' ? 'text-[#004349] font-extrabold border-b-2 border-[#004349] bg-[#eff4ff]/60' : 'text-slate-600 hover:text-slate-900'} rounded-t-lg text-xs sm:text-sm" data-path="schedule-config" href="#">
+          <span class="material-symbols-outlined text-[17px] text-teal-700">tune</span>
+          시간표 작성 기준
+        </a>
+        <a class="px-3.5 py-2 transition-colors flex items-center gap-1.5 ${this.currentView === 'monthly-generator' || this.currentView === 'autogen' ? 'text-[#004349] font-extrabold border-b-2 border-[#004349] bg-[#eff4ff]/60' : 'text-slate-600 hover:text-slate-900'} rounded-t-lg text-xs sm:text-sm" data-path="monthly-generator" href="#">
+          <span class="material-symbols-outlined text-[17px] text-teal-700">calendar_month</span>
+          월별 근무표 작성
+        </a>
+        <a class="px-3.5 py-2 transition-colors flex items-center gap-1.5 ${this.currentView === 'editor' ? 'text-[#004349] font-extrabold border-b-2 border-[#004349] bg-[#eff4ff]/60' : 'text-slate-600 hover:text-slate-900'} rounded-t-lg text-xs sm:text-sm" data-path="editor" href="#">
+          <span class="material-symbols-outlined text-[17px] text-teal-700">table_chart</span>
           월간 근무표 편집
         </a>
-        <a class="px-4 py-2 transition-colors flex items-center gap-1.5 ${this.currentView === 'user-mgmt' ? 'text-[#004349] font-bold border-b-2 border-[#004349] bg-[#eff4ff]/60' : 'text-slate-600 hover:text-slate-900'} rounded-t-lg text-sm relative" data-path="user-mgmt" href="#">
-          <span class="material-symbols-outlined text-[17px]">how_to_reg</span>
-          회원 가입 승인 관리
+        <a class="px-3.5 py-2 transition-colors flex items-center gap-1.5 ${this.currentView === 'requests' ? 'text-[#004349] font-extrabold border-b-2 border-[#004349] bg-[#eff4ff]/60' : 'text-slate-600 hover:text-slate-900'} rounded-t-lg text-xs sm:text-sm" data-path="requests" href="#">
+          <span class="material-symbols-outlined text-[17px] text-teal-700">sync_alt</span>
+          휴무·교환 승인
+        </a>
+        <a class="px-3.5 py-2 transition-colors flex items-center gap-1.5 ${this.currentView === 'user-mgmt' ? 'text-[#004349] font-extrabold border-b-2 border-[#004349] bg-[#eff4ff]/60' : 'text-slate-600 hover:text-slate-900'} rounded-t-lg text-xs sm:text-sm relative" data-path="user-mgmt" href="#">
+          <span class="material-symbols-outlined text-[17px] text-teal-700">how_to_reg</span>
+          회원 가입 승인
           ${this.pendingUsersCount > 0 ? `<span class="ml-1 px-1.5 py-0.2 rounded-full bg-rose-500 text-white text-[10px] font-black">${this.pendingUsersCount}</span>` : ''}
         </a>
-        <a class="px-4 py-2 transition-colors flex items-center gap-1.5 ${this.currentView === 'requests' ? 'text-[#004349] font-bold border-b-2 border-[#004349] bg-[#eff4ff]/60' : 'text-slate-600 hover:text-slate-900'} rounded-t-lg text-sm" data-path="requests" href="#">
-          <span class="material-symbols-outlined text-[17px]">sync_alt</span>
-          휴무·교환 신청 관리
-        </a>
-        <a class="px-4 py-2 transition-colors flex items-center gap-1.5 ${this.currentView === 'dashboard' ? 'text-[#004349] font-bold border-b-2 border-[#004349] bg-[#eff4ff]/60' : 'text-slate-600 hover:text-slate-900'} rounded-t-lg text-sm" data-path="dashboard" href="#">
-          <span class="material-symbols-outlined text-[17px]">dashboard</span>
+        <a class="px-3.5 py-2 transition-colors flex items-center gap-1.5 ${this.currentView === 'dashboard' ? 'text-[#004349] font-extrabold border-b-2 border-[#004349] bg-[#eff4ff]/60' : 'text-slate-600 hover:text-slate-900'} rounded-t-lg text-xs sm:text-sm" data-path="dashboard" href="#">
+          <span class="material-symbols-outlined text-[17px] text-teal-700">dashboard</span>
           운영 대시보드
         </a>
-        <a class="px-3.5 py-1.5 bg-teal-50 text-teal-800 font-bold rounded-lg border border-teal-200 transition-colors flex items-center gap-1.5 text-xs hover:bg-teal-100 ml-2" data-path="mobile" href="#" title="요양보호사 모바일 뷰 미리보기">
+        <a class="px-3 py-1.5 bg-teal-50 text-teal-800 font-bold rounded-lg border border-teal-200 transition-colors flex items-center gap-1.5 text-xs hover:bg-teal-100 ml-2" data-path="mobile" href="#" title="요양보호사 모바일 뷰 미리보기">
           <span class="material-symbols-outlined text-[16px] text-teal-700">smartphone</span>
           [미리보기] 내 근무
         </a>
@@ -562,6 +576,9 @@ class CareShiftApp {
             this.rosterData = getLocalRosterData();
             this.recalculateViolations();
             this.render();
+          },
+          onNavigate: (viewName) => {
+            this.navigate(viewName);
           }
         });
       });
@@ -748,6 +765,26 @@ class CareShiftApp {
       case 'autogen':
       case 'rule-simulation':
         renderAutoGenerateView(this.container, props);
+        break;
+      case 'schedule-config':
+        renderScheduleConfigView(this.container, {
+          ...props,
+          onSaved: (newSettings) => {
+            this.rosterData = getLocalRosterData();
+            this.recalculateViolations();
+          }
+        });
+        break;
+      case 'monthly-generator':
+        renderMonthlyGeneratorView(this.container, {
+          ...props,
+          onApplyRoster: (newData) => {
+            this.rosterData = newData;
+            this.recalculateViolations();
+            saveRosterData(newData);
+            this.render();
+          }
+        });
         break;
       case 'requests':
       case 'requests-management':

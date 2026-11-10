@@ -28,25 +28,30 @@ export function renderRosterEditorView(container, { rosterData, violations, onUp
         </div>
 
         <div class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar w-full sm:w-auto py-1">
+          <!-- 월별 새로 작성 바로가기 버튼 -->
+          <button id="btn-goto-monthly-from-editor" class="px-2.5 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-800 text-[11px] font-black rounded-lg border border-teal-300 flex items-center gap-1 transition shadow-xs shrink-0" title="환자 수 및 법정 기준에 맞춰 새 달의 근무표를 생성합니다">
+            <span class="material-symbols-outlined text-[15px] text-teal-700">calendar_month</span>
+            새 달 근무표 작성
+          </button>
           <!-- DB 비교 및 최신 동기화 버튼 -->
-          <button id="btn-sync-roster-db" class="px-2 py-1.5 bg-sky-50 hover:bg-sky-100 text-sky-800 text-[11px] font-bold rounded border border-sky-300 flex items-center gap-1 transition shadow-sm shrink-0" title="자체 캐시와 실시간 DB를 비교하여 근무표를 최신화합니다">
+          <button id="btn-sync-roster-db" class="px-2 py-1.5 bg-sky-50 hover:bg-sky-100 text-sky-800 text-[11px] font-bold rounded-lg border border-sky-300 flex items-center gap-1 transition shadow-xs shrink-0" title="자체 캐시와 실시간 DB를 비교하여 근무표를 최신화합니다">
             <span class="material-symbols-outlined text-[15px] text-sky-700">sync</span>
             DB 실시간 동기화
           </button>
           <!-- 구글 시트 연동 버튼 -->
-          <button id="btn-sync-gsheet" class="px-2 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[11px] font-bold rounded border border-emerald-300 flex items-center gap-1 transition shadow-sm shrink-0">
+          <button id="btn-sync-gsheet" class="px-2 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[11px] font-bold rounded-lg border border-emerald-300 flex items-center gap-1 transition shadow-xs shrink-0">
             <span class="material-symbols-outlined text-[15px] text-emerald-700">table_view</span>
             구글시트 동기화
           </button>
-          <a id="link-open-gsheet" href="https://docs.google.com/spreadsheets/u/0/" target="_blank" class="px-2 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold rounded border border-slate-300 flex items-center gap-1 transition shrink-0" title="작업 중인 구글 시트 웹으로 열기">
+          <a id="link-open-gsheet" href="https://docs.google.com/spreadsheets/u/0/" target="_blank" class="px-2 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold rounded-lg border border-slate-300 flex items-center gap-1 transition shrink-0" title="작업 중인 구글 시트 웹으로 열기">
             <span class="material-symbols-outlined text-[14px]">open_in_new</span>
             시트 열기
           </a>
-          <button id="btn-publish-roster" class="px-2.5 py-1.5 bg-teal-700 hover:bg-teal-800 text-white text-[11px] font-bold rounded shadow-sm flex items-center gap-1 transition shrink-0">
+          <button id="btn-publish-roster" class="px-2.5 py-1.5 bg-[#004349] hover:bg-[#0d5c63] text-white text-[11px] font-bold rounded-lg shadow-sm flex items-center gap-1 transition shrink-0">
             <span class="material-symbols-outlined text-[15px]">send</span>
-            공식 재배포
+            공식 배포
           </button>
-          <button id="btn-print-excel" class="hidden sm:flex px-2.5 py-1.5 bg-[#004349] hover:bg-[#0d5c63] text-white text-[11px] font-bold rounded shadow-sm items-center gap-1 transition shrink-0">
+          <button id="btn-print-excel" class="hidden sm:flex px-2.5 py-1.5 bg-slate-700 hover:bg-slate-800 text-white text-[11px] font-bold rounded-lg shadow-sm items-center gap-1 transition shrink-0">
             <span class="material-symbols-outlined text-[15px]">print</span>
             인쇄/PDF
           </button>
@@ -352,6 +357,11 @@ export function renderRosterEditorView(container, { rosterData, violations, onUp
   // A4 가로 인쇄 기능
   container.querySelector('#btn-print-excel')?.addEventListener('click', () => {
     window.print();
+  });
+
+  // 새 달 근무표 작성 이동 이벤트
+  container.querySelector('#btn-goto-monthly-from-editor')?.addEventListener('click', () => {
+    navigate('monthly-generator');
   });
 
   // DB 실시간 동기화 버튼 이벤트

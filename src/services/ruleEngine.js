@@ -1,8 +1,11 @@
-// 실제 요양병원 현장 근무표 검증 규칙 (B/D, N, N1, B2, X/OFF)
+// 실제 요양병원 현장 근무표 검증 규칙 (B/D, E, N, N1, B2, X/OFF 및 역듀티, 연속근무 등)
+import { getAppSettings } from './settingsService';
 
 export function validateRoster(staffList, rosterAssignments) {
   const violations = [];
   const daysInMonth = 30;
+  const settings = getAppSettings();
+  const rules = settings.rosterRules || {};
 
   // 1. 직원별 규칙 점검
   staffList.forEach(staff => {
@@ -13,7 +16,7 @@ export function validateRoster(staffList, rosterAssignments) {
     for (let i = 0; i < list.length; i++) {
       const item = list[i];
       const prev = i > 0 ? list[i - 1] : null;
-      const isWork = (item.code === 'B' || item.code === 'D' || item.code === 'N' || item.code === 'N1' || item.code === 'B2');
+      const isWork = (item.code === 'B' || item.code === 'D' || item.code === 'E' || item.code === 'N' || item.code === 'N1' || item.code === 'B2' || item.code === 'MID');
       const isNight = (item.code === 'N' || item.code === 'N1');
 
       if (isWork) {
@@ -34,17 +37,30 @@ export function validateRoster(staffList, rosterAssignments) {
         });
       }
 
-      // 야간(N, N1) 연속 점검
+      // 🛑 역듀티(Reverse Duty) 검증: 전일 E(저녁 23시) 후 당일 D(낮 07시) 출근 금지
+      if (rules.noReverseDuty !== false && prev && prev.code === 'E' && (item.code === 'D' || item.code === 'B')) {
+        violations.push({
+          type: 'error',
+          rule: '역듀티(E➔D) 금지 위반',
+          staffId: staff.id,
+          staffName: staff.name,
+          day: item.day,
+          message: `${staff.name}님: ${prev.day}일 Evening(23시 퇴근) 후 ${item.day}일 Day(07시 출근) 배치됨 (수면시간 부족)`
+        });
+      }
+
+      // 야간(N, N1) 연속 점검 (설정된 상한 기준, 기본 2일)
+      const maxNight = rules.maxConsecutiveNight || 2;
       if (isNight) {
         consecutiveNights++;
-        if (consecutiveNights >= 2) {
+        if (consecutiveNights > maxNight) {
           violations.push({
             type: 'warning',
-            rule: '야간 2일 연속 배치',
+            rule: `연속 야간(${maxNight}일 상한) 초과`,
             staffId: staff.id,
             staffName: staff.name,
             day: item.day,
-            message: `${staff.name}님: ${item.day}일에 야간(${item.code}) 연속 배치 (피로도 주의)`
+            message: `${staff.name}님: ${item.day}일에 야간(${item.code}) ${consecutiveNights}일 연속 배치 (피로도 한계 초과)`
           });
         }
       } else {
@@ -56,7 +72,7 @@ export function validateRoster(staffList, rosterAssignments) {
             staffId: staff.id,
             staffName: staff.name,
             day: item.day,
-            message: `${staff.name}님: 전일 야간 후 ${item.day}일에 주간(${item.code}) 출근 배정 (비번 X 필요)`
+            message: `${staff.name}님: 전일 야간 후 ${item.day}일에 주간/저녁(${item.code}) 출근 배정 (비번 OFF 필요)`
           });
         }
         consecutiveNights = 0;
@@ -64,7 +80,7 @@ export function validateRoster(staffList, rosterAssignments) {
     }
   });
 
-  // 2. 날짜별 주간(B/D) 최소 3~4명, 야간(N 1명, N1 1명 또는 N 2명) 필수 인원 점검
+  // 2. 날짜별 주간 최소 3~4명, 야간 2명 필수 인원 점검
   for (let day = 1; day <= daysInMonth; day++) {
     let dayCount = 0;
     let n1Count = 0;
@@ -73,7 +89,7 @@ export function validateRoster(staffList, rosterAssignments) {
     staffList.forEach(staff => {
       const item = (rosterAssignments[staff.id] || []).find(a => a.day === day);
       if (item) {
-        if (item.code === 'B' || item.code === 'D') dayCount++;
+        if (item.code === 'B' || item.code === 'D' || item.code === 'E' || item.code === 'MID') dayCount++;
         if (item.code === 'N1') n1Count++;
         if (item.code === 'N') nCount++;
       }
@@ -83,20 +99,20 @@ export function validateRoster(staffList, rosterAssignments) {
     if (dayCount < 3) {
       violations.push({
         type: 'warning',
-        rule: '주간(B/D) 최소 인원 미달',
+        rule: '주간/오후 최소 인원 미달',
         day,
-        message: `9/${day} 주간 인원 ${dayCount}명으로 병동 최소 기준(3명) 미달`
+        message: `${day}일 주간/저녁 인원 ${dayCount}명으로 병동 최소 기준(3명) 미달`
       });
     }
 
-    // 야간 전반야/후반야 필수 2인 체계 점검
+    // 야간 필수 2인 체계 점검
     const totalNight = n1Count + nCount;
     if (totalNight < 2) {
       violations.push({
         type: 'error',
-        rule: '야간(N/N1) 필수 인원 공백',
+        rule: '야간(Night) 필수 인원 공백',
         day,
-        message: `9/${day} 야간 총원 ${totalNight}명 (전반야/후반야 교대조 2명 미달)`
+        message: `${day}일 야간 총원 ${totalNight}명 (야간 순찰/낙상방지 2명 미달)`
       });
     }
   }
