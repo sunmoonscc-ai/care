@@ -98,11 +98,16 @@ export async function saveRequest(newReq) {
 
 // 특정 직원의 특정 월 기존 희망휴무 신청 건 전체 일괄 삭제/교체
 export async function replaceStaffMonthlyOffRequests(staffId, staffName, monthPrefix, newRequestItems = []) {
+  const maxOffDays = 2; // 최대 2일로 제한
+
   // 1. 현재 로컬 및 DB에 등록된 전체 목록 로드
   const all = await loadRequests();
 
-  // 2. 삭제 대상 필터링: staffId 기반 매칭 (가장 정확한 방법)
-  // staffId가 없으면 staffName으로 매칭, 모두 없으면 이메일로 매칭
+  // 2. 삭제 대상 필터링: 해당 월의 모든 OFF 신청 중 staffId 또는 staffName 일치
+  const inputStaffId = (staffId || '').trim().toLowerCase();
+  const inputStaffName = (staffName || '').trim().toLowerCase();
+  const inputEmail = newRequestItems.length > 0 ? (newRequestItems[0].requesterEmail || '').trim().toLowerCase() : '';
+
   const toDelete = all.filter(r => {
     if (r.type !== 'OFF' || !r.date || !r.date.startsWith(monthPrefix)) return false;
 
@@ -110,46 +115,50 @@ export async function replaceStaffMonthlyOffRequests(staffId, staffName, monthPr
     const rStaffName = (r.requesterName || '').trim().toLowerCase();
     const rEmail = (r.requesterEmail || '').trim().toLowerCase();
 
-    const inputStaffId = (staffId || '').trim().toLowerCase();
-    const inputStaffName = (staffName || '').trim().toLowerCase();
-    const inputEmail = newRequestItems.length > 0 ? (newRequestItems[0].requesterEmail || '').trim().toLowerCase() : '';
-
-    // staffId 매칭 (최우선)
+    // staffId, staffName, 이메일 중 하나라도 일치하면 삭제 대상
     if (inputStaffId && rStaffId === inputStaffId) return true;
-
-    // staffName 매칭
     if (inputStaffName && rStaffName === inputStaffName) return true;
-
-    // 이메일 매칭
     if (inputEmail && rEmail === inputEmail) return true;
 
     return false;
   });
 
+  console.log(`🗑️ [replaceStaffMonthlyOffRequests] ${monthPrefix}: ${inputStaffName || inputStaffId} 기존 신청 ${toDelete.length}건 삭제 예정`);
+
   const deleteIds = new Set(toDelete.map(d => d.id));
   const remaining = all.filter(r => !deleteIds.has(r.id));
 
-  // 3. 새 신청 건 생성
-  const preparedNew = newRequestItems.map((item, idx) => ({
+  // 3. 새 신청 건 생성 (maxOffDays 초과 방지)
+  const validatedItems = newRequestItems.map(item => ({
+    ...item,
+    // rank 필드의 신청만 유지 (범위 정보는 제거)
+    requesterEmail: (item.requesterEmail || '').toLowerCase().trim(),
+    requesterPhone: (item.requesterPhone || '').replace(/[^0-9]/g, '')
+  }));
+
+  // 각 rank 별로 최대 maxOffDays개만 유지
+  const rank1Items = validatedItems.filter(i => i.rank === 1).slice(0, maxOffDays);
+  const rank2Items = validatedItems.filter(i => i.rank === 2).slice(0, maxOffDays);
+  const rank3Items = validatedItems.filter(i => i.rank === 3).slice(0, maxOffDays);
+
+  const preparedNew = [...rank1Items, ...rank2Items, ...rank3Items].map((item, idx) => ({
     id: `req_${Date.now()}_${idx}_${Math.random().toString(36).substr(2, 4)}`,
     ...item,
     createdAt: new Date().toLocaleString('ko-KR')
   }));
 
+  console.log(`✅ [replaceStaffMonthlyOffRequests] 신규 신청 ${preparedNew.length}건 저장 (1순위: ${rank1Items.length}, 2순위: ${rank2Items.length}, 3순위: ${rank3Items.length})`);
+
   // 4. 로컬 캐시 즉시 갱신
   const updatedList = [...preparedNew, ...remaining];
   localStorage.setItem(STORAGE_KEY_REQUESTS, JSON.stringify(updatedList));
 
-  // 5. Firestore 동기화 (로컬 업데이트 후 원격 동기화)
+  // 5. Firestore 동기화
   if (!isOfflineFallback && db) {
     try {
       const q = query(collection(db, 'requests'));
       const snap = await getDocs(q);
       const deletePromises = [];
-
-      const inputStaffId = (staffId || '').trim().toLowerCase();
-      const inputStaffName = (staffName || '').trim().toLowerCase();
-      const inputEmail = newRequestItems.length > 0 ? (newRequestItems[0].requesterEmail || '').trim().toLowerCase() : '';
 
       snap.forEach(docSnap => {
         const data = docSnap.data();
@@ -169,15 +178,17 @@ export async function replaceStaffMonthlyOffRequests(staffId, staffName, monthPr
       // 삭제 완료 대기
       if (deletePromises.length > 0) {
         await Promise.all(deletePromises);
+        console.log(`  Firestore: ${deletePromises.length}건 삭제 완료`);
       }
 
       // 새 건 등록
       if (preparedNew.length > 0) {
         const addPromises = preparedNew.map(item => addDoc(collection(db, 'requests'), item));
         await Promise.all(addPromises);
+        console.log(`  Firestore: ${preparedNew.length}건 등록 완료`);
       }
     } catch (e) {
-      console.warn("Firestore replace error:", e);
+      console.error("Firestore replace error:", e);
     }
   }
 
