@@ -136,7 +136,14 @@ export async function renderMonthlyGeneratorView(container, { rosterData, onAppl
 
   // 1순위, 2순위, 3순위 신청 데이터 파싱 및 겹침 분석
   const staffPreferenceMap = {};
-  
+
+  // 📊 원본 신청 데이터 확인
+  console.log(`\n📋 [신청 데이터 원본] 총 ${monthOffRequests.length}건:`);
+  monthOffRequests.forEach(r => {
+    const day = r.date ? r.date.split('-')[2] : '?';
+    console.log(`  • ${r.requesterName || r.requesterEmail} / ${day}일 / rank:${r.rank} / ranks.rank1:${r.ranks?.rank1 ? `[${r.ranks.rank1}]` : 'X'}`);
+  });
+
   monthOffRequests.forEach(r => {
     const key = (r.requesterName || r.requesterEmail || r.requesterId || '').trim();
     if (!key) return;
@@ -163,6 +170,15 @@ export async function renderMonthlyGeneratorView(container, { rosterData, onAppl
       if (r.ranks.rank2) staffPreferenceMap[key].rank2 = [...new Set([...staffPreferenceMap[key].rank2, ...r.ranks.rank2])];
       if (r.ranks.rank3) staffPreferenceMap[key].rank3 = [...new Set([...staffPreferenceMap[key].rank3, ...r.ranks.rank3])];
     }
+  });
+
+  // 📊 파싱 후 최종 신청 데이터
+  console.log(`\n📊 [최종 신청 데이터 구조]:`);
+  Object.entries(staffPreferenceMap).forEach(([key, pref]) => {
+    console.log(`  ${pref.name || pref.email}:`);
+    console.log(`    ├─ 1순위: [${pref.rank1}]`);
+    console.log(`    ├─ 2순위: [${pref.rank2}]`);
+    console.log(`    └─ 3순위: [${pref.rank3}]`);
   });
 
   // 직원 듀티 배정 매칭 헬퍼 함수 (3중 비교: 이름, 전화번호, 이메일)
