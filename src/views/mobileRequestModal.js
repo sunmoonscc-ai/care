@@ -8,7 +8,7 @@ export function openMobileRequestModal({ rosterData, staff, type = 'OFF', existi
 
   const settings = getAppSettings();
   const maxOffDays = settings.monthlyOffLimit || 2;
-  const requireConsecutive = settings.requireConsecutiveOff !== false;
+  const requireConsecutive = false; // 개별 날짜 선택 모드 (연속 선택 안 함)
 
   const otherStaffList = rosterData.staffList.filter(s => s.id !== staff.id);
 
