@@ -228,6 +228,8 @@ export function openMobileRequestModal({ rosterData, staff, type = 'OFF', existi
     const nextDay = selectedDay + 1 <= daysInMonth ? selectedDay + 1 : daysInMonth;
 
     const monthStr = `${targetYear}-${String(targetMonth).padStart(2, '0')}`;
+    console.log(`📝 [신청 생성] 사용자: ${staff.name}, 선택일: ${selectedDay}일, 다음날: ${nextDay}일, 월: ${monthStr}`);
+
     const newItems = [
       {
         type: 'OFF',

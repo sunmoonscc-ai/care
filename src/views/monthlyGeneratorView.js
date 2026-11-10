@@ -178,11 +178,16 @@ export async function renderMonthlyGeneratorView(container, { rosterData, onAppl
   });
 
   // 📊 파싱 후 최종 신청 데이터
+  console.log(`\n📊 [로드된 신청 원본]:`);
+  monthOffRequests.forEach(r => {
+    console.log(`  ${r.requesterName || r.requesterEmail}: date=${r.date}, rank=${r.rank}`);
+  });
+
   console.log(`\n📊 [최종 신청 데이터]:`);
   Object.entries(staffPreferenceMap).forEach(([key, pref]) => {
     if (pref.startDay) {
       const endDay = Math.min(pref.startDay + 1, daysInMonth);
-      console.log(`  ${pref.name || pref.email}: ${pref.startDay}일~${endDay}일 휴무`);
+      console.log(`  ${pref.name || pref.email}: offDays=[${pref.offDays}], startDay=${pref.startDay}일~${endDay}일 휴무`);
     }
   });
 
