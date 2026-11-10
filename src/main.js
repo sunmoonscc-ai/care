@@ -1,8 +1,10 @@
-import { getLocalRosterData, syncRosterFromFirestore, saveRosterData } from './services/rosterService';
+import { getLocalRosterData, syncRosterFromFirestore, saveRosterData, createDefaultRoster } from './services/rosterService';
 import { validateRoster } from './services/ruleEngine';
 import { subscribeAuth, logoutUser, loginWithGoogle, checkRedirectLoginResult } from './services/authService';
 import { getUserProfile, registerNewUserRequest, listAllUsers, subscribeUsersList, syncUsersWithFirestore } from './services/userService';
 import { openUserProfileModal } from './services/userProfileModal';
+import { openSettingsModal } from './services/settingsModal';
+import { syncAppSettingsFromFirestore } from './services/settingsService';
 import { subscribeRosterChanges } from './services/realtimeSync';
 import { DIAGNOSTICS } from './services/diagnostics';
 
@@ -33,6 +35,12 @@ class CareShiftApp {
 
     // 0. 모바일 리디렉션 로그인 결과 체크
     checkRedirectLoginResult();
+
+    // 앱 설정값 Firestore 동기화
+    syncAppSettingsFromFirestore().then(() => {
+      this.rosterData = getLocalRosterData();
+      this.recalculateViolations();
+    });
 
     // 정기적(2분 주기) 백그라운드 캐시 vs DB 비교 동기화 타이머 시작
     this.startPeriodicSync();
@@ -497,10 +505,9 @@ class CareShiftApp {
               </button>
 
               ${this.authState.isAdmin ? `
-                <button id="menu-btn-user-mgmt" class="w-full px-4 py-2 text-left text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2 font-medium transition">
-                  <span class="material-symbols-outlined text-[17px] text-slate-500">how_to_reg</span>
-                  회원 가입 승인 관리
-                  ${this.pendingUsersCount > 0 ? `<span class="ml-auto px-1.5 py-0.2 bg-rose-500 text-white rounded-full text-[10px] font-bold">${this.pendingUsersCount}</span>` : ''}
+                <button id="menu-btn-adjust-settings" class="w-full px-4 py-2 text-left text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2 font-medium transition">
+                  <span class="material-symbols-outlined text-[17px] text-teal-700">tune</span>
+                  설정값 조정
                 </button>
               ` : ''}
 
@@ -545,10 +552,18 @@ class CareShiftApp {
         });
       });
 
-      // 관리자 회원 승인 이동
-      userContainer.querySelector('#menu-btn-user-mgmt')?.addEventListener('click', () => {
+      // 설정값 조정 팝업 열기
+      userContainer.querySelector('#menu-btn-adjust-settings')?.addEventListener('click', () => {
         dropdown?.classList.add('hidden');
-        this.navigate('user-mgmt');
+        openSettingsModal({
+          onSaved: (newSettings) => {
+            console.log("⚙️ 설정값 변경 완료, 근무표 갱신:", newSettings);
+            // 전체 직원 수나 설정이 바뀌었으므로 근무표 동적 갱신
+            this.rosterData = getLocalRosterData();
+            this.recalculateViolations();
+            this.render();
+          }
+        });
       });
 
       // 로그아웃 확인 및 실행

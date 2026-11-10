@@ -370,7 +370,7 @@ export function subscribeUsersList(callback) {
   }
 }
 
-function getLocalUsers() {
+export function getLocalUsers() {
   const saved = localStorage.getItem(STORAGE_KEY_USERS);
   if (saved) {
     try { return JSON.parse(saved); } catch(e){}
@@ -378,6 +378,12 @@ function getLocalUsers() {
   return {};
 }
 
-function saveLocalUsers(data) {
+export function saveLocalUsers(data) {
   localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(data));
+}
+
+// 가입된 일반 회원(관리자 제외) 목록 조회
+export function getRegisteredMembers() {
+  const users = Object.values(getLocalUsers());
+  return users.filter(u => !ADMIN_EMAILS.includes(u.email.toLowerCase()));
 }

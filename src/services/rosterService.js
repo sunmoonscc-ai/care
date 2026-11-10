@@ -1,28 +1,22 @@
 import { db, isOfflineFallback } from './firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { realStaffList, generateRealHospitalRoster } from './realRosterData';
+import { buildDynamicStaffList, generateRealHospitalRoster } from './realRosterData';
+import { getAppSettings } from './settingsService';
+import { getRegisteredMembers } from './userService';
 
 const STORAGE_KEY_ROSTER = 'careshift_real_roster_202609';
 
 // 캐시된 인메모리 데이터 (즉각적인 화면 렌더링용)
 let cachedRoster = null;
 
-// 1. 대기시간 0ms로 즉시 로컬 캐시 또는 기본 데이터 반환 (Instant Load)
-export function getLocalRosterData() {
-  if (cachedRoster) return cachedRoster;
+// 최신 설정값과 가입 회원 명단을 바탕으로 동적 기본 근무표 생성
+export function createDefaultRoster() {
+  const settings = getAppSettings();
+  const members = getRegisteredMembers();
+  const staffList = buildDynamicStaffList(settings.totalStaffCount, members);
+  const assignments = generateRealHospitalRoster(staffList);
 
-  const localRoster = localStorage.getItem(STORAGE_KEY_ROSTER);
-  if (localRoster) {
-    try {
-      cachedRoster = JSON.parse(localRoster);
-      return cachedRoster;
-    } catch (e) {
-      console.warn("Local storage parse error, generating fresh data:", e);
-    }
-  }
-
-  // 로컬에도 없으면 즉시 기본 서식 반환
-  cachedRoster = {
+  return {
     title: '2026년 09 월 직원근무표 ( 2층 요양보호사)',
     year: 2026,
     month: 9,
@@ -30,14 +24,52 @@ export function getLocalRosterData() {
     printedAt: '2026-08-24 11:47',
     status: 'published',
     version: '배포본 v1.0',
-    staffList: realStaffList,
-    assignments: generateRealHospitalRoster(),
+    staffList: staffList,
+    assignments: assignments,
     changeLogs: [
       { id: 'log_1', date: '2026-08-24', content: '2026년 9월 정규 근무표 최초 배포 (수간호사 승인)', author: '수간호사' },
       { id: 'log_2', date: '2026-08-28', content: '윤인국 10일 N 대체근무 지정 (빨간색 표시)', author: '팀장' }
     ]
   };
+}
 
+// 1. 대기시간 0ms로 즉시 로컬 캐시 또는 기본 데이터 반환 (Instant Load)
+export function getLocalRosterData() {
+  const settings = getAppSettings();
+  const members = getRegisteredMembers();
+  const expectedStaffList = buildDynamicStaffList(settings.totalStaffCount, members);
+
+  if (cachedRoster) {
+    // 직원 목록이 동적으로 변경되었는지 확인 및 동기화
+    cachedRoster.staffList = expectedStaffList;
+    expectedStaffList.forEach(s => {
+      if (!cachedRoster.assignments[s.id]) {
+        const fresh = generateRealHospitalRoster([s]);
+        cachedRoster.assignments[s.id] = fresh[s.id];
+      }
+    });
+    return cachedRoster;
+  }
+
+  const localRoster = localStorage.getItem(STORAGE_KEY_ROSTER);
+  if (localRoster) {
+    try {
+      cachedRoster = JSON.parse(localRoster);
+      cachedRoster.staffList = expectedStaffList;
+      expectedStaffList.forEach(s => {
+        if (!cachedRoster.assignments[s.id]) {
+          const fresh = generateRealHospitalRoster([s]);
+          cachedRoster.assignments[s.id] = fresh[s.id];
+        }
+      });
+      return cachedRoster;
+    } catch (e) {
+      console.warn("Local storage parse error, generating fresh data:", e);
+    }
+  }
+
+  // 로컬에도 없으면 즉시 동적 기본 서식 반환
+  cachedRoster = createDefaultRoster();
   localStorage.setItem(STORAGE_KEY_ROSTER, JSON.stringify(cachedRoster));
   return cachedRoster;
 }
@@ -61,11 +93,20 @@ export async function syncRosterFromFirestore(force = false) {
       if (localStr !== remoteStr || force) {
         console.log("🔄 [syncRosterFromFirestore] 근무표 DB 변경사항 감지 -> 캐시 갱신 완료");
         cachedRoster = remoteData;
-        localStorage.setItem(STORAGE_KEY_ROSTER, remoteStr);
+        
+        // 동적 직원 정보 동기화
+        const settings = getAppSettings();
+        const members = getRegisteredMembers();
+        cachedRoster.staffList = buildDynamicStaffList(settings.totalStaffCount, members);
+
+        localStorage.setItem(STORAGE_KEY_ROSTER, JSON.stringify(cachedRoster));
         return { updated: true, data: cachedRoster };
       } else {
         console.log("✅ [syncRosterFromFirestore] 근무표 로컬 캐시와 Firestore DB 일치함");
         cachedRoster = remoteData;
+        const settings = getAppSettings();
+        const members = getRegisteredMembers();
+        cachedRoster.staffList = buildDynamicStaffList(settings.totalStaffCount, members);
         return { updated: false, data: cachedRoster };
       }
     }

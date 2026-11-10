@@ -1,11 +1,31 @@
 // 휴무 및 근무 맞교환 신청 전용 모바일 모달 팝업
 import { saveRequest } from '../services/requestService';
+import { getAppSettings } from '../services/settingsService';
 
 export function openMobileRequestModal({ rosterData, staff, type = 'OFF', onComplete }) {
   let modal = document.getElementById('modal-mobile-request');
   if (modal) modal.remove();
 
+  const settings = getAppSettings();
+  const maxOffDays = settings.monthlyOffLimit || 2;
+  const requireConsecutive = settings.requireConsecutiveOff;
+
   const otherStaffList = rosterData.staffList.filter(s => s.id !== staff.id);
+
+  // 기본 선택 날짜 (연속 2일: 27일, 28일)
+  let selectedDays = type === 'OFF' ? [27, 28] : [15];
+
+  const renderDayChips = () => {
+    return Array.from({ length: 30 }).map((_, i) => {
+      const day = i + 1;
+      const isSelected = selectedDays.includes(day);
+      return `
+        <button type="button" class="btn-day-chip py-2 rounded-lg font-extrabold text-xs transition ${isSelected ? 'bg-teal-700 text-white shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-100'}" data-day="${day}">
+          ${day}일
+        </button>
+      `;
+    }).join('');
+  };
 
   const modalHtml = `
     <div id="modal-mobile-request" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-xs animate-in fade-in duration-200 font-sans">
@@ -33,19 +53,23 @@ export function openMobileRequestModal({ rosterData, staff, type = 'OFF', onComp
         <div class="space-y-3.5 text-xs">
           <!-- 1. 날짜 선택 -->
           <div>
-            <label class="block font-bold text-slate-700 mb-1">날짜 선택 (9월)</label>
-            <div class="grid grid-cols-6 gap-1.5 max-h-36 overflow-y-auto p-1 bg-slate-50 rounded-xl border border-slate-200">
-              ${Array.from({ length: 30 }).map((_, i) => {
-                const day = i + 1;
-                const isSelected = day === 15;
-                return `
-                  <button type="button" class="btn-day-chip py-2 rounded-lg font-extrabold text-xs transition ${isSelected ? 'bg-teal-700 text-white shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-100'}" data-day="${day}">
-                    ${day}일
-                  </button>
-                `;
-              }).join('')}
+            <div class="flex items-center justify-between mb-1">
+              <label class="block font-bold text-slate-700">
+                ${type === 'OFF' ? `희망 휴무 일자 선택 (최대 ${maxOffDays}일)` : '날짜 선택 (9월)'}
+              </label>
+              ${type === 'OFF' && requireConsecutive ? `
+                <span class="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                  연속 ${maxOffDays}일 필수
+                </span>
+              ` : ''}
             </div>
-            <input type="hidden" id="selected-day" value="15"/>
+
+            <div id="day-chips-grid" class="grid grid-cols-6 gap-1.5 max-h-36 overflow-y-auto p-1 bg-slate-50 rounded-xl border border-slate-200">
+              ${renderDayChips()}
+            </div>
+            <p id="day-selection-guide" class="text-[11px] text-slate-500 mt-1 font-medium">
+              선택한 날짜: <b class="text-teal-800 font-extrabold">${selectedDays.map(d => `${d}일`).join(', ')}</b> (총 ${selectedDays.length}일)
+            </p>
           </div>
 
           ${type === 'SWAP' ? `
@@ -85,12 +109,12 @@ export function openMobileRequestModal({ rosterData, staff, type = 'OFF', onComp
           <div>
             <label class="block font-bold text-slate-700 mb-1">신청 사유</label>
             <div class="flex flex-wrap gap-1.5 mb-1.5">
+              <button type="button" class="btn-reason-tag px-2.5 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] font-bold">개인 경조사</button>
               <button type="button" class="btn-reason-tag px-2.5 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] font-bold">병원 정기검진</button>
-              <button type="button" class="btn-reason-tag px-2.5 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] font-bold">가족 경조사</button>
-              <button type="button" class="btn-reason-tag px-2.5 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] font-bold">개인 사정</button>
+              <button type="button" class="btn-reason-tag px-2.5 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] font-bold">가족 간병</button>
               <button type="button" class="btn-reason-tag px-2.5 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] font-bold">건강상 휴식</button>
             </div>
-            <input id="input-req-reason" type="text" placeholder="사유를 입력하거나 위 태그를 누르세요" value="병원 정기검진" class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:border-teal-600 font-medium"/>
+            <input id="input-req-reason" type="text" placeholder="사유를 입력하거나 위 태그를 누르세요" value="개인 경조사" class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:border-teal-600 font-medium"/>
           </div>
         </div>
 
@@ -109,14 +133,52 @@ export function openMobileRequestModal({ rosterData, staff, type = 'OFF', onComp
   document.body.insertAdjacentHTML('beforeend', modalHtml);
   modal = document.getElementById('modal-mobile-request');
 
+  const updateChipsUI = () => {
+    modal.querySelectorAll('.btn-day-chip').forEach(b => {
+      const d = parseInt(b.dataset.day, 10);
+      const isSel = selectedDays.includes(d);
+      b.className = `btn-day-chip py-2 rounded-lg font-extrabold text-xs transition ${isSel ? 'bg-teal-700 text-white shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-100'}`;
+    });
+
+    const guideEl = modal.querySelector('#day-selection-guide');
+    if (guideEl) {
+      guideEl.innerHTML = `선택한 날짜: <b class="text-teal-800 font-extrabold">${selectedDays.sort((a,b)=>a-b).map(d => `${d}일`).join(', ')}</b> (총 ${selectedDays.length}일)`;
+    }
+  };
+
   // 날짜 칩 클릭 이벤트
   modal.querySelectorAll('.btn-day-chip').forEach(btn => {
     btn.addEventListener('click', () => {
-      modal.querySelectorAll('.btn-day-chip').forEach(b => {
-        b.className = 'btn-day-chip py-2 rounded-lg font-extrabold text-xs transition bg-white text-slate-700 hover:bg-slate-100';
-      });
-      btn.className = 'btn-day-chip py-2 rounded-lg font-extrabold text-xs transition bg-teal-700 text-white shadow-xs';
-      modal.querySelector('#selected-day').value = btn.dataset.day;
+      const clickedDay = parseInt(btn.dataset.day, 10);
+
+      if (type === 'OFF') {
+        if (requireConsecutive && maxOffDays > 1) {
+          // 연속 일자 신청 필수 정책: 클릭한 날부터 연속으로 maxOffDays 일자 선택 (월 30일 초과 방지)
+          let startDay = clickedDay;
+          if (startDay + maxOffDays - 1 > 30) {
+            startDay = 30 - maxOffDays + 1;
+          }
+          selectedDays = [];
+          for (let i = 0; i < maxOffDays; i++) {
+            selectedDays.push(startDay + i);
+          }
+        } else {
+          // 단일 또는 토글
+          if (selectedDays.includes(clickedDay)) {
+            selectedDays = selectedDays.filter(d => d !== clickedDay);
+          } else {
+            if (selectedDays.length >= maxOffDays) {
+              selectedDays.shift(); // 선입선출
+            }
+            selectedDays.push(clickedDay);
+          }
+        }
+      } else {
+        // 교환은 하루 기준
+        selectedDays = [clickedDay];
+      }
+
+      updateChipsUI();
     });
   });
 
@@ -132,33 +194,56 @@ export function openMobileRequestModal({ rosterData, staff, type = 'OFF', onComp
 
   // 제출 이벤트
   modal.querySelector('#btn-submit-mobile-req')?.addEventListener('click', async () => {
-    const day = modal.querySelector('#selected-day').value;
-    const reason = modal.querySelector('#input-req-reason').value.trim() || '개인 사정';
-    const dateStr = `2026-09-${day.padStart(2, '0')}`;
+    if (selectedDays.length === 0) {
+      alert('신청할 날짜를 선택해주세요.');
+      return;
+    }
 
-    let reqData;
+    // 연속성 검증
+    if (type === 'OFF' && requireConsecutive && selectedDays.length > 1) {
+      const sorted = [...selectedDays].sort((a,b)=>a-b);
+      for (let i = 1; i < sorted.length; i++) {
+        if (sorted[i] !== sorted[i-1] + 1) {
+          alert(`⚠️ 희망 휴무는 연속된 날짜로만 신청 가능합니다.\n(예: 27~28일 2일 연속)`);
+          return;
+        }
+      }
+    }
+
+    const reason = modal.querySelector('#input-req-reason').value.trim() || '개인 사정';
+
     if (type === 'OFF') {
-      reqData = {
-        type: 'OFF',
-        typeName: '희망 휴무(OFF)',
-        requesterId: staff.id,
-        requesterName: staff.name,
-        targetId: '',
-        targetName: '-',
-        date: dateStr,
-        fromShift: 'B',
-        toShift: 'X',
-        reason: reason,
-        status: 'PENDING_ADMIN',
-        statusText: '관리자(수간호사) 승인 대기중'
-      };
+      const dateDisplay = selectedDays.sort((a,b)=>a-b).map(d => `9월 ${d}일`).join(', ');
+      
+      for (const day of selectedDays) {
+        const dateStr = `2026-09-${String(day).padStart(2, '0')}`;
+        await saveRequest({
+          type: 'OFF',
+          typeName: '희망 휴무(OFF)',
+          requesterId: staff.id,
+          requesterName: staff.name,
+          targetId: '',
+          targetName: '-',
+          date: dateStr,
+          fromShift: 'B',
+          toShift: 'X',
+          reason: `${reason} (${selectedDays.length}일 연속 신청)`,
+          status: 'PENDING_ADMIN',
+          statusText: '관리자(수간호사) 승인 대기중'
+        });
+      }
+
+      modal.remove();
+      alert(`🎉 [${dateDisplay}] 희망 휴무(OFF) ${selectedDays.length}일 신청이 등록되었습니다!\n관리자 승인 즉시 근무표에 자동 반영됩니다.`);
     } else {
+      const day = selectedDays[0];
+      const dateStr = `2026-09-${String(day).padStart(2, '0')}`;
       const targetSelect = modal.querySelector('#select-target-staff');
       const targetStaff = otherStaffList.find(s => s.id === targetSelect.value) || otherStaffList[0];
       const myShift = modal.querySelector('#select-my-shift').value;
       const targetShift = modal.querySelector('#select-target-shift').value;
 
-      reqData = {
+      await saveRequest({
         type: 'SWAP',
         typeName: '근무 맞교환',
         requesterId: staff.id,
@@ -171,13 +256,14 @@ export function openMobileRequestModal({ rosterData, staff, type = 'OFF', onComp
         reason: reason,
         status: 'PENDING_ADMIN',
         statusText: `동료(${targetStaff.name}) 및 관리자 승인 대기`
-      };
+      });
+
+      modal.remove();
+      alert(`🎉 [9월 ${day}일] 근무 맞교환 신청이 등록되었습니다!\n관리자 승인 즉시 근무표에 자동 반영됩니다.`);
     }
 
-    await saveRequest(reqData);
-    modal.remove();
-    alert(`🎉 [9월 ${day}일] ${type === 'OFF' ? '희망 휴무' : '근무 맞교환'} 신청이 등록되었습니다!\n관리자 승인 즉시 근무표에 자동 반영됩니다.`);
     if (onComplete) onComplete();
   });
 }
+
 

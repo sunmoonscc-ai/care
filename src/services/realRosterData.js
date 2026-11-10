@@ -13,22 +13,51 @@ export const realShiftTypes = {
   REQ_X: { code: 'X', name: '신청비번(빨간색)', hours: 0, bg: 'bg-rose-50', text: 'text-rose-600 font-bold', border: 'border-rose-300', isRequested: true }
 };
 
-// 2층 요양보호사 실제 직원 데이터 (제공된 이미지 명단 기준)
-export const realStaffList = [
-  { id: 'st_1', name: '한애순', role: '요양보호사', fixedD: 11, fixedN: 7 },
-  { id: 'st_2', name: '이성태', role: '요양보호사', fixedD: 11, fixedN: 6 },
-  { id: 'st_3', name: '윤인국', role: '요양보호사', fixedD: 11, fixedN: 6 },
-  { id: 'st_4', name: '박춘열', role: '요양보호사', fixedD: 10, fixedN: 7 },
-  { id: 'st_5', name: '석기호', role: '요양보호사', fixedD: 10, fixedN: 7 },
-  { id: 'st_6', name: '이상진', role: '요양보호사', fixedD: 10, fixedN: 7 },
-  { id: 'st_7', name: '김현자', role: '요양보호사', fixedD: 10, fixedN: 7 },
-  { id: 'st_8', name: '남기현', role: '요양보호사', fixedD: 10, fixedN: 7 },
-  { id: 'st_9', name: '김선애', role: '요양보호사', fixedD: 11, fixedN: 6 },
-  { id: 'st_10', name: '허향옥', role: '요양보호사(지원)', fixedD: 8, fixedN: 0 }
-];
+// 2층 요양보호사 직원 목록 동적 생성 (설정된 정원 및 가입 회원 수 반영)
+// 가입한 회원은 직원1부터 차례로 본인 실명으로 대체, 나머지는 '직원N(외부 프리랜서)'로 할당
+export function buildDynamicStaffList(totalCount = 10, registeredMembers = []) {
+  const staffList = [];
+
+  for (let i = 1; i <= totalCount; i++) {
+    const memberIndex = i - 1;
+    const member = registeredMembers[memberIndex];
+
+    if (member) {
+      // 실제 가입한 요양보호사
+      staffList.push({
+        id: `st_${i}`,
+        name: member.realName || member.displayName || `직원${i}`,
+        role: member.role === 'REGULAR' ? '요양보호사(정회원)' : member.role === 'ASSOCIATE' ? '요양보호사(준회원)' : '요양보호사',
+        email: member.email,
+        phoneNumber: member.phoneNumber || '',
+        isFreelancer: false,
+        fixedD: 10,
+        fixedN: 7
+      });
+    } else {
+      // 미가입 공석: 외부 프리랜서로 할당
+      staffList.push({
+        id: `st_${i}`,
+        name: `직원${i}(외부 프리랜서)`,
+        role: '요양보호사(프리랜서)',
+        email: '',
+        phoneNumber: '',
+        isFreelancer: true,
+        fixedD: 10,
+        fixedN: 7
+      });
+    }
+  }
+
+  return staffList;
+}
+
+// 2층 요양보호사 실제 직원 데이터 (기본 10명 기준)
+export const realStaffList = buildDynamicStaffList(10, []);
+
 
 // 실제 2026년 9월 2층 요양보호사 근무표 패턴 생성
-export function generateRealHospitalRoster() {
+export function generateRealHospitalRoster(staffList = realStaffList) {
   const assignments = {};
   
   // 9월 첫날 화요일 시작, 30일
@@ -46,6 +75,13 @@ export function generateRealHospitalRoster() {
     st_10: ['','','','','','','','','','','','','','B','B','X','B','B','X','B','B','X','B','X','X','X','B','X','X']
   };
 
+  // 10명을 초과하는 직원의 경우 순환 기본 패턴 적용
+  const defaultPatterns = [
+    ['B','B','N','X','N1','X','B','X','B','B','N','X','N1','X','B','B','X','X','B','N1','X','X','B','N1','X','B','N','X','X','B'],
+    ['N1','X','B','N','X','B','X','B','B','N1','X','X','B','N','X','N1','X','B','B','X','X','B','B2','X','B','N','X','B','B','X'],
+    ['X','B','X','B','X','B','B','N1','X','N','X','B','X','B','B','X','N','X','N1','X','B','X','N1','X','N','X','B','B','X','B']
+  ];
+
   // 신청에 의해 빨간색으로 표시된 날짜들(희망휴무 또는 수동변경)
   const requestedOffs = {
     st_1: [17, 18],
@@ -58,9 +94,9 @@ export function generateRealHospitalRoster() {
     st_10: [24, 25, 26]
   };
 
-  realStaffList.forEach(staff => {
+  staffList.forEach((staff, idx) => {
     assignments[staff.id] = [];
-    const p = patterns[staff.id] || [];
+    const p = patterns[staff.id] || defaultPatterns[idx % defaultPatterns.length];
     const reqList = requestedOffs[staff.id] || [];
 
     for (let day = 1; day <= 30; day++) {
