@@ -35,10 +35,19 @@ export function openMobileRequestModal({ rosterData, staff, type = 'OFF', existi
   let isSubmitting = false;
 
   const renderCalendarGrid = () => {
-    return Array.from({ length: daysInMonth }).map((_, i) => {
-      const day = i + 1;
-      const info = getDayInfo(day);
+    // 2026년 12월 1일의 요일 (0=일, 1=월, ..., 6=토)
+    const firstDayOfMonth = new Date(targetYear, targetMonth - 1, 1).getDay();
 
+    let html = '';
+
+    // 첫 주: 1일 전까지 빈 칸 추가
+    for (let i = 0; i < firstDayOfMonth; i++) {
+      html += `<div class="py-2 px-1"></div>`;
+    }
+
+    // 1일부터 마지막 날짜까지
+    for (let day = 1; day <= daysInMonth; day++) {
+      const info = getDayInfo(day);
       const isSelected = selectedDay === day;
       let btnStyle = 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200';
 
@@ -52,7 +61,7 @@ export function openMobileRequestModal({ rosterData, staff, type = 'OFF', existi
         }
       }
 
-      return `
+      html += `
         <button type="button" class="btn-calendar-day py-2 px-1 rounded-xl transition flex flex-col items-center justify-center ${btnStyle}" data-day="${day}">
           <span class="text-[11px] ${isSelected ? 'text-white' : info.isWeekend ? (info.dayOfWeek === 0 ? 'text-rose-600' : 'text-blue-600') : 'text-slate-500'} font-medium leading-none">
             ${info.dayName}
@@ -60,7 +69,9 @@ export function openMobileRequestModal({ rosterData, staff, type = 'OFF', existi
           <span class="text-sm font-extrabold leading-tight mt-0.5">${day}</span>
         </button>
       `;
-    }).join('');
+    }
+
+    return html;
   };
 
   const formatSelectedDay = () => {
