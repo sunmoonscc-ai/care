@@ -229,11 +229,14 @@ export async function renderMonthlyGeneratorView(container, { rosterData, onAppl
       const pref = findStaffPreference(s);
       if (!pref || pref.rank1.length === 0) return;
 
+      // 1순위는 최대 maxOffDays까지만 취함 (과도한 신청 데이터 방어)
+      const validRank1 = pref.rank1.slice(0, maxOffDays);
+
       // 1순위만 검증: 모든 1순위 날짜가 정원 범위 내면 배정, 그렇지 않으면 무시
-      const canFitRank1 = pref.rank1.every(d => dailyOffCount[d] < maxOffPerDay);
+      const canFitRank1 = validRank1.every(d => dailyOffCount[d] < maxOffPerDay);
       if (canFitRank1) {
-        resolvedOffDays[s.id] = [...pref.rank1];
-        pref.rank1.forEach(d => dailyOffCount[d]++);
+        resolvedOffDays[s.id] = [...validRank1];
+        validRank1.forEach(d => dailyOffCount[d]++);
         pref.appliedRank = 1;
       }
       // 1순위가 안 되면 2순위, 3순위는 무시하고 배정하지 않음

@@ -470,16 +470,25 @@ export function openMobileRequestModal({ rosterData, staff, type = 'OFF', existi
         submitLabel.innerText = '휴무 신청 등록 중...';
       }
 
+      // 신청 데이터에 maxOffDays 초과하는 날짜가 있으면 제거 (방어)
+      const validRank1 = rankSelections[1].slice(0, maxOffDays);
+      const validRank2 = rankSelections[2].slice(0, maxOffDays);
+      const validRank3 = rankSelections[3].slice(0, maxOffDays);
+
+      if (validRank1.length !== rankSelections[1].length) {
+        console.warn(`[선택 초과 보정] 1순위: ${rankSelections[1].length}일 -> ${validRank1.length}일`);
+      }
+
       const rankData = {
-        rank1: rankSelections[1],
-        rank2: rankSelections[2],
-        rank3: rankSelections[3]
+        rank1: validRank1,
+        rank2: validRank2,
+        rank3: validRank3
       };
 
       const newItems = [];
 
       // 1순위 항목들 - 각 개별 날짜마다 신청 생성 (근무표 생성 시 정확한 매칭 위해)
-      for (const day of rankSelections[1]) {
+      for (const day of validRank1) {
         newItems.push({
           type: 'OFF',
           typeName: '희망 휴무(OFF)',
@@ -502,8 +511,8 @@ export function openMobileRequestModal({ rosterData, staff, type = 'OFF', existi
       }
 
       // 2순위 항목들
-      if (rankSelections[2].length > 0) {
-        for (const day of rankSelections[2]) {
+      if (validRank2.length > 0) {
+        for (const day of validRank2) {
           newItems.push({
             type: 'OFF',
             typeName: '희망 휴무(OFF) - 2순위',
@@ -527,8 +536,8 @@ export function openMobileRequestModal({ rosterData, staff, type = 'OFF', existi
       }
 
       // 3순위 항목들
-      if (rankSelections[3].length > 0) {
-        for (const day of rankSelections[3]) {
+      if (validRank3.length > 0) {
+        for (const day of validRank3) {
           newItems.push({
             type: 'OFF',
             typeName: '희망 휴무(OFF) - 3순위',
@@ -555,7 +564,7 @@ export function openMobileRequestModal({ rosterData, staff, type = 'OFF', existi
       await replaceStaffMonthlyOffRequests(staff.id, staff.name, '2026-12', newItems);
 
       modal.remove();
-      alert(`🎉 2026년 12월 희망 휴무 신청이 정상 접수되었습니다!\n\n• 1순위: ${formatRankSummary(rankSelections[1])}\n• 2순위: ${formatRankSummary(rankSelections[2])}\n• 3순위: ${formatRankSummary(rankSelections[3])}\n\n모바일 메인 화면의 [내 12월 희망 휴무 신청 현황] 카드에서 언제든 확인 및 변경할 수 있습니다.`);
+      alert(`🎉 2026년 12월 희망 휴무 신청이 정상 접수되었습니다!\n\n• 1순위: ${formatRankSummary(validRank1)}\n• 2순위: ${formatRankSummary(validRank2)}\n• 3순위: ${formatRankSummary(validRank3)}\n\n모바일 메인 화면의 [내 12월 희망 휴무 신청 현황] 카드에서 언제든 확인 및 변경할 수 있습니다.`);
     } else {
       // SWAP (맞교환)
       isSubmitting = true;
