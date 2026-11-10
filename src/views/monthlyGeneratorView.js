@@ -154,14 +154,21 @@ export async function renderMonthlyGeneratorView(container, { rosterData, onAppl
         email: r.requesterEmail || '',
         phone: cleanPhone(r.requesterPhone),
         id: r.requesterId || '',
-        startDay: null // 휴무 시작일 (숫자 1개)
+        offDays: [] // 모든 휴무 날짜 수집
       };
     }
 
-    // 모든 신청이 rank=1이고, startDay가 없으면 첫 신청의 날짜를 저장
+    // 모든 휴무 날짜 수집
     const day = parseInt(r.date.split('-')[2], 10);
-    if (!staffPreferenceMap[key].startDay) {
-      staffPreferenceMap[key].startDay = day;
+    if (!staffPreferenceMap[key].offDays.includes(day)) {
+      staffPreferenceMap[key].offDays.push(day);
+    }
+  });
+
+  // 수집한 날짜 중 가장 작은 날짜를 startDay로 설정
+  Object.values(staffPreferenceMap).forEach(pref => {
+    if (pref.offDays.length > 0) {
+      pref.startDay = Math.min(...pref.offDays);
     }
   });
 
