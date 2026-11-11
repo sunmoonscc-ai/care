@@ -69,6 +69,16 @@ export async function loadRequests() {
   });
 
   const merged = Array.from(combinedMap.values());
+
+  console.log(`📊 [신청 데이터 로드]`);
+  console.log(`  Firestore: ${firestoreList.length}건`);
+  console.log(`  localStorage: ${localList.length}건`);
+  console.log(`  병합 결과: ${merged.length}건 (중복 제거됨)`);
+
+  // OFF 신청만 필터링해서 수 확인
+  const offRequests = merged.filter(r => r.type === 'OFF');
+  console.log(`  OFF 신청: ${offRequests.length}건`);
+
   if (merged.length > 0) {
     // 최신 순으로 정렬
     merged.sort((a, b) => {
@@ -109,10 +119,15 @@ export async function replaceStaffMonthlyOffRequests(staffId, staffName, monthPr
   // 1. 현재 로컬 및 DB에 등록된 전체 목록 로드
   const all = await loadRequests();
 
-  // 2. 삭제 대상 필터링: 해당 월의 모든 OFF 신청 중 staffId 또는 staffName 일치
+  // 2. 삭제 대상 필터링: 해당 월의 모든 OFF 신청 중 staffId, staffName, email, phone 중 하나라도 일치
   const inputStaffId = (staffId || '').trim().toLowerCase();
   const inputStaffName = (staffName || '').trim().toLowerCase();
   const inputEmail = newRequestItems.length > 0 ? (newRequestItems[0].requesterEmail || '').trim().toLowerCase() : '';
+  const inputPhone = newRequestItems.length > 0 ? ((newRequestItems[0].requesterPhone || '').replace(/[^0-9]/g, '')) : '';
+
+  console.log(`🔍 [휴무신청 삭제 전 확인]`);
+  console.log(`  입력값: staffId=${inputStaffId}, staffName=${inputStaffName}, email=${inputEmail || '(비어있음)'}, phone=${inputPhone || '(비어있음)'}`);
+  console.log(`  대상월: ${monthPrefix}`);
 
   const toDelete = all.filter(r => {
     if (r.type !== 'OFF' || !r.date || !r.date.startsWith(monthPrefix)) return false;
@@ -120,11 +135,22 @@ export async function replaceStaffMonthlyOffRequests(staffId, staffName, monthPr
     const rStaffId = (r.requesterId || '').trim().toLowerCase();
     const rStaffName = (r.requesterName || '').trim().toLowerCase();
     const rEmail = (r.requesterEmail || '').trim().toLowerCase();
+    const rPhone = ((r.requesterPhone || '').replace(/[^0-9]/g, ''));
 
-    return (inputStaffId && rStaffId === inputStaffId) ||
-           (inputStaffName && rStaffName === inputStaffName) ||
-           (inputEmail && rEmail === inputEmail);
+    // 4중 조건: staffId, staffName, email, phone 중 하나라도 일치하면 삭제 대상
+    const isMatch = (inputStaffId && rStaffId === inputStaffId) ||
+                    (inputStaffName && rStaffName === inputStaffName) ||
+                    (inputEmail && rEmail === inputEmail) ||
+                    (inputPhone && rPhone === inputPhone);
+
+    if (isMatch) {
+      console.log(`  ✅ 삭제 대상 발견: [${r.id}] ${r.requesterName || r.requesterEmail} (${r.date})`);
+    }
+
+    return isMatch;
   });
+
+  console.log(`  💾 총 ${toDelete.length}건 삭제 예정`);
 
   const deleteIds = new Set(toDelete.map(d => d.id));
   const remaining = all.filter(r => !deleteIds.has(r.id));
@@ -152,12 +178,36 @@ export async function replaceStaffMonthlyOffRequests(staffId, staffName, monthPr
   const updatedList = [...preparedNew, ...remaining];
   localStorage.setItem(STORAGE_KEY_REQUESTS, JSON.stringify(updatedList));
 
+  console.log(`\n✅ [휴무신청 저장 완료]`);
+  console.log(`  기존 신청 삭제: ${toDelete.length}건`);
+  console.log(`  새 신청 추가: ${preparedNew.length}건`);
+  console.log(`  유지된 신청: ${remaining.length}건`);
+  console.log(`  로컬 총 신청: ${updatedList.length}건`);
+
+  // 저장된 신청 상세 정보 출력
+  const newUserReqs = updatedList.filter(r =>
+    r.type === 'OFF' &&
+    r.date &&
+    r.date.startsWith(monthPrefix) &&
+    ((inputStaffId && (r.requesterId || '').trim().toLowerCase() === inputStaffId) ||
+     (inputStaffName && (r.requesterName || '').trim().toLowerCase() === inputStaffName) ||
+     (inputEmail && (r.requesterEmail || '').trim().toLowerCase() === inputEmail) ||
+     (inputPhone && ((r.requesterPhone || '').replace(/[^0-9]/g, '')) === inputPhone))
+  );
+
+  console.log(`  ${inputStaffName || inputEmail || '신청자'}의 신청 내역:`);
+  newUserReqs.forEach(r => {
+    console.log(`    - [${r.id}] ${r.date} (${r.status || 'PENDING'})`);
+  });
+
   // 5. Firestore 동기화
   if (!isOfflineFallback && db) {
     try {
       const q = query(collection(db, 'requests'));
       const snap = await getDocs(q);
       const deletePromises = [];
+
+      console.log(`📲 [Firestore 동기화] ${snap.size}건 중 삭제 대상 검색...`);
 
       snap.forEach(docSnap => {
         const data = docSnap.data();
@@ -166,21 +216,29 @@ export async function replaceStaffMonthlyOffRequests(staffId, staffName, monthPr
         const rStaffId = (data.requesterId || '').trim().toLowerCase();
         const rStaffName = (data.requesterName || '').trim().toLowerCase();
         const rEmail = (data.requesterEmail || '').trim().toLowerCase();
+        const rPhone = ((data.requesterPhone || '').replace(/[^0-9]/g, ''));
 
+        // 4중 조건: staffId, staffName, email, phone 중 하나라도 일치하면 삭제
         if ((inputStaffId && rStaffId === inputStaffId) ||
             (inputStaffName && rStaffName === inputStaffName) ||
-            (inputEmail && rEmail === inputEmail)) {
+            (inputEmail && rEmail === inputEmail) ||
+            (inputPhone && rPhone === inputPhone)) {
+          console.log(`  🗑️ Firestore 삭제: [${docSnap.id}] ${data.requesterName || data.requesterEmail}`);
           deletePromises.push(deleteDoc(doc(db, 'requests', docSnap.id)));
         }
       });
 
       if (deletePromises.length > 0) {
+        console.log(`  ⏳ ${deletePromises.length}건 삭제 중...`);
         await Promise.all(deletePromises);
+        console.log(`  ✅ Firestore 삭제 완료`);
       }
 
       if (preparedNew.length > 0) {
+        console.log(`  ⏳ ${preparedNew.length}건 추가 중...`);
         const addPromises = preparedNew.map(item => addDoc(collection(db, 'requests'), item));
         await Promise.all(addPromises);
+        console.log(`  ✅ Firestore 추가 완료`);
       }
     } catch (e) {
       logger.error('RequestService', 'Firestore 동기화 실패', e);
