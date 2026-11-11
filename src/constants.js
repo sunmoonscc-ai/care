@@ -18,7 +18,17 @@ export const STORAGE_KEYS = {
   ROSTER: 'careshift_roster',
   REQUESTS: 'careshift_shift_requests',
   SETTINGS: 'careshift_app_settings',
-  USERS: 'careshift_users'
+  USERS: 'careshift_users',
+  MONTHLY_OFF_REQUESTS: 'careshift_monthly_off_requests'
+};
+
+// Firestore 컬렉션 이름
+export const COLLECTIONS = {
+  USERS: 'users',
+  ROSTERS: 'rosters',
+  REQUESTS: 'requests',
+  MONTHLY_OFF_REQUESTS: 'monthly_off_requests',
+  SETTINGS: 'settings'
 };
 
 // 사용자 상태

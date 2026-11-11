@@ -1,5 +1,5 @@
 // 휴무 신청 모달 (단순화: 1개 날짜만 선택)
-import { replaceStaffMonthlyOffRequests } from '../services/requestService';
+import { replaceStaffMonthlyOffRequests, saveUserMonthlyOffRequest } from '../services/requestService';
 import { MAX_OFF_DAYS } from '../constants';
 
 export function openMobileRequestModal({ rosterData, staff, type = 'OFF', existingSelections = null, onComplete }) {
@@ -225,42 +225,25 @@ export function openMobileRequestModal({ rosterData, staff, type = 'OFF', existi
     const monthStr = `${targetYear}-${String(targetMonth).padStart(2, '0')}`;
 
     // 선택한 날짜부터 MAX_OFF_DAYS간 휴무 신청
-    // 항상 MAX_OFF_DAYS(2일)씩 신청하도록 수정
-    const nextDay = Math.min(selectedDay + MAX_OFF_DAYS - 1, daysInMonth);
+    const startDayNum = parseInt(selectedDay, 10);
+    const calculatedOffDays = [];
+    for (let i = 0; i < MAX_OFF_DAYS; i++) {
+      const d = startDayNum + i;
+      if (d <= daysInMonth) {
+        calculatedOffDays.push(d);
+      }
+    }
+    const endDayNum = calculatedOffDays[calculatedOffDays.length - 1] || startDayNum;
 
-    console.log(`\n📝 [휴무 신청 생성]`);
-    console.log(`  신청자: ${staff.name} (ID=${staff.id}, email=${staff.email || '(비어있음)'})`);
-    console.log(`  신청 기간: ${monthStr}-${String(selectedDay).padStart(2, '0')} ~ ${monthStr}-${String(nextDay).padStart(2, '0')} (${MAX_OFF_DAYS}일)`);
+    console.log(`\n📝 [사용자별 월별 휴무 신청 저장]`);
+    console.log(`  신청자: ${staff.name} (email=${staff.email || '(없음)'}, uid=${staff.uid || '(없음)'})`);
+    console.log(`  신청월: ${monthStr}, 선택일: ${startDayNum}일, 배정휴무일: [${calculatedOffDays.join(', ')}]`);
 
-    const newItems = Array.from({ length: MAX_OFF_DAYS }, (_, i) => ({
-      type: 'OFF',
-      typeName: '희망 휴무(OFF)',
-      requesterId: staff.id || '',
-      requesterUid: staff.uid || '',  // 사용자 고유 ID (Firestore 식별용)
-      requesterName: staff.name || '',
-      requesterEmail: (staff.email || '').toLowerCase().trim(),
-      requesterPhone: (staff.phoneNumber || '').replace(/[^0-9]/g, ''),
-      targetId: '',
-      targetName: '-',
-      date: `${monthStr}-${String(selectedDay + i).padStart(2, '0')}`,
-      fromShift: 'D',
-      toShift: 'OFF',
-      reason: reason,
-      rank: 1,
-      month: monthStr,
-      status: 'PENDING_ADMIN',
-      statusText: '관리자(수간호사) 승인 대기중'
-    }));
-
-    console.log(`  신청 항목 상세:`);
-    newItems.forEach((item, idx) => {
-      console.log(`    [${idx + 1}] ${item.date} (rank=${item.rank}, ${item.status})`);
-    });
-
-    await replaceStaffMonthlyOffRequests(staff.id, staff.name, monthStr, newItems);
+    // 🌟 1. 사용자별/월별 격리 저장 (Firestore users/{userKey}/monthly_off/{monthStr})
+    await saveUserMonthlyOffRequest(staff, monthStr, startDayNum, calculatedOffDays, reason);
 
     modal.remove();
-    alert(`🎉 ${targetYear}년 ${targetMonth}월 ${selectedDay}일~${nextDay}일 휴무 신청이 완료되었습니다!\n\n관리자 승인 후 근무표에 반영됩니다.\n\n(콘솔 F12를 열어서 로그를 확인하세요)`);
+    alert(`🎉 ${targetYear}년 ${targetMonth}월 ${startDayNum}일~${endDayNum}일 휴무 신청이 데이터베이스에 등록되었습니다!\n\n관리자 승인 후 근무표에 반영됩니다.`);
 
     if (onComplete) onComplete();
   });

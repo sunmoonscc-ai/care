@@ -1,18 +1,19 @@
 // 관리자 전용 월별 근무표 작성 및 자동 생성 메뉴 (환자수 기반 법정 인력 산정 & 실제 휴무 신청 연동)
-import { getAppSettings, calculateStaffingRequirements } from '../services/settingsService';
+import { getAppSettings, syncAppSettingsFromFirestore, calculateStaffingRequirements } from '../services/settingsService';
 import { getRegisteredMembers, listAllUsers } from '../services/userService';
 import { buildDynamicStaffList } from '../services/realRosterData';
 import { saveRosterData, deleteDecemberRoster } from '../services/rosterService';
-import { loadRequests } from '../services/requestService';
+import { loadRequests, getAllUsersMonthlyOffRequests, getUserRequestKey } from '../services/requestService';
 import { MAX_OFF_DAYS } from '../constants';
 
 export async function renderMonthlyGeneratorView(container, { rosterData, onApplyRoster, navigate }) {
-  const currentSettings = getAppSettings();
+  // 🌟 관리자 모드: 설정값도 캐시 대신 Firestore에서 최신 상태를 강제 동기화하여 가져옴
+  const currentSettings = await syncAppSettingsFromFirestore();
   const activeCodes = currentSettings.activeShiftTypes || ['D', 'E', 'N', 'OFF'];
   const rules = currentSettings.rosterRules || {};
 
-  // 최신 Firestore 및 로컬 사용자 목록 조회 (관리자 제외 일반 회원)
-  const allUsers = await listAllUsers();
+  // 최신 Firestore 원격 사용자 목록 강제 조회 (관리자 제외 일반 회원)
+  const allUsers = await listAllUsers(true);
   const members = allUsers.filter(u => u.role !== 'ADMIN' && u.email && !u.email.includes('hdcc6th') && !u.email.includes('sunmoon.scc'));
 
   // 환자수 기반 실시간 인력 계산
@@ -55,94 +56,115 @@ export async function renderMonthlyGeneratorView(container, { rosterData, onAppl
   );
 
   // 1. 실제 데이터베이스에서 해당 월의 휴무 신청 내역 조회
-  const allRequests = await loadRequests();
-  console.log(`\n📥 [근무표 생성 시작] 총 신청 건수: ${allRequests.length}건`);
-  allRequests.forEach(r => {
-    console.log(`  [${r.id}] 타입=${r.type} / 신청자=${r.requesterName || '?'} / 날짜=${r.date || '?'}`);
+  // 🌟 [신규 구조] 사용자별 격리 저장된 월별 휴무 데이터 일괄 수집
+  const targetPrefix = `${targetYear}-${String(targetMonth).padStart(2, '0')}`;
+  const userMonthlyOffMap = await getAllUsersMonthlyOffRequests(targetPrefix, members);
+
+  console.log(`\n📥 [사용자별 월별 휴무 데이터 수집] 대상월=${targetPrefix}, 수집된 사용자=${Object.keys(userMonthlyOffMap).length}명:`);
+  Object.entries(userMonthlyOffMap).forEach(([k, d]) => {
+    console.log(`  [${k}] ${d.requesterName}: 선택일=${d.selectedDay}일, 배정휴무일=[${d.offDays?.join(', ')}]`);
   });
 
-  const targetPrefix = `${targetYear}-${String(targetMonth).padStart(2, '0')}`;
+  const allRequests = await loadRequests();
   const monthOffRequests = allRequests.filter(r => r.type === 'OFF' && r.date && r.date.startsWith(targetPrefix));
-  console.log(`\n✅ [월별 OFF 신청 필터링] 대상월=${targetPrefix} / 필터링된 OFF 신청: ${monthOffRequests.length}건`);
-  monthOffRequests.forEach(r => {
-    console.log(`  [${r.id}] ${r.requesterName} (email=${r.requesterEmail}, phone=${r.requesterPhone}) / 날짜=${r.date}`);
-  });
 
   // 신청자 식별을 위한 헬퍼 (전화번호 숫자 정규화)
   const cleanPhone = (p) => (p || '').replace(/[^0-9]/g, '');
 
-  // 1단계: 접수된 신청 건들(monthOffRequests)의 모든 식별 키를 세트로 정리
+  // 1단계: 접수된 모든 식별 키를 세트로 정리 (신규 격리 저장 데이터 + 레거시 requests)
   const requestedIds = new Set();
   const requestedEmails = new Set();
   const requestedPhones = new Set();
   const requestedNames = new Set();
 
+  // 1) 신규 격리 저장 데이터 반영
+  Object.values(userMonthlyOffMap).forEach(d => {
+    if (d.requesterId && d.requesterId.trim()) requestedIds.add(d.requesterId.trim().toLowerCase());
+    if (d.requesterUid && d.requesterUid.trim()) requestedIds.add(d.requesterUid.trim().toLowerCase());
+    if (d.requesterEmail && d.requesterEmail.trim()) requestedEmails.add(d.requesterEmail.trim().toLowerCase());
+    if (d.requesterPhone && cleanPhone(d.requesterPhone)) requestedPhones.add(cleanPhone(d.requesterPhone));
+    if (d.requesterName && d.requesterName.trim()) requestedNames.add(d.requesterName.trim().toLowerCase());
+  });
+
+  // 2) 레거시 requests 반영
   monthOffRequests.forEach(r => {
     if (r.requesterId && r.requesterId.trim()) requestedIds.add(r.requesterId.trim().toLowerCase());
+    if (r.requesterUid && r.requesterUid.trim()) requestedIds.add(r.requesterUid.trim().toLowerCase());
     if (r.requesterEmail && r.requesterEmail.trim()) requestedEmails.add(r.requesterEmail.trim().toLowerCase());
     if (r.requesterPhone && cleanPhone(r.requesterPhone)) requestedPhones.add(cleanPhone(r.requesterPhone));
     if (r.requesterName && r.requesterName.trim()) requestedNames.add(r.requesterName.trim().toLowerCase());
   });
 
-  // 2단계: 신청자 매칭 헬퍼 함수 (3중 교차 비교: ID, 이메일, 전화번호, 실명/표시명)
+  // 2단계: 신청자 매칭 헬퍼 함수 (3중 교차 비교: ID/UID, 이메일, 전화번호, 실명/표시명)
   const checkMemberMatchedWithRequests = (m) => {
-    const mId = (m.staffId || m.uid || m.id || '').trim().toLowerCase();
+    const mId = (m.staffId || m.id || '').trim().toLowerCase();
+    const mUid = (m.uid || '').trim().toLowerCase();
     const mEmail = (m.email || '').trim().toLowerCase();
     const mPhone = cleanPhone(m.phoneNumber);
     const mReal = (m.realName || '').trim().toLowerCase();
     const mDisplay = (m.displayName || '').trim().toLowerCase();
 
-    // 1) ID 매칭
+    // 1) ID 또는 UID 매칭
     if (mId && requestedIds.has(mId)) return true;
+    if (mUid && requestedIds.has(mUid)) return true;
 
     // 2) 이메일 매칭
     if (mEmail && requestedEmails.has(mEmail)) return true;
 
-    // 3) 전화번호 매칭 (하이픈 제거 숫자 비교)
+    // 3) 전화번호 매칭
     if (mPhone && requestedPhones.has(mPhone)) return true;
 
-    // 4) 이름 매칭 (개인정보에서 수정한 realName 또는 displayName 비교)
+    // 4) 이름 매칭 (개인정보 실명 또는 표시명)
     if (mReal && requestedNames.has(mReal)) return true;
     if (mDisplay && requestedNames.has(mDisplay)) return true;
 
     return false;
   };
 
-  // 신청 완료된 회원 및 미신청 회원 분류 (정확한 사용자 기반 판단)
+  // 신청 완료된 회원 및 미신청 회원 분류
   const memberRequesters = members.filter(m => checkMemberMatchedWithRequests(m));
   const unrequestedMembers = members.filter(m => !checkMemberMatchedWithRequests(m));
 
-  // 신청서(monthOffRequests) 자체에서 고유 신청자 목록 추출 (검증 용도)
-  const distinctRequestersInReqs = new Map();
+  // 신청자 고유 이름 목록 추출
+  const distinctApplicantNamesMap = new Map();
+  Object.values(userMonthlyOffMap).forEach(d => {
+    const label = d.requesterName || d.requesterEmail || '신청자';
+    const key = d.userKey || label;
+    distinctApplicantNamesMap.set(key, label);
+  });
   monthOffRequests.forEach(r => {
-    const displayLabel = r.requesterName || r.requesterEmail || '신청자';
-    const uniqueKey = r.requesterEmail || cleanPhone(r.requesterPhone) || (r.requesterName ? r.requesterName.trim().toLowerCase() : null) || r.requesterId;
-    if (uniqueKey && !distinctRequestersInReqs.has(uniqueKey)) {
-      distinctRequestersInReqs.set(uniqueKey, displayLabel);
+    const label = r.requesterName || r.requesterEmail || '신청자';
+    const key = r.requesterEmail || cleanPhone(r.requesterPhone) || (r.requesterName ? r.requesterName.trim().toLowerCase() : null) || r.requesterId;
+    if (key && !distinctApplicantNamesMap.has(key)) {
+      distinctApplicantNamesMap.set(key, label);
     }
   });
 
-  const distinctApplicantNames = Array.from(distinctRequestersInReqs.values());
-
-  // 신청자 수 계산 (등록된 사용자 매칭 수와 신청서 고유 신청자 수 중 최대치 반영)
+  const distinctApplicantNames = Array.from(distinctApplicantNamesMap.values());
   const effectiveRequestedCount = Math.max(memberRequesters.length, distinctApplicantNames.length);
-  const effectiveTotalCount = members.length;  // 등록된 사용자 총 수
-  const effectiveUnrequestedCount = Math.max(0, effectiveTotalCount - effectiveRequestedCount);  // 미신청자 수
-
-  // 디버깅 정보 (신청서 데이터 검증)
-  if (distinctApplicantNames.length !== effectiveRequestedCount) {
-    console.warn(
-      `[휴무신청 데이터 검증] 신청서 고유신청자(${distinctApplicantNames.length}명)와 ` +
-      `등록사용자 신청자(${effectiveRequestedCount}명) 불일치. ` +
-      `신청서: [${distinctApplicantNames.join(', ')}] / ` +
-      `미신청자: [${unrequestedMembers.map(m => m.realName || m.displayName || m.email).join(', ')}]`
-    );
-  }
+  const effectiveTotalCount = members.length;
+  const effectiveUnrequestedCount = Math.max(0, effectiveTotalCount - effectiveRequestedCount);
 
   // 1순위, 2순위, 3순위 신청 데이터 파싱 (신청자별로 통합)
   const staffPreferenceMap = {};
 
-  // 신청 건들을 순회하면서 동일 신청자의 휴무 신청 데이터 병합
+  // 1) 신규 구조 데이터(Firestore 최신 원격 반영본)를 staffPreferenceMap에 최우선 안착
+  Object.values(userMonthlyOffMap).forEach(d => {
+    const uKey = d.userKey || getUserRequestKey(d);
+    const sortedOffs = Array.isArray(d.offDays) && d.offDays.length > 0 ? [...d.offDays].sort((a,b)=>a-b) : [d.selectedDay, d.selectedDay + 1];
+    staffPreferenceMap[uKey] = {
+      requesterId: d.requesterId || '',
+      requesterUid: d.requesterUid || '',
+      name: d.requesterName || '',
+      email: (d.requesterEmail || '').toLowerCase().trim(),
+      phone: cleanPhone(d.requesterPhone),
+      offDays: sortedOffs,
+      startDay: sortedOffs[0],
+      rawRequests: [{ date: `${targetPrefix}-${String(sortedOffs[0]).padStart(2, '0')}`, day: sortedOffs[0], rank: 1 }]
+    };
+  });
+
+  // 2) 레거시 monthOffRequests는 신규 데이터에 전혀 등록되지 않은 직원에 대해서만 보충
   monthOffRequests.forEach(r => {
     const rId = (r.requesterId || '').trim().toLowerCase();
     const rEmail = (r.requesterEmail || '').trim().toLowerCase();
@@ -150,35 +172,28 @@ export async function renderMonthlyGeneratorView(container, { rosterData, onAppl
     const rName = (r.requesterName || '').trim();
     const rNameLower = rName.toLowerCase();
 
-    // 기존에 매칭되는 pref가 있는지 검사 (이메일 > 전화번호 > 실명/표시명 > ID)
-    let matchedKey = null;
-    for (const [k, p] of Object.entries(staffPreferenceMap)) {
-      if (rEmail && p.email && rEmail === p.email) { matchedKey = k; break; }
-      if (rPhone && p.phone && rPhone === p.phone) { matchedKey = k; break; }
-      if (rNameLower && p.name && rNameLower === p.name.toLowerCase()) { matchedKey = k; break; }
-      if (rId && p.requesterId && rId === p.requesterId.toLowerCase()) { matchedKey = k; break; }
+    // 이미 최신 신규 데이터(staffPreferenceMap)에 존재하는 직원이면 레거시 데이터 병합 절대 금지!
+    for (const [, p] of Object.entries(staffPreferenceMap)) {
+      if (rEmail && p.email && rEmail === p.email) return;
+      if (rPhone && p.phone && rPhone === p.phone) return;
+      if (rNameLower && p.name && rNameLower === p.name.toLowerCase()) return;
+      if (rId && p.requesterId && rId === p.requesterId.toLowerCase()) return;
     }
 
-    const uniqueKey = matchedKey || (rEmail ? `email:${rEmail}` : rPhone ? `phone:${rPhone}` : rNameLower ? `name:${rNameLower}` : `id:${rId}`);
+    const uniqueKey = rEmail ? `email:${rEmail}` : rPhone ? `phone:${rPhone}` : rNameLower ? `name:${rNameLower}` : `id:${rId}`;
 
     if (!staffPreferenceMap[uniqueKey]) {
       staffPreferenceMap[uniqueKey] = {
         requesterId: r.requesterId || '',
+        requesterUid: r.requesterUid || '',
         name: r.requesterName || '',
         email: rEmail,
         phone: rPhone,
         offDays: [],
         rawRequests: []
       };
-    } else {
-      // 기존에 비어있던 필드 보강
-      if (!staffPreferenceMap[uniqueKey].name && r.requesterName) staffPreferenceMap[uniqueKey].name = r.requesterName;
-      if (!staffPreferenceMap[uniqueKey].email && rEmail) staffPreferenceMap[uniqueKey].email = rEmail;
-      if (!staffPreferenceMap[uniqueKey].phone && rPhone) staffPreferenceMap[uniqueKey].phone = rPhone;
-      if (!staffPreferenceMap[uniqueKey].requesterId && r.requesterId) staffPreferenceMap[uniqueKey].requesterId = r.requesterId;
     }
 
-    // 날짜 파싱 및 수집
     const dateStr = r.date || '';
     const dayMatch = dateStr.match(/-(\d{1,2})$/);
     if (dayMatch) {
@@ -190,7 +205,7 @@ export async function renderMonthlyGeneratorView(container, { rosterData, onAppl
     }
   });
 
-  // 수집한 날짜 정렬 및 startDay 확정
+  // startDay 및 정렬 보정
   Object.entries(staffPreferenceMap).forEach(([key, pref]) => {
     if (pref.offDays.length > 0) {
       pref.offDays.sort((a, b) => a - b);
@@ -693,25 +708,74 @@ export async function renderMonthlyGeneratorView(container, { rosterData, onAppl
 
   // 신청휴무일보기 버튼
   container.querySelector('#btn-view-off-requests')?.addEventListener('click', () => {
-    // 신청 데이터를 신청자별로 정리
+    // 🌟 신청 데이터를 신청자별로 정리:
+    // 신규 월별 전용 신청(userMonthlyOffMap 및 staffPreferenceMap)을 최우선으로 적용하며,
+    // 인당 최대 MAX_OFF_DAYS(2일)까지만 노출하도록 제한
     const requestListByStaff = {};
+
+    // 1) staffPreferenceMap의 데이터 우선 반영 (각 직원별 실제 최종 신청일 2일)
+    Object.values(staffPreferenceMap).forEach(pref => {
+      const name = pref.name || pref.email || '신청자';
+      if (Array.isArray(pref.offDays) && pref.offDays.length > 0) {
+        requestListByStaff[name] = [...pref.offDays].slice(0, 2).sort((a, b) => a - b);
+      }
+    });
+
+    // 2) 레거시 monthOffRequests에서 아직 staffPreferenceMap에 없는 인원만 최소한으로 보충
     monthOffRequests.forEach(r => {
       const name = r.requesterName || r.requesterEmail || '신청자';
       if (!requestListByStaff[name]) {
         requestListByStaff[name] = [];
       }
+      // 이미 2일이 채워졌으면 레거시 중복 추가 차단
+      if (requestListByStaff[name].length >= 2) return;
+
       if (r.date) {
         const dayMatch = r.date.match(/-(\d{1,2})$/);
         if (dayMatch) {
-          requestListByStaff[name].push(parseInt(dayMatch[1], 10));
+          const d = parseInt(dayMatch[1], 10);
+          if (!requestListByStaff[name].includes(d)) {
+            requestListByStaff[name].push(d);
+          }
         }
       }
     });
 
-    // 각 신청자의 신청 일자를 정렬
+    // 각 신청자의 신청 일자를 최대 2일로 정렬 보정
     Object.keys(requestListByStaff).forEach(name => {
-      requestListByStaff[name] = [...new Set(requestListByStaff[name])].sort((a, b) => a - b);
+      requestListByStaff[name] = [...new Set(requestListByStaff[name])].slice(0, 2).sort((a, b) => a - b);
     });
+
+    // 총 신청 일수 계산
+    const totalOffDaysCount = Object.values(requestListByStaff).reduce((acc, cur) => acc + cur.length, 0);
+
+    // 요일 구하기 및 배지 스타일 헬퍼 (평일/토요일 파랑/일요일 빨강)
+    const weekDayNames = ['일', '월', '화', '수', '목', '금', '토'];
+    const getDayBadge = (day) => {
+      const dObj = new Date(targetYear, targetMonth - 1, day);
+      const dayOfWeek = dObj.getDay();
+      const weekName = weekDayNames[dayOfWeek];
+
+      if (dayOfWeek === 0) {
+        // 일요일 (빨간색)
+        return {
+          text: `${day}일(${weekName})`,
+          badgeClass: 'bg-red-50 text-red-600 border border-red-200'
+        };
+      } else if (dayOfWeek === 6) {
+        // 토요일 (파란색)
+        return {
+          text: `${day}일(${weekName})`,
+          badgeClass: 'bg-blue-50 text-blue-600 border border-blue-200'
+        };
+      } else {
+        // 평일 (단정하고 부드러운 청록/다크그레이)
+        return {
+          text: `${day}일(${weekName})`,
+          badgeClass: 'bg-teal-50 text-teal-800 border border-teal-200'
+        };
+      }
+    };
 
     // 팝업 HTML 생성
     const modalHtml = `
@@ -726,7 +790,7 @@ export async function renderMonthlyGeneratorView(container, { rosterData, onAppl
               </div>
               <div>
                 <h3 class="font-black text-slate-900 text-lg">${targetYear}년 ${String(targetMonth).padStart(2, '0')}월 신청 휴무 일정</h3>
-                <p class="text-xs text-slate-400 mt-0.5">${Object.keys(requestListByStaff).length}명 총 ${monthOffRequests.length}일 신청</p>
+                <p class="text-xs text-slate-400 mt-0.5">${Object.keys(requestListByStaff).length}명 총 ${totalOffDaysCount}일 신청</p>
               </div>
             </div>
             <button id="btn-close-off-modal" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-400 flex items-center justify-center transition">
@@ -736,21 +800,35 @@ export async function renderMonthlyGeneratorView(container, { rosterData, onAppl
 
           <!-- 신청 목록 -->
           <div class="space-y-3">
-            ${Object.entries(requestListByStaff).map(([name, days]) => `
+            ${Object.keys(requestListByStaff).length > 0 ? Object.entries(requestListByStaff).map(([name, days]) => `
               <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 hover:border-teal-300 transition">
-                <div class="flex items-start justify-between gap-3">
+                <div class="flex items-center justify-between gap-3">
                   <div>
-                    <p class="font-bold text-slate-900">${name}</p>
-                    <p class="text-sm text-slate-600 mt-1">
-                      <span class="inline-block px-2 py-1 rounded-lg bg-teal-100 text-teal-800 font-bold text-xs mr-2">
-                        ${days.length}일
+                    <div class="flex items-center gap-2">
+                      <p class="font-bold text-slate-900">${name}</p>
+                      <span class="px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 font-extrabold text-[11px]">
+                        총 ${days.length}일
                       </span>
-                      ${days.map(d => `<span class="inline-block px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 font-semibold text-xs mr-1.5 mb-1">${d}일</span>`).join('')}
-                    </p>
+                    </div>
+                    <div class="flex items-center gap-2 mt-2 flex-wrap">
+                      <span class="text-xs text-slate-500 font-bold mr-0.5">신청일자:</span>
+                      ${days.map(d => {
+                        const badge = getDayBadge(d);
+                        return `
+                          <span class="inline-flex items-center px-2.5 py-1 rounded-lg ${badge.badgeClass} font-extrabold text-xs shadow-2xs">
+                            ${badge.text}
+                          </span>
+                        `;
+                      }).join('')}
+                    </div>
                   </div>
                 </div>
               </div>
-            `).join('')}
+            `).join('') : `
+              <div class="p-6 text-center text-slate-400 text-xs">
+                접수된 희망 휴무 내역이 없습니다.
+              </div>
+            `}
           </div>
 
           <!-- 닫기 버튼 -->

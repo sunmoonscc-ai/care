@@ -2,7 +2,9 @@ import { db, isOfflineFallback } from './firebase';
 import {
   collection,
   doc,
+  getDoc,
   getDocs,
+  setDoc,
   addDoc,
   updateDoc,
   deleteDoc,
@@ -14,6 +16,7 @@ import { logger } from './loggerService';
 import { STORAGE_KEYS, MAX_OFF_DAYS } from '../constants';
 
 const STORAGE_KEY_REQUESTS = STORAGE_KEYS.REQUESTS;
+const STORAGE_KEY_MONTHLY_OFF = STORAGE_KEYS.MONTHLY_OFF_REQUESTS || 'careshift_monthly_off_requests';
 
 // 기본 초기 신청 데이터
 const initialRequests = [
@@ -34,6 +37,251 @@ const initialRequests = [
     createdAt: '2026-11-02 14:20'
   }
 ];
+
+// ---------------------------------------------------------------------------
+// 🌟 [신규 구조] 사용자별·월별 독립 희망 휴무 관리 (Firestore & LocalStorage)
+// 경로: users/{userKey}/monthly_off/{yearMonth}
+// ---------------------------------------------------------------------------
+
+// 사용자 키 헬퍼 (이메일 우선, 없으면 UID 또는 staffId)
+export function getUserRequestKey(userOrStaff) {
+  if (!userOrStaff) return 'unknown_user';
+  const email = (userOrStaff.email || userOrStaff.requesterEmail || '').trim().toLowerCase();
+  if (email) return email;
+  const uid = (userOrStaff.uid || userOrStaff.requesterUid || '').trim().toLowerCase();
+  if (uid) return uid;
+  const id = (userOrStaff.id || userOrStaff.staffId || userOrStaff.requesterId || '').trim().toLowerCase();
+  if (id) return id;
+  const name = (userOrStaff.name || userOrStaff.requesterName || '').trim().toLowerCase();
+  if (name) return `name_${name}`;
+  return 'unknown_user';
+}
+
+// 로컬 사용자별 월별 신청 캐시 맵 가져오기
+function getLocalMonthlyOffMap() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_MONTHLY_OFF);
+    return raw ? JSON.parse(raw) : {};
+  } catch (e) {
+    return {};
+  }
+}
+
+// 로컬 사용자별 월별 신청 캐시 맵 저장
+function saveLocalMonthlyOffMap(map) {
+  try {
+    localStorage.setItem(STORAGE_KEY_MONTHLY_OFF, JSON.stringify(map));
+  } catch (e) {
+    console.warn("로컬 캐시 저장 오류:", e);
+  }
+}
+
+/**
+ * 특정 사용자의 특정 월 희망 휴무 신청 정보 저장
+ * @param {Object} userOrStaff - { id, uid, name, email, phoneNumber }
+ * @param {string} yearMonth - 예: '2026-12'
+ * @param {number} selectedDay - 시작일 (예: 9)
+ * @param {Array<number>} offDays - 휴무일 배열 (예: [9, 10])
+ * @param {string} reason - 사유
+ */
+export async function saveUserMonthlyOffRequest(userOrStaff, yearMonth, selectedDay, offDays, reason = '개인 사정') {
+  const userKey = getUserRequestKey(userOrStaff);
+  const cleanPhone = (userOrStaff.phoneNumber || userOrStaff.requesterPhone || '').replace(/[^0-9]/g, '');
+
+  const data = {
+    userKey,
+    yearMonth,
+    selectedDay,
+    offDays: Array.isArray(offDays) ? offDays : [selectedDay, selectedDay + 1],
+    reason: reason || '개인 사정',
+    requesterId: userOrStaff.id || userOrStaff.staffId || userOrStaff.requesterId || '',
+    requesterUid: userOrStaff.uid || userOrStaff.requesterUid || '',
+    requesterName: userOrStaff.name || userOrStaff.displayName || userOrStaff.requesterName || '',
+    requesterEmail: (userOrStaff.email || userOrStaff.requesterEmail || '').toLowerCase().trim(),
+    requesterPhone: cleanPhone,
+    status: 'PENDING_ADMIN',
+    statusText: '관리자(수간호사) 승인 대기중',
+    updatedAt: new Date().toISOString(),
+    updatedAtTimestamp: Date.now()
+  };
+
+  // 1. 로컬 캐시 즉시 업데이트
+  const localMap = getLocalMonthlyOffMap();
+  if (!localMap[yearMonth]) localMap[yearMonth] = {};
+  localMap[yearMonth][userKey] = data;
+  saveLocalMonthlyOffMap(localMap);
+
+  console.log(`💾 [saveUserMonthlyOffRequest] 로컬 저장 완료 (${userKey} - ${yearMonth}: [${data.offDays}])`);
+
+  // 2. Firestore 저장:
+  // 최상위 `monthly_off_requests` 컬렉션에 `${yearMonth}_${userKey}` 문서로 저장하여
+  // 콘솔에서 한눈에 확인 가능 및 1회 쿼리로 일괄 수집 가능하도록 최적화
+  if (db) {
+    try {
+      const topLevelDocId = `${yearMonth}_${userKey}`;
+      const topLevelDocRef = doc(db, 'monthly_off_requests', topLevelDocId);
+      await setDoc(topLevelDocRef, data, { merge: true });
+      console.log(`✅ [Firestore 저장 성공] monthly_off_requests/${topLevelDocId}`);
+
+      // 사용자 서브컬렉션에도 동시 백업 (기존 구조 호환)
+      const subDocRef = doc(db, 'users', userKey, 'monthly_off', yearMonth);
+      await setDoc(subDocRef, data, { merge: true });
+    } catch (e) {
+      console.error(`❌ [Firestore 저장 실패] monthly_off_requests:`, e.message);
+    }
+  }
+
+  // 3. 하위 호환성을 위해 requests 컬렉션 및 기존 캐시에도 OFF 데이터 동기화 유지
+  try {
+    const legacyItems = data.offDays.map((d, idx) => ({
+      type: 'OFF',
+      typeName: '희망 휴무(OFF)',
+      requesterId: data.requesterId,
+      requesterUid: data.requesterUid,
+      requesterName: data.requesterName,
+      requesterEmail: data.requesterEmail,
+      requesterPhone: data.requesterPhone,
+      targetId: '',
+      targetName: '-',
+      date: `${yearMonth}-${String(d).padStart(2, '0')}`,
+      fromShift: 'D',
+      toShift: 'OFF',
+      reason: data.reason,
+      rank: 1,
+      month: yearMonth,
+      status: 'PENDING_ADMIN',
+      statusText: '관리자(수간호사) 승인 대기중'
+    }));
+    await replaceStaffMonthlyOffRequests(data.requesterId, data.requesterName, yearMonth, legacyItems);
+  } catch (err) {
+    console.warn("하위호환 requests 컬렉션 동기화 건너뜀:", err.message);
+  }
+
+  return data;
+}
+
+/**
+ * 특정 사용자의 특정 월 희망 휴무 조회
+ */
+export async function getUserMonthlyOffRequest(userOrStaff, yearMonth) {
+  const userKey = getUserRequestKey(userOrStaff);
+
+  // 1. Firestore 최상위 컬렉션 우선 조회
+  if (db) {
+    try {
+      const topDocRef = doc(db, 'monthly_off_requests', `${yearMonth}_${userKey}`);
+      const topSnap = await getDoc(topDocRef);
+      if (topSnap.exists()) {
+        const data = topSnap.data();
+        const localMap = getLocalMonthlyOffMap();
+        if (!localMap[yearMonth]) localMap[yearMonth] = {};
+        localMap[yearMonth][userKey] = data;
+        saveLocalMonthlyOffMap(localMap);
+        return data;
+      }
+
+      // 서브컬렉션 폴백 조회
+      const docRef = doc(db, 'users', userKey, 'monthly_off', yearMonth);
+      const snap = await getDoc(docRef);
+      if (snap.exists()) {
+        const data = snap.data();
+        const localMap = getLocalMonthlyOffMap();
+        if (!localMap[yearMonth]) localMap[yearMonth] = {};
+        localMap[yearMonth][userKey] = data;
+        saveLocalMonthlyOffMap(localMap);
+        return data;
+      }
+    } catch (e) {
+      console.warn(`Firestore 사용자 휴무 조회 실패 (${userKey}):`, e.message);
+    }
+  }
+
+  // 2. 로컬 캐시 조회
+  const localMap = getLocalMonthlyOffMap();
+  if (localMap[yearMonth] && localMap[yearMonth][userKey]) {
+    return localMap[yearMonth][userKey];
+  }
+
+  return null;
+}
+
+/**
+ * 관리자용: 특정 월의 모든 등록 사용자 희망 휴무 일괄 수집
+ * 🌟 [개선] Firestore 최신 원격 데이터를 최우선으로 수집하고,
+ * 로컬 캐시나 레거시 데이터가 최신 원격 데이터를 덮어쓰지 않도록 보장
+ */
+export async function getAllUsersMonthlyOffRequests(yearMonth, registeredUsers = []) {
+  const resultMap = {}; // userKey -> request data
+
+  // 1. Firestore 최상위 `monthly_off_requests` 컬렉션 원격 조회 (최신 원격 데이터 최우선!)
+  if (db) {
+    try {
+      const qTop = query(
+        collection(db, 'monthly_off_requests'),
+        where('yearMonth', '==', yearMonth)
+      );
+      const topSnap = await getDocs(qTop);
+      topSnap.forEach(d => {
+        const data = d.data();
+        if (data) {
+          const userKey = data.userKey || getUserRequestKey(data);
+          resultMap[userKey] = data;
+          console.log(`🌐 [Firestore 최신 수신] ${userKey} (${data.requesterName}): [${data.offDays}]`);
+        }
+      });
+    } catch (e) {
+      console.warn("monthly_off_requests 쿼리 실패 (단일 조회 시도):", e.message);
+    }
+
+    // 1-2. 혹시 최상위에 아직 반영 안 된 직원은 users 서브컬렉션 병렬 조회
+    try {
+      const keysToFetch = new Set();
+      registeredUsers.forEach(u => {
+        const k = getUserRequestKey(u);
+        if (k && k !== 'unknown_user' && !resultMap[k]) keysToFetch.add(k);
+      });
+
+      const fetchPromises = Array.from(keysToFetch).map(async (key) => {
+        try {
+          const docRef = doc(db, 'users', key, 'monthly_off', yearMonth);
+          const snap = await getDoc(docRef);
+          if (snap.exists()) {
+            return { key, data: snap.data() };
+          }
+        } catch (e) {
+          // ignore individual read errors
+        }
+        return null;
+      });
+
+      const results = await Promise.all(fetchPromises);
+      results.forEach(res => {
+        if (res && res.data && !resultMap[res.key]) {
+          resultMap[res.key] = res.data;
+        }
+      });
+    } catch (e) {
+      console.warn("getAllUsersMonthlyOffRequests 서브컬렉션 조회 오류:", e.message);
+    }
+  }
+
+  // 2. Firestore에 전혀 없는 사용자만 로컬 캐시에서 폴백으로 보충 (Firestore에 있으면 절대 덮어쓰지 않음!)
+  const localMap = getLocalMonthlyOffMap();
+  if (localMap[yearMonth]) {
+    Object.entries(localMap[yearMonth]).forEach(([k, localData]) => {
+      if (!resultMap[k]) {
+        resultMap[k] = localData;
+      }
+    });
+  }
+
+  // 3. 최신 Firestore 결과로 로컬 캐시 덮어써서 동기화
+  if (!localMap[yearMonth]) localMap[yearMonth] = {};
+  Object.assign(localMap[yearMonth], resultMap);
+  saveLocalMonthlyOffMap(localMap);
+
+  return resultMap;
+}
 
 export async function loadRequests() {
   let firestoreList = [];

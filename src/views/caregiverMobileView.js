@@ -1,6 +1,6 @@
 // 요양보호사용 전용 모바일 뷰 (터치 친화적, 반응형 카드, 어르신 친화적 큰 폰트)
 import { openMobileRequestModal } from './mobileRequestModal';
-import { loadRequests } from '../services/requestService';
+import { loadRequests, getUserMonthlyOffRequest } from '../services/requestService';
 
 export async function renderCaregiverMobileView(container, { rosterData, authState, navigate }) {
   const userProfile = authState.userProfile;
@@ -85,12 +85,8 @@ export async function renderCaregiverMobileView(container, { rosterData, authSta
   const tomorrowShift = getShiftBadge(tomorrowAssign.code);
 
   // 2. 내가 신청한 12월 희망 휴무 내역 실시간 조회
-  const allReqs = await loadRequests();
-  const myOffReqs = allReqs.filter(r =>
-    r.type === 'OFF' &&
-    (r.requesterId === staff.id || r.requesterName === displayName || (authState.user?.email && r.requesterEmail === authState.user.email)) &&
-    r.date && r.date.startsWith('2026-12')
-  );
+  const targetYearMonth = '2026-12';
+  const myMonthlyDoc = await getUserMonthlyOffRequest(staff, targetYearMonth);
 
   // 설정에서 maxOffDays 로드 (기본 2)
   const settings = await import('../services/settingsService').then(m => m.getAppSettings());
@@ -98,12 +94,24 @@ export async function renderCaregiverMobileView(container, { rosterData, authSta
 
   // 1순위만 사용 (모든 휴무 요청이 rank=1)
   const myRanks = { 1: [] };
-  myOffReqs.forEach(r => {
-    const day = parseInt(r.date.split('-')[2], 10);
-    if (!myRanks[1].includes(day)) {
-      myRanks[1].push(day);
-    }
-  });
+
+  if (myMonthlyDoc && Array.isArray(myMonthlyDoc.offDays) && myMonthlyDoc.offDays.length > 0) {
+    myRanks[1] = [...myMonthlyDoc.offDays];
+  } else {
+    // 기존 requests 컬렉션 폴백
+    const allReqs = await loadRequests();
+    const myOffReqs = allReqs.filter(r =>
+      r.type === 'OFF' &&
+      (r.requesterId === staff.id || r.requesterName === displayName || (authState.user?.email && r.requesterEmail === authState.user.email)) &&
+      r.date && r.date.startsWith(targetYearMonth)
+    );
+    myOffReqs.forEach(r => {
+      const day = parseInt(r.date.split('-')[2], 10);
+      if (!myRanks[1].includes(day)) {
+        myRanks[1].push(day);
+      }
+    });
+  }
 
   // 최대 2개까지만 (그 첫 번째 날짜가 시작점)
   if (myRanks[1].length > maxOffDays) {
