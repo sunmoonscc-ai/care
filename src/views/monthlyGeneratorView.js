@@ -23,6 +23,17 @@ export async function renderMonthlyGeneratorView(container, { rosterData, onAppl
 
   const staffList = buildDynamicStaffList(staffing.totalStaff, members);
 
+  // 🔍 근무표 생성 시작 전 직원 목록 확인
+  console.log(`\n👨‍⚕️ [근무표 생성 초기화]`);
+  console.log(`  등록된 사용자: ${members.length}명`);
+  members.forEach(m => {
+    console.log(`    - ${m.realName || m.displayName || m.email} (email=${m.email}, phone=${m.phoneNumber || '?'})`);
+  });
+  console.log(`  생성된 근무표 직원: ${staffList.length}명`);
+  staffList.forEach(s => {
+    console.log(`    - [${s.id}] ${s.name} (email=${s.email || '?'}, phone=${s.phoneNumber || '?'})`);
+  });
+
   // 현재 날짜 기반으로 근무표 작성 대상 달 계산 (2개월 후)
   const now = new Date();
   let targetYear = now.getFullYear();
@@ -45,47 +56,35 @@ export async function renderMonthlyGeneratorView(container, { rosterData, onAppl
 
   // 1. 실제 데이터베이스에서 해당 월의 휴무 신청 내역 조회
   const allRequests = await loadRequests();
+  console.log(`\n📥 [근무표 생성 시작] 총 신청 건수: ${allRequests.length}건`);
+  allRequests.forEach(r => {
+    console.log(`  [${r.id}] 타입=${r.type} / 신청자=${r.requesterName || '?'} / 날짜=${r.date || '?'}`);
+  });
+
   const targetPrefix = `${targetYear}-${String(targetMonth).padStart(2, '0')}`;
   const monthOffRequests = allRequests.filter(r => r.type === 'OFF' && r.date && r.date.startsWith(targetPrefix));
+  console.log(`\n✅ [월별 OFF 신청 필터링] 대상월=${targetPrefix} / 필터링된 OFF 신청: ${monthOffRequests.length}건`);
+  monthOffRequests.forEach(r => {
+    console.log(`  [${r.id}] ${r.requesterName} (email=${r.requesterEmail}, phone=${r.requesterPhone}) / 날짜=${r.date}`);
+  });
 
   // 신청자 식별을 위한 헬퍼 (전화번호 숫자 정규화)
   const cleanPhone = (p) => (p || '').replace(/[^0-9]/g, '');
 
   // 1단계: 접수된 신청 건들(monthOffRequests)의 모든 식별 키를 세트로 정리
-  // 신청자 1명당 1번만 카운트하기 위해 이미 처리된 신청자는 제외
   const requestedIds = new Set();
   const requestedEmails = new Set();
   const requestedPhones = new Set();
   const requestedNames = new Set();
-  const processedRequesters = new Set(); // 이미 처리된 신청자 추적
 
   monthOffRequests.forEach(r => {
-    // 신청자 고유 식별자 결정 (우선순위: ID > Email > Phone > Name)
-    const id = r.requesterId ? r.requesterId.trim().toLowerCase() : null;
-    const email = r.requesterEmail ? r.requesterEmail.trim().toLowerCase() : null;
-    const phone = r.requesterPhone ? cleanPhone(r.requesterPhone) : null;
-    const name = r.requesterName ? r.requesterName.trim().toLowerCase() : null;
-
-    // 신청자 고유 키 결정
-    let uniqueKey = null;
-    if (id) uniqueKey = `id:${id}`;
-    else if (email && email !== '') uniqueKey = `email:${email}`;
-    else if (phone && phone !== '') uniqueKey = `phone:${phone}`;
-    else if (name && name !== '') uniqueKey = `name:${name}`;
-
-    // 이미 처리된 신청자는 건너뛰기 (1명당 1번만)
-    if (uniqueKey && processedRequesters.has(uniqueKey)) return;
-    if (uniqueKey) processedRequesters.add(uniqueKey);
-
-    // 각 식별자 세트에 추가 (매칭 용도)
-    if (id) requestedIds.add(id);
-    if (email && email !== '') requestedEmails.add(email);
-    if (phone && phone !== '') requestedPhones.add(phone);
-    if (name && name !== '') requestedNames.add(name);
+    if (r.requesterId && r.requesterId.trim()) requestedIds.add(r.requesterId.trim().toLowerCase());
+    if (r.requesterEmail && r.requesterEmail.trim()) requestedEmails.add(r.requesterEmail.trim().toLowerCase());
+    if (r.requesterPhone && cleanPhone(r.requesterPhone)) requestedPhones.add(cleanPhone(r.requesterPhone));
+    if (r.requesterName && r.requesterName.trim()) requestedNames.add(r.requesterName.trim().toLowerCase());
   });
 
-  // 2단계: 신청자 매칭 헬퍼 함수 (ID 우선 매칭)
-  // 우선순위: ID > Email > Phone > Name
+  // 2단계: 신청자 매칭 헬퍼 함수 (3중 교차 비교: ID, 이메일, 전화번호, 실명/표시명)
   const checkMemberMatchedWithRequests = (m) => {
     const mId = (m.staffId || m.uid || m.id || '').trim().toLowerCase();
     const mEmail = (m.email || '').trim().toLowerCase();
@@ -93,20 +92,18 @@ export async function renderMonthlyGeneratorView(container, { rosterData, onAppl
     const mReal = (m.realName || '').trim().toLowerCase();
     const mDisplay = (m.displayName || '').trim().toLowerCase();
 
-    // 1순위: ID 매칭 (가장 확실함)
+    // 1) ID 매칭
     if (mId && requestedIds.has(mId)) return true;
 
-    // 2순위: 이메일 매칭 (고유 식별자)
-    if (mEmail && mEmail !== '' && requestedEmails.has(mEmail)) return true;
+    // 2) 이메일 매칭
+    if (mEmail && requestedEmails.has(mEmail)) return true;
 
-    // 3순위: 전화번호 매칭
-    if (mPhone && mPhone !== '' && requestedPhones.has(mPhone)) return true;
+    // 3) 전화번호 매칭 (하이픈 제거 숫자 비교)
+    if (mPhone && requestedPhones.has(mPhone)) return true;
 
-    // 4순위: 이름 매칭 (가장 부정확함)
-    if ((mReal && mReal !== '' && requestedNames.has(mReal)) ||
-        (mDisplay && mDisplay !== '' && requestedNames.has(mDisplay))) {
-      return true;
-    }
+    // 4) 이름 매칭 (개인정보에서 수정한 realName 또는 displayName 비교)
+    if (mReal && requestedNames.has(mReal)) return true;
+    if (mDisplay && requestedNames.has(mDisplay)) return true;
 
     return false;
   };
@@ -119,7 +116,7 @@ export async function renderMonthlyGeneratorView(container, { rosterData, onAppl
   const distinctRequestersInReqs = new Map();
   monthOffRequests.forEach(r => {
     const displayLabel = r.requesterName || r.requesterEmail || '신청자';
-    const uniqueKey = r.requesterEmail || cleanPhone(r.requesterPhone) || r.requesterName || r.requesterId;
+    const uniqueKey = r.requesterEmail || cleanPhone(r.requesterPhone) || (r.requesterName ? r.requesterName.trim().toLowerCase() : null) || r.requesterId;
     if (uniqueKey && !distinctRequestersInReqs.has(uniqueKey)) {
       distinctRequestersInReqs.set(uniqueKey, displayLabel);
     }
@@ -127,10 +124,10 @@ export async function renderMonthlyGeneratorView(container, { rosterData, onAppl
 
   const distinctApplicantNames = Array.from(distinctRequestersInReqs.values());
 
-  // 신청자 수 계산 (등록된 사용자 기준으로 정확히 계산)
-  const effectiveRequestedCount = memberRequesters.length;  // 등록된 사용자 중 신청한 수
+  // 신청자 수 계산 (등록된 사용자 매칭 수와 신청서 고유 신청자 수 중 최대치 반영)
+  const effectiveRequestedCount = Math.max(memberRequesters.length, distinctApplicantNames.length);
   const effectiveTotalCount = members.length;  // 등록된 사용자 총 수
-  const effectiveUnrequestedCount = effectiveTotalCount - effectiveRequestedCount;  // 미신청자 수
+  const effectiveUnrequestedCount = Math.max(0, effectiveTotalCount - effectiveRequestedCount);  // 미신청자 수
 
   // 디버깅 정보 (신청서 데이터 검증)
   if (distinctApplicantNames.length !== effectiveRequestedCount) {
@@ -142,104 +139,125 @@ export async function renderMonthlyGeneratorView(container, { rosterData, onAppl
     );
   }
 
-  // 1순위, 2순위, 3순위 신청 데이터 파싱 (신청자별 unique key로 통합)
+  // 1순위, 2순위, 3순위 신청 데이터 파싱 (신청자별로 통합)
   const staffPreferenceMap = {};
 
-  // 신청자별 unique key 생성 (ID > 이메일 > 전화번호 > 이름 우선순위)
+  // 신청 건들을 순회하면서 동일 신청자의 휴무 신청 데이터 병합
   monthOffRequests.forEach(r => {
-    // unique key 결정
-    let uniqueKey = null;
-    if (r.requesterId && r.requesterId.trim()) {
-      uniqueKey = `id:${r.requesterId.trim().toLowerCase()}`;
-    } else if (r.requesterEmail && r.requesterEmail.trim()) {
-      uniqueKey = `email:${r.requesterEmail.trim().toLowerCase()}`;
-    } else if (r.requesterPhone && cleanPhone(r.requesterPhone)) {
-      uniqueKey = `phone:${cleanPhone(r.requesterPhone)}`;
-    } else if (r.requesterName && r.requesterName.trim()) {
-      uniqueKey = `name:${r.requesterName.trim().toLowerCase()}`;
+    const rId = (r.requesterId || '').trim().toLowerCase();
+    const rEmail = (r.requesterEmail || '').trim().toLowerCase();
+    const rPhone = cleanPhone(r.requesterPhone);
+    const rName = (r.requesterName || '').trim();
+    const rNameLower = rName.toLowerCase();
+
+    // 기존에 매칭되는 pref가 있는지 검사 (이메일 > 전화번호 > 실명/표시명 > ID)
+    let matchedKey = null;
+    for (const [k, p] of Object.entries(staffPreferenceMap)) {
+      if (rEmail && p.email && rEmail === p.email) { matchedKey = k; break; }
+      if (rPhone && p.phone && rPhone === p.phone) { matchedKey = k; break; }
+      if (rNameLower && p.name && rNameLower === p.name.toLowerCase()) { matchedKey = k; break; }
+      if (rId && p.requesterId && rId === p.requesterId.toLowerCase()) { matchedKey = k; break; }
     }
 
-    if (!uniqueKey) {
-      console.warn(`⚠️ [신청자 식별 불가] 신청 건 스킵:`, r);
-      return;
-    }
+    const uniqueKey = matchedKey || (rEmail ? `email:${rEmail}` : rPhone ? `phone:${rPhone}` : rNameLower ? `name:${rNameLower}` : `id:${rId}`);
 
-    // 신청자 정보가 없으면 초기화
     if (!staffPreferenceMap[uniqueKey]) {
       staffPreferenceMap[uniqueKey] = {
         requesterId: r.requesterId || '',
         name: r.requesterName || '',
-        email: (r.requesterEmail || '').toLowerCase().trim(),
-        phone: cleanPhone(r.requesterPhone),
+        email: rEmail,
+        phone: rPhone,
         offDays: [],
-        rawRequests: [] // 원본 신청 항목 저장 (디버깅용)
+        rawRequests: []
       };
+    } else {
+      // 기존에 비어있던 필드 보강
+      if (!staffPreferenceMap[uniqueKey].name && r.requesterName) staffPreferenceMap[uniqueKey].name = r.requesterName;
+      if (!staffPreferenceMap[uniqueKey].email && rEmail) staffPreferenceMap[uniqueKey].email = rEmail;
+      if (!staffPreferenceMap[uniqueKey].phone && rPhone) staffPreferenceMap[uniqueKey].phone = rPhone;
+      if (!staffPreferenceMap[uniqueKey].requesterId && r.requesterId) staffPreferenceMap[uniqueKey].requesterId = r.requesterId;
     }
 
-    // 모든 휴무 날짜 수집
+    // 날짜 파싱 및 수집
     const dateStr = r.date || '';
-    const dayMatch = dateStr.match(/-(\d{1,2})$/); // YYYY-MM-DD에서 일수 추출
+    const dayMatch = dateStr.match(/-(\d{1,2})$/);
     if (dayMatch) {
       const day = parseInt(dayMatch[1], 10);
       if (!staffPreferenceMap[uniqueKey].offDays.includes(day)) {
         staffPreferenceMap[uniqueKey].offDays.push(day);
       }
       staffPreferenceMap[uniqueKey].rawRequests.push({ date: dateStr, day, rank: r.rank });
-    } else {
-      console.warn(`⚠️ [날짜 파싱 실패] r.date="${dateStr}"`);
     }
   });
 
-  // 수집한 날짜 중 가장 작은 날짜를 startDay로 설정
+  // 수집한 날짜 정렬 및 startDay 확정
   Object.entries(staffPreferenceMap).forEach(([key, pref]) => {
     if (pref.offDays.length > 0) {
-      pref.offDays.sort((a, b) => a - b); // 오름차순 정렬
-      pref.startDay = pref.offDays[0]; // 최소값이 시작일
+      pref.offDays.sort((a, b) => a - b);
+      pref.startDay = pref.offDays[0];
     }
   });
 
-  // 📊 파싱 후 최종 신청 데이터
-  console.log(`\n📊 [신청자별 통합 데이터] ${Object.keys(staffPreferenceMap).length}명:`);
-  Object.entries(staffPreferenceMap).forEach(([key, pref]) => {
-    console.log(`  [${key}] ${pref.name || pref.email}: offDays=[${pref.offDays}], startDay=${pref.startDay || '?'}일 / rawReqs=${pref.rawRequests.length}건`);
-    if (pref.startDay) {
-      const endDay = Math.min(pref.startDay + 1, daysInMonth);
-      console.log(`    → 배정 예정: ${pref.startDay}일~${endDay}일`);
-    }
-  });
-
-  // 근무표 staffList의 직원과 신청 데이터를 정확히 매칭하는 함수
+  // 근무표 staffList의 직원(st_1, st_2 등)과 신청 데이터를 4중(ID, 이메일, 전화번호, 이름) 교차 매칭
   const findStaffPreference = (s) => {
     const sId = (s.id || '').trim().toLowerCase();
     const sEmail = (s.email || '').trim().toLowerCase();
     const sPhone = cleanPhone(s.phoneNumber);
     const sName = (s.name || '').trim().toLowerCase();
 
-    // 우선순위: ID > 이메일 > 전화번호 > 이름
-    if (sId) {
-      const idKey = `id:${sId}`;
-      if (staffPreferenceMap[idKey]) return staffPreferenceMap[idKey];
-    }
+    for (const [, pref] of Object.entries(staffPreferenceMap)) {
+      const pId = (pref.requesterId || '').trim().toLowerCase();
+      const pEmail = (pref.email || '').trim().toLowerCase();
+      const pPhone = cleanPhone(pref.phone);
+      const pName = (pref.name || '').trim().toLowerCase();
 
-    if (sEmail) {
-      const emailKey = `email:${sEmail}`;
-      if (staffPreferenceMap[emailKey]) return staffPreferenceMap[emailKey];
-    }
+      // 1) ID 일치 (가장 정확함: st_1 == st_1)
+      if (sId && pId && sId === pId) {
+        console.log(`  [ID 매칭] ${s.id} == ${pref.requesterId}`);
+        return pref;
+      }
 
-    if (sPhone) {
-      const phoneKey = `phone:${sPhone}`;
-      if (staffPreferenceMap[phoneKey]) return staffPreferenceMap[phoneKey];
-    }
+      // 2) 이메일 일치 (이메일이 있을 때)
+      if (sEmail && pEmail && sEmail === pEmail) {
+        console.log(`  [이메일 매칭] ${s.email} == ${pref.email}`);
+        return pref;
+      }
 
-    if (sName) {
-      for (const [, pref] of Object.entries(staffPreferenceMap)) {
-        const pName = (pref.name || '').trim().toLowerCase();
-        if (pName && sName === pName) return pref;
+      // 3) 전화번호 일치
+      if (sPhone && pPhone && sPhone === pPhone) {
+        console.log(`  [전화번호 매칭] ${s.phoneNumber} == ${pref.phone}`);
+        return pref;
+      }
+
+      // 4) 이름 매칭 (정확한 이름 일치 또는 포함 관계)
+      // 예: "김은정" == "김은정" 또는 "s24 ultra" 포함 "s24"
+      if (sName && pName) {
+        const exactMatch = sName === pName;
+        const partialMatch = sName.includes(pName) || pName.includes(sName);
+        const koreanMatch = (sName.includes(pName) || pName.includes(sName)) && !sName.includes('외부') && !pName.includes('user_');
+
+        if (exactMatch || koreanMatch) {
+          console.log(`  [이름 매칭] "${s.name}" ≈ "${pref.name}"`);
+          return pref;
+        }
       }
     }
 
     return null;
   };
+
+  // 📊 파싱 후 최종 신청 데이터
+  console.log(`\n📊 [신청자별 통합 데이터] ${Object.keys(staffPreferenceMap).length}명:`);
+  Object.entries(staffPreferenceMap).forEach(([key, pref]) => {
+    console.log(`  [${key}] ${pref.name || pref.email}: offDays=[${pref.offDays}], startDay=${pref.startDay || '?'}일 / rawReqs=${pref.rawRequests.length}건`);
+  });
+
+  // 🔍 근무표 직원 목록과 신청 데이터 매칭 확인
+  console.log(`\n👥 [근무표 직원 목록 및 매칭 상태] 총 ${staffList.length}명:`);
+  staffList.forEach(s => {
+    const pref = findStaffPreference(s);
+    console.log(`  [${s.id}] ${s.name} (email=${s.email}, phone=${s.phoneNumber}) → ${pref ? `✅ 매칭: ${pref.name} (offDays=${pref.offDays})` : '❌ 미매칭'}`);
+  });
 
   // 2. 듀티 생성 엔진 (1순위 우선 배정 + 날짜별 최대 휴무 허용 인원 초과 시 2순위/3순위 자동 조정)
   const generateRosterDraft = (mode = 'BALANCED') => {
@@ -259,9 +277,14 @@ export async function renderMonthlyGeneratorView(container, { rosterData, onAppl
     const dailyOffCount = Array(daysInMonth + 1).fill(0);
 
     // 1단계: 휴무 신청 배정 (시작일부터 maxOffDays일)
+    console.log(`\n⚙️ [근무표 생성 중] 모드=${mode}, maxOffDaysLimit=${maxOffDaysLimit}, maxOffPerDay=${maxOffPerDay}`);
+
     staffList.forEach(s => {
       const pref = findStaffPreference(s);
-      if (!pref || !pref.startDay) return;
+      if (!pref || !pref.startDay) {
+        console.log(`  [${s.id}] ${s.name}: 신청 데이터 없음 → 정규 로테이션`);
+        return;
+      }
 
       // 시작일부터 maxOffDaysLimit만큼 휴무 생성
       const offDays = [];
@@ -274,8 +297,13 @@ export async function renderMonthlyGeneratorView(container, { rosterData, onAppl
       if (canFit) {
         resolvedOffDays[s.id] = offDays;
         offDays.forEach(d => dailyOffCount[d]++);
+        console.log(`  [${s.id}] ${s.name}: ✅ 휴무 배정 [${offDays}]`);
+      } else {
+        console.log(`  [${s.id}] ${s.name}: ⚠️ 휴무 미배정 - 날짜 정원 초과 (요청: [${offDays}])`);
       }
     });
+
+    console.log(`  📊 최종 휴무 배정: ${Object.keys(resolvedOffDays).length}명 / 총 ${staffList.length}명`);
 
     staffList.forEach(s => {
       assignments[s.id] = [];

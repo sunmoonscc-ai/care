@@ -643,30 +643,14 @@ class CareShiftApp {
   recalculateViolations() {
     if (!this.rosterData) return;
     this.violations = validateRoster(this.rosterData.staffList, this.rosterData.assignments);
-    this.updateHeaderStats();
   }
 
   updateHeaderStats() {
+    // 상단 헤더 위반/실시간 검증 뱃지는 화면 간소화를 위해 제거됨
     const violationBadge = document.getElementById('header-violation-badge');
-    if (!violationBadge) return;
-
-    // 로그인 전이거나 승인 대기자에게는 위반 뱃지 숨김
-    if (!this.authState.isLoggedIn || this.authState.userProfile?.status === 'PENDING' || this.authState.userProfile?.status === 'REJECTED') {
-      violationBadge.classList.add('hidden');
-      violationBadge.classList.remove('xs:flex');
-      return;
+    if (violationBadge) {
+      violationBadge.remove();
     }
-
-    const errorCount = this.violations.filter(v => v.type === 'error').length;
-    const warnCount = this.violations.filter(v => v.type === 'warning').length;
-
-    violationBadge.classList.remove('hidden');
-    violationBadge.classList.add('xs:flex');
-    violationBadge.innerHTML = `
-      <span class="text-[10px] text-slate-500 hidden sm:inline">실시간 검증</span>
-      <span class="inline-flex items-center px-1.5 py-0.2 rounded bg-red-100 text-red-800 text-[10px] font-bold">위반 ${errorCount}</span>
-      <span class="inline-flex items-center px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 text-[10px] font-bold hidden xs:inline-flex">주의 ${warnCount}</span>
-    `;
   }
 
   setupNavigation() {

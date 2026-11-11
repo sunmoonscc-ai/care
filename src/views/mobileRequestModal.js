@@ -225,9 +225,10 @@ export function openMobileRequestModal({ rosterData, staff, type = 'OFF', existi
     const monthStr = `${targetYear}-${String(targetMonth).padStart(2, '0')}`;
 
     // 선택한 날짜부터 MAX_OFF_DAYS간 휴무 신청
-    const nextDay = selectedDay + 1 <= daysInMonth ? selectedDay + 1 : daysInMonth;
+    // 항상 MAX_OFF_DAYS(2일)씩 신청하도록 수정
+    const nextDay = Math.min(selectedDay + MAX_OFF_DAYS - 1, daysInMonth);
 
-    const newItems = Array.from({ length: Math.min(MAX_OFF_DAYS, nextDay - selectedDay + 1) }, (_, i) => ({
+    const newItems = Array.from({ length: MAX_OFF_DAYS }, (_, i) => ({
       type: 'OFF',
       typeName: '희망 휴무(OFF)',
       requesterId: staff.id || '',

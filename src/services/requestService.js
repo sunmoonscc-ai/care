@@ -39,7 +39,7 @@ export async function loadRequests() {
   let firestoreList = [];
   if (!isOfflineFallback && db) {
     try {
-      const q = query(collection(db, 'requests'), orderBy('createdAt', 'desc'));
+      const q = query(collection(db, 'requests'));
       const snap = await getDocs(q);
       if (!snap.empty) {
         firestoreList = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -70,6 +70,12 @@ export async function loadRequests() {
 
   const merged = Array.from(combinedMap.values());
   if (merged.length > 0) {
+    // 최신 순으로 정렬
+    merged.sort((a, b) => {
+      const timeA = a.createdAtTimestamp || (a.createdAt ? new Date(a.createdAt).getTime() : 0);
+      const timeB = b.createdAtTimestamp || (b.createdAt ? new Date(b.createdAt).getTime() : 0);
+      return timeB - timeA;
+    });
     localStorage.setItem(STORAGE_KEY_REQUESTS, JSON.stringify(merged));
     return merged;
   }
@@ -138,7 +144,8 @@ export async function replaceStaffMonthlyOffRequests(staffId, staffName, monthPr
   const preparedNew = [...rank1Items, ...rank2Items, ...rank3Items].map((item, idx) => ({
     id: `req_${Date.now()}_${idx}_${Math.random().toString(36).substr(2, 4)}`,
     ...item,
-    createdAt: new Date().toLocaleString('ko-KR')
+    createdAt: new Date().toISOString(),
+    createdAtTimestamp: Date.now()
   }));
 
   // 4. 로컬 캐시 즉시 갱신

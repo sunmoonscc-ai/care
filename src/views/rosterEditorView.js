@@ -6,13 +6,20 @@ import { setupGoogleSheetModal } from '../services/googleSheetModal';
 import { exportRosterToCSV } from '../services/excelService';
 
 export function renderRosterEditorView(container, { rosterData, violations, onUpdateRoster, navigate }) {
-  const daysInMonth = 30;
-  const staffList = rosterData.staffList;
-  const assignments = rosterData.assignments;
+  const currentYear = parseInt(rosterData?.year, 10) || 2026;
+  const currentMonth = parseInt(rosterData?.month, 10) || 12;
+  const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
+  const staffList = rosterData.staffList || [];
+  const assignments = rosterData.assignments || {};
   const changeLogs = rosterData.changeLogs || [];
 
-  // 2026년 9월 1일은 화요일
-  const dayNames = ['화', '수', '목', '금', '토', '일', '월', '화', '수', '목', '금', '토', '일', '월', '화', '수', '목', '금', '토', '일', '월', '화', '수', '목', '금', '토', '일', '월', '화', '수'];
+  // 요일 이름 동적 생성 (일요일: 0 ~ 토요일: 6)
+  const weekDayNames = ['일', '월', '화', '수', '목', '금', '토'];
+  const dayNames = Array.from({ length: daysInMonth }, (_, i) => {
+    const day = i + 1;
+    const d = new Date(currentYear, currentMonth - 1, day);
+    return weekDayNames[d.getDay()];
+  });
 
   container.innerHTML = `
     <div class="flex flex-col w-full h-[calc(100vh-8.5rem)] md:h-[calc(100vh-5rem)] overflow-hidden bg-slate-100">
@@ -157,7 +164,7 @@ export function renderRosterEditorView(container, { rosterData, violations, onUp
                           data-day="${day}"
                           data-code="${code}"
                           data-requested="${isRedText ? 'true' : 'false'}"
-                          title="${staff.name} 9/${day}: ${code}${isRedText ? ' (요청/대체변경)' : ''}"
+                          title="${staff.name} ${currentMonth}/${day}: ${code}${isRedText ? ' (요청/대체변경)' : ''}"
                         >
                           <span class="inline-block w-full py-1 text-xs font-bold leading-none ${isRedText ? 'text-red-600 font-extrabold' : isNight ? 'text-slate-900 font-bold' : 'text-slate-800'}">
                             ${code}
