@@ -236,6 +236,7 @@ export function openMobileRequestModal({ rosterData, staff, type = 'OFF', existi
       type: 'OFF',
       typeName: '희망 휴무(OFF)',
       requesterId: staff.id || '',
+      requesterUid: staff.uid || '',  // 사용자 고유 ID (Firestore 식별용)
       requesterName: staff.name || '',
       requesterEmail: (staff.email || '').toLowerCase().trim(),
       requesterPhone: (staff.phoneNumber || '').replace(/[^0-9]/g, ''),

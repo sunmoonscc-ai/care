@@ -129,14 +129,15 @@ export async function replaceStaffMonthlyOffRequests(staffId, staffName, monthPr
   // 1. 현재 로컬 및 DB에 등록된 전체 목록 로드
   const all = await loadRequests();
 
-  // 2. 삭제 대상 필터링: 해당 월의 모든 OFF 신청 중 staffId, staffName, email, phone 중 하나라도 일치
+  // 2. 삭제 대상 필터링: 해당 월의 모든 OFF 신청 중 staffId, staffName, email, phone, uid 중 하나라도 일치
   const inputStaffId = (staffId || '').trim().toLowerCase();
   const inputStaffName = (staffName || '').trim().toLowerCase();
   const inputEmail = newRequestItems.length > 0 ? (newRequestItems[0].requesterEmail || '').trim().toLowerCase() : '';
   const inputPhone = newRequestItems.length > 0 ? ((newRequestItems[0].requesterPhone || '').replace(/[^0-9]/g, '')) : '';
+  const inputUid = newRequestItems.length > 0 ? (newRequestItems[0].requesterUid || '').trim().toLowerCase() : '';
 
   console.log(`🔍 [휴무신청 삭제 전 확인]`);
-  console.log(`  입력값: staffId=${inputStaffId}, staffName=${inputStaffName}, email=${inputEmail || '(비어있음)'}, phone=${inputPhone || '(비어있음)'}`);
+  console.log(`  입력값: staffId=${inputStaffId}, staffName=${inputStaffName}, email=${inputEmail || '(비어있음)'}, phone=${inputPhone || '(비어있음)'}, uid=${inputUid || '(비어있음)'}`);
   console.log(`  대상월: ${monthPrefix}`);
 
   const toDelete = all.filter(r => {
@@ -146,12 +147,14 @@ export async function replaceStaffMonthlyOffRequests(staffId, staffName, monthPr
     const rStaffName = (r.requesterName || '').trim().toLowerCase();
     const rEmail = (r.requesterEmail || '').trim().toLowerCase();
     const rPhone = ((r.requesterPhone || '').replace(/[^0-9]/g, ''));
+    const rUid = (r.requesterUid || '').trim().toLowerCase();
 
-    // 4중 조건: staffId, staffName, email, phone 중 하나라도 일치하면 삭제 대상
+    // 5중 조건: staffId, staffName, email, phone, uid 중 하나라도 일치하면 삭제 대상
     const isMatch = (inputStaffId && rStaffId === inputStaffId) ||
                     (inputStaffName && rStaffName === inputStaffName) ||
                     (inputEmail && rEmail === inputEmail) ||
-                    (inputPhone && rPhone === inputPhone);
+                    (inputPhone && rPhone === inputPhone) ||
+                    (inputUid && rUid === inputUid);
 
     if (isMatch) {
       console.log(`  ✅ 삭제 대상 발견: [${r.id}] ${r.requesterName || r.requesterEmail} (${r.date})`);
@@ -235,12 +238,14 @@ export async function replaceStaffMonthlyOffRequests(staffId, staffName, monthPr
       const rStaffName = (data.requesterName || '').trim().toLowerCase();
       const rEmail = (data.requesterEmail || '').trim().toLowerCase();
       const rPhone = ((data.requesterPhone || '').replace(/[^0-9]/g, ''));
+      const rUid = (data.requesterUid || '').trim().toLowerCase();
 
-      // 4중 조건: staffId, staffName, email, phone 중 하나라도 일치하면 삭제
+      // 5중 조건: staffId, staffName, email, phone, uid 중 하나라도 일치하면 삭제
       if ((inputStaffId && rStaffId === inputStaffId) ||
           (inputStaffName && rStaffName === inputStaffName) ||
           (inputEmail && rEmail === inputEmail) ||
-          (inputPhone && rPhone === inputPhone)) {
+          (inputPhone && rPhone === inputPhone) ||
+          (inputUid && rUid === inputUid)) {
         console.log(`  🗑️ Firestore 삭제: [${docSnap.id}] ${data.requesterName || data.requesterEmail}`);
         deletePromises.push(deleteDoc(doc(db, 'requests', docSnap.id)));
       }

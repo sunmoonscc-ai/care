@@ -50,7 +50,8 @@ export async function renderCaregiverMobileView(container, { rosterData, authSta
   const staff = {
     ...myStaff,
     email: myStaff.email || authState.user?.email || userProfile?.email || '',
-    phoneNumber: myStaff.phoneNumber || userProfile?.phoneNumber || ''
+    phoneNumber: myStaff.phoneNumber || userProfile?.phoneNumber || '',
+    uid: authState.user?.uid || userProfile?.uid || ''  // 사용자 고유 ID (Firestore 식별용)
   };
   const assignments = rosterData.assignments[staff.id] || rosterData.assignments['st_1'] || [];
 
