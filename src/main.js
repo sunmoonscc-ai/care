@@ -6,6 +6,7 @@ import { openUserProfileModal } from './services/userProfileModal';
 import { openSettingsModal } from './services/settingsModal';
 import { syncAppSettingsFromFirestore } from './services/settingsService';
 import { subscribeRosterChanges } from './services/realtimeSync';
+import { subscribeRequests } from './services/requestService';
 import { DIAGNOSTICS } from './services/diagnostics';
 import { ROSTER_SYNC_INTERVAL, USER_STATUS } from './constants';
 
@@ -197,6 +198,14 @@ class CareShiftApp {
 
       // 근무표 실시간 반영이 필요한 뷰(근무표편집 등)에서만 정숙하게 재렌더
       if (this.currentView === 'editor' || this.currentView === 'dashboard') {
+        this.render();
+      }
+    });
+
+    // 6. 원격 휴무 신청 변경 실시간 감시 (관리자 화면 자동 갱신)
+    subscribeRequests((requestsList) => {
+      console.log(`🔥 [Firestore Realtime] 원격 휴무 신청 실시간 동기화: ${requestsList.length}건`);
+      if (this.authState.isAdmin && (this.currentView === 'monthly-generator' || this.currentView === 'dashboard' || this.currentView === 'requests')) {
         this.render();
       }
     });

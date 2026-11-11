@@ -37,7 +37,7 @@ const initialRequests = [
 
 export async function loadRequests() {
   let firestoreList = [];
-  if (!isOfflineFallback && db) {
+  if (db) {
     try {
       const q = query(collection(db, 'requests'));
       const snap = await getDocs(q);
@@ -271,6 +271,37 @@ export async function replaceStaffMonthlyOffRequests(staffId, staffName, monthPr
   return preparedNew;
 }
 
+// Firestore requests 컬렉션 실시간 구독 리스너 (원격 신청 즉시 감지)
+export function subscribeRequests(onChange) {
+  if (!db) return () => {};
+
+  try {
+    const q = query(collection(db, 'requests'));
+    const unsubscribe = onSnapshot(q, (snap) => {
+      const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      list.sort((a, b) => {
+        const timeA = a.createdAtTimestamp || (a.createdAt ? new Date(a.createdAt).getTime() : 0);
+        const timeB = b.createdAtTimestamp || (b.createdAt ? new Date(b.createdAt).getTime() : 0);
+        return timeB - timeA;
+      });
+
+      // 로컬 스토리지도 자동 최신화
+      if (list.length > 0) {
+        localStorage.setItem(STORAGE_KEY_REQUESTS, JSON.stringify(list));
+      }
+
+      if (onChange) onChange(list);
+    }, (err) => {
+      console.warn("Firestore requests 실시간 감시 오류:", err.message);
+    });
+
+    return unsubscribe;
+  } catch (e) {
+    console.warn("subscribeRequests 설정 실패:", e.message);
+    return () => {};
+  }
+}
+
 export async function updateRequestStatus(reqId, newStatus, newStatusText) {
   const list = await loadRequests();
   const target = list.find(r => r.id === reqId);
@@ -280,7 +311,7 @@ export async function updateRequestStatus(reqId, newStatus, newStatusText) {
     localStorage.setItem(STORAGE_KEY_REQUESTS, JSON.stringify(list));
   }
 
-  if (!isOfflineFallback && db) {
+  if (db) {
     try {
       await updateDoc(doc(db, 'requests', reqId), {
         status: newStatus,
