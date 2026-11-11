@@ -106,9 +106,9 @@ export async function saveRequest(newReq) {
 
   console.log(`\n💾 [saveRequest]`);
   console.log(`  localStorage: ✅ 저장 완료`);
-  console.log(`  Firestore 저장 시도: ${!isOfflineFallback && db ? '진행' : '건너뜀'}`);
 
-  if (!isOfflineFallback && db) {
+  // Firestore에 항상 저장 시도 (db가 있으면)
+  if (db) {
     // UI 지연 방지를 위해 비동기 백그라운드 저장
     addDoc(collection(db, 'requests'), item)
       .then(docRef => {
@@ -117,6 +117,8 @@ export async function saveRequest(newReq) {
       .catch(e => {
         console.error(`  ❌ Firestore 저장 실패: ${e.message}`);
       });
+  } else {
+    console.warn(`  ⚠️ db가 없음 - Firestore 저장 불가`);
   }
 
   return item;
@@ -208,54 +210,57 @@ export async function replaceStaffMonthlyOffRequests(staffId, staffName, monthPr
     console.log(`    - [${r.id}] ${r.date} (${r.status || 'PENDING'})`);
   });
 
-  // 5. Firestore 동기화
-  console.log(`\n🔥 [Firestore 상태 확인]`);
+  // 5. Firestore 동기화 (항상 시도)
+  console.log(`\n🔥 [Firestore 저장 시도]`);
   console.log(`  isOfflineFallback: ${isOfflineFallback}`);
   console.log(`  db: ${!!db ? '있음' : '없음'}`);
-  console.log(`  저장 시도: ${!isOfflineFallback && db ? '진행' : '건너뜀'}`);
 
-  if (!isOfflineFallback && db) {
-    try {
-      const q = query(collection(db, 'requests'));
-      const snap = await getDocs(q);
-      const deletePromises = [];
-
-      console.log(`📲 [Firestore 동기화] ${snap.size}건 중 삭제 대상 검색...`);
-
-      snap.forEach(docSnap => {
-        const data = docSnap.data();
-        if (data.type !== 'OFF' || !data.date || !data.date.startsWith(monthPrefix)) return;
-
-        const rStaffId = (data.requesterId || '').trim().toLowerCase();
-        const rStaffName = (data.requesterName || '').trim().toLowerCase();
-        const rEmail = (data.requesterEmail || '').trim().toLowerCase();
-        const rPhone = ((data.requesterPhone || '').replace(/[^0-9]/g, ''));
-
-        // 4중 조건: staffId, staffName, email, phone 중 하나라도 일치하면 삭제
-        if ((inputStaffId && rStaffId === inputStaffId) ||
-            (inputStaffName && rStaffName === inputStaffName) ||
-            (inputEmail && rEmail === inputEmail) ||
-            (inputPhone && rPhone === inputPhone)) {
-          console.log(`  🗑️ Firestore 삭제: [${docSnap.id}] ${data.requesterName || data.requesterEmail}`);
-          deletePromises.push(deleteDoc(doc(db, 'requests', docSnap.id)));
-        }
-      });
-
-      if (deletePromises.length > 0) {
-        console.log(`  ⏳ ${deletePromises.length}건 삭제 중...`);
-        await Promise.all(deletePromises);
-        console.log(`  ✅ Firestore 삭제 완료`);
-      }
-
-      if (preparedNew.length > 0) {
-        console.log(`  ⏳ ${preparedNew.length}건 추가 중...`);
-        const addPromises = preparedNew.map(item => addDoc(collection(db, 'requests'), item));
-        await Promise.all(addPromises);
-        console.log(`  ✅ Firestore 추가 완료`);
-      }
-    } catch (e) {
-      logger.error('RequestService', 'Firestore 동기화 실패', e);
+  try {
+    if (!db) {
+      console.warn(`  ⚠️ db가 없음 - Firestore 저장 불가`);
+      return preparedNew;
     }
+
+    const q = query(collection(db, 'requests'));
+    const snap = await getDocs(q);
+    const deletePromises = [];
+
+    console.log(`📲 [Firestore 동기화] ${snap.size}건 중 삭제 대상 검색...`);
+
+    snap.forEach(docSnap => {
+      const data = docSnap.data();
+      if (data.type !== 'OFF' || !data.date || !data.date.startsWith(monthPrefix)) return;
+
+      const rStaffId = (data.requesterId || '').trim().toLowerCase();
+      const rStaffName = (data.requesterName || '').trim().toLowerCase();
+      const rEmail = (data.requesterEmail || '').trim().toLowerCase();
+      const rPhone = ((data.requesterPhone || '').replace(/[^0-9]/g, ''));
+
+      // 4중 조건: staffId, staffName, email, phone 중 하나라도 일치하면 삭제
+      if ((inputStaffId && rStaffId === inputStaffId) ||
+          (inputStaffName && rStaffName === inputStaffName) ||
+          (inputEmail && rEmail === inputEmail) ||
+          (inputPhone && rPhone === inputPhone)) {
+        console.log(`  🗑️ Firestore 삭제: [${docSnap.id}] ${data.requesterName || data.requesterEmail}`);
+        deletePromises.push(deleteDoc(doc(db, 'requests', docSnap.id)));
+      }
+    });
+
+    if (deletePromises.length > 0) {
+      console.log(`  ⏳ ${deletePromises.length}건 삭제 중...`);
+      await Promise.all(deletePromises);
+      console.log(`  ✅ Firestore 삭제 완료`);
+    }
+
+    if (preparedNew.length > 0) {
+      console.log(`  ⏳ ${preparedNew.length}건 추가 중...`);
+      const addPromises = preparedNew.map(item => addDoc(collection(db, 'requests'), item));
+      await Promise.all(addPromises);
+      console.log(`  ✅ Firestore 추가 완료`);
+    }
+  } catch (e) {
+    console.error(`  ❌ Firestore 동기화 오류: ${e.message}`);
+    logger.error('RequestService', 'Firestore 동기화 실패', e);
   }
 
   return preparedNew;
