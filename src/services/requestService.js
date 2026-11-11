@@ -104,11 +104,19 @@ export async function saveRequest(newReq) {
   list.unshift(item);
   localStorage.setItem(STORAGE_KEY_REQUESTS, JSON.stringify(list));
 
+  console.log(`\n💾 [saveRequest]`);
+  console.log(`  localStorage: ✅ 저장 완료`);
+  console.log(`  Firestore 저장 시도: ${!isOfflineFallback && db ? '진행' : '건너뜀'}`);
+
   if (!isOfflineFallback && db) {
     // UI 지연 방지를 위해 비동기 백그라운드 저장
-    addDoc(collection(db, 'requests'), item).catch(e => {
-      console.warn("Firestore request add background warning:", e);
-    });
+    addDoc(collection(db, 'requests'), item)
+      .then(docRef => {
+        console.log(`  ✅ Firestore 저장 성공: ${docRef.id}`);
+      })
+      .catch(e => {
+        console.error(`  ❌ Firestore 저장 실패: ${e.message}`);
+      });
   }
 
   return item;
@@ -201,6 +209,11 @@ export async function replaceStaffMonthlyOffRequests(staffId, staffName, monthPr
   });
 
   // 5. Firestore 동기화
+  console.log(`\n🔥 [Firestore 상태 확인]`);
+  console.log(`  isOfflineFallback: ${isOfflineFallback}`);
+  console.log(`  db: ${!!db ? '있음' : '없음'}`);
+  console.log(`  저장 시도: ${!isOfflineFallback && db ? '진행' : '건너뜀'}`);
+
   if (!isOfflineFallback && db) {
     try {
       const q = query(collection(db, 'requests'));
