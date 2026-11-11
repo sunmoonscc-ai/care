@@ -464,8 +464,12 @@ export async function renderMonthlyGeneratorView(container, { rosterData, onAppl
 
         <div class="shrink-0 flex items-center gap-2">
           <span class="px-3 py-1.5 rounded-xl font-black text-xs ${effectiveUnrequestedCount > 0 ? 'bg-amber-200 text-amber-900' : 'bg-emerald-200 text-emerald-900'}">
-            접수된 휴무 신청: ${monthOffRequests.length}건
+            접수된 휴무 신청: ${Object.keys(staffPreferenceMap).length}명 ${monthOffRequests.length}일
           </span>
+          <button id="btn-view-off-requests" class="px-3 py-1.5 rounded-xl font-bold text-xs bg-teal-600 hover:bg-teal-700 text-white transition flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[14px]">info</span>
+            신청휴무일보기
+          </button>
         </div>
       </div>
 
@@ -685,5 +689,91 @@ export async function renderMonthlyGeneratorView(container, { rosterData, onAppl
 
   container.querySelector('#btn-goto-schedule-settings')?.addEventListener('click', () => {
     navigate('schedule-config');
+  });
+
+  // 신청휴무일보기 버튼
+  container.querySelector('#btn-view-off-requests')?.addEventListener('click', () => {
+    // 신청 데이터를 신청자별로 정리
+    const requestListByStaff = {};
+    monthOffRequests.forEach(r => {
+      const name = r.requesterName || r.requesterEmail || '신청자';
+      if (!requestListByStaff[name]) {
+        requestListByStaff[name] = [];
+      }
+      if (r.date) {
+        const dayMatch = r.date.match(/-(\d{1,2})$/);
+        if (dayMatch) {
+          requestListByStaff[name].push(parseInt(dayMatch[1], 10));
+        }
+      }
+    });
+
+    // 각 신청자의 신청 일자를 정렬
+    Object.keys(requestListByStaff).forEach(name => {
+      requestListByStaff[name] = [...new Set(requestListByStaff[name])].sort((a, b) => a - b);
+    });
+
+    // 팝업 HTML 생성
+    const modalHtml = `
+      <div id="modal-off-requests" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs animate-in fade-in duration-200 font-sans">
+        <div class="bg-white w-full max-w-2xl rounded-2xl p-6 shadow-2xl border border-slate-200 space-y-4 max-h-[80vh] overflow-y-auto">
+
+          <!-- 헤더 -->
+          <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-teal-50 text-teal-800 flex items-center justify-center font-bold border border-teal-200">
+                <span class="material-symbols-outlined text-[20px]">event_note</span>
+              </div>
+              <div>
+                <h3 class="font-black text-slate-900 text-lg">${targetYear}년 ${String(targetMonth).padStart(2, '0')}월 신청 휴무 일정</h3>
+                <p class="text-xs text-slate-400 mt-0.5">${Object.keys(requestListByStaff).length}명 총 ${monthOffRequests.length}일 신청</p>
+              </div>
+            </div>
+            <button id="btn-close-off-modal" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-400 flex items-center justify-center transition">
+              <span class="material-symbols-outlined text-[18px]">close</span>
+            </button>
+          </div>
+
+          <!-- 신청 목록 -->
+          <div class="space-y-3">
+            ${Object.entries(requestListByStaff).map(([name, days]) => `
+              <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 hover:border-teal-300 transition">
+                <div class="flex items-start justify-between gap-3">
+                  <div>
+                    <p class="font-bold text-slate-900">${name}</p>
+                    <p class="text-sm text-slate-600 mt-1">
+                      <span class="inline-block px-2 py-1 rounded-lg bg-teal-100 text-teal-800 font-bold text-xs mr-2">
+                        ${days.length}일
+                      </span>
+                      ${days.map(d => `<span class="inline-block px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 font-semibold text-xs mr-1.5 mb-1">${d}일</span>`).join('')}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+
+          <!-- 닫기 버튼 -->
+          <div class="pt-2 border-t border-slate-100">
+            <button id="btn-close-modal-footer" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl transition">
+              닫기
+            </button>
+          </div>
+
+        </div>
+      </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    const modal = document.getElementById('modal-off-requests');
+
+    const closeModal = () => modal?.remove();
+    document.getElementById('btn-close-off-modal')?.addEventListener('click', closeModal);
+    document.getElementById('btn-close-modal-footer')?.addEventListener('click', closeModal);
+
+    // 모달 외부 클릭시 닫기
+    modal?.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
   });
 }
